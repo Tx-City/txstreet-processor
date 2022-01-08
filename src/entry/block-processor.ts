@@ -1,0 +1,92 @@
+// Load environment variables from .env
+import dotenv from 'dotenv';
+dotenv.config(); 
+
+// Merge command line args into environment variables, overwriting values specified in .env
+import minimist from 'minimist';
+Object.assign(process.env, minimist(process.argv.slice(2)));
+
+// Setup the logger for this file. 
+import debug from 'debug'; 
+const logger = debug('src/index'); 
+
+// Misc imports 
+import processBlock from '../methods/block-processor/process-block'; 
+import * as Wrappers from '../lib/node-wrappers';
+import { Logger } from '../lib/utilities';
+
+// A collection of all initialized BlockchainNode instances. 
+const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {}; 
+
+// A hardcoded array of implemented blockchains.
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY']
+var nodesToInit: string[] = []; 
+
+// Check for command line arguments matching that of blockchain implementations 
+Object.keys(process.env).forEach(key => {
+    if(blockchainImpls.includes(key.toUpperCase())) {
+        nodesToInit.push(key.toUpperCase()); 
+    }
+})
+
+// Simple infinite loop terminator
+var running = true; 
+
+// A simple infinite execution loop that doesn't block the event loop. 
+const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
+    try {
+        await processBlock(wrapper); 
+        setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1); 
+    } catch (error) {
+        Logger.error(error);
+        setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1); 
+    }   
+}
+
+const run = async () => {
+    Logger.setLogLevel(Logger.LoggingLevel.Info);
+    if(nodesToInit.includes('BTC')) {
+        const btcWrapper = new Wrappers.BTCWrapper(
+            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: 8332 },
+            { host: process.env.BTC_NODE as string, port: 28332 }); 
+
+        nonBlockingInfiniteLoop(btcWrapper); 
+    }
+
+    if(nodesToInit.includes('BCH')) {
+        const bchWrapper = new Wrappers.BCHWrapper(
+            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: 8332 },
+            { host: process.env.BCH_NODE as string, port: 28332 }); 
+
+        nonBlockingInfiniteLoop(bchWrapper); 
+    }
+
+    if(nodesToInit.includes('XMR')) {
+        const xmrWrapper = new Wrappers.XMRWrapper(process.env.XMR_NODE as string);
+
+        nonBlockingInfiniteLoop(xmrWrapper); 
+    }
+
+
+    if(nodesToInit.includes('LTC')) {
+        const ltcWrapper = new Wrappers.LTCWrapper(
+            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: 9332 },
+            { host: process.env.LTC_NODE as string, port: 28332 }); 
+
+        nonBlockingInfiniteLoop(ltcWrapper); 
+    }
+
+    if(nodesToInit.includes('ETH')) {
+        const ethWrapper = new Wrappers.ETHWrapper(process.env.ETH_NODE as string);
+
+        nonBlockingInfiniteLoop(ethWrapper); 
+    }
+
+    if(nodesToInit.includes('RINKEBY')) {
+        const rinkebyWrapper = new Wrappers.RINKEBYWrapper(process.env.RINKEBY_NODE as string); 
+
+        nonBlockingInfiniteLoop(rinkebyWrapper); 
+    }
+}
+
+run(); 

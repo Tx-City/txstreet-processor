@@ -1,0 +1,30 @@
+import mongodb from '../../databases/mongodb';
+
+// Create localized logger
+import { Logger } from '../../lib/utilities';
+
+// The purpose of this method is to find chain-provided block information in the database. 
+export default async (chain: string, key: string, value: any): Promise<any> => {
+    try {
+        // Initialize database.
+        const { database } = await mongodb(); 
+        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS || '');
+
+        // Here we need to make sure processed is true, as that's how we differentiate between 
+        // a block and a request.
+        const block = await collection.findOne({ chain, [key]: value });
+        if(block.processed) return block;
+
+        // Some error with rinkeby sending invalid blocks through the geth event. 
+        // XXX: This ONLY happens on Rinkeby. 
+        if(block && block.processFailures > 10) {
+            await collection.deleteOne({ chain, [key]: value }); 
+            return true;
+        }
+
+        return block.processed; 
+    } catch (error) {
+        Logger.error(error); 
+        return null;
+    }
+}

@@ -1,0 +1,70 @@
+import mongodb from '../../../databases/mongodb';
+import redis from '../../../databases/redis'; 
+import { formatTransaction, formatBlock, Logger, storeObject } from '../../../lib/utilities';
+import path from 'path';
+
+export default async (chain: string): Promise<void> => {
+    try {
+        const { database } = await mongodb();
+        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+        const block = await collection.find({ chain, stored: true, broadcast: false }).sort({ height: 1 }).limit(1).next(); 
+        if(!block) {
+            return; 
+        }
+        await checkBlock(database, chain, block); 
+        
+    } catch (error) {
+        Logger.error(error); 
+    }
+}
+
+const checkForConfirmation = async (database: any, chain: string, block: any) => {
+    const txsCollection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain); 
+    const blocksCollection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+    
+    const remainingTxs = await txsCollection.find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).count(); 
+    if(!remainingTxs) {
+        block.txFull = {}; 
+        const transactions = await txsCollection.find({ hash: { $in: block.transactions }, confirmed: true, dropped: { $exists: false } }).toArray(); 
+        transactions.forEach((transaction: any) => {
+            const formatted = formatTransaction(chain, transaction);
+            block.txFull[formatted.tx] = formatted; 
+        });
+        const content = JSON.stringify(formatBlock(chain, block)); 
+        await storeObject(path.join('blocks', chain, block.hash), content); 
+        await blocksCollection.updateOne({ chain, hash: block.hash }, { $set: { stored: true, broadcast: false } }); 
+        return false;
+    } else {
+        return false; 
+    }
+}
+
+const checkBlock = async (database: any, chain: string, block: any): Promise<boolean> => {
+    try {
+        const blocksCollection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+        const parent = await blocksCollection.findOne({ chain, hash: block.previousblockhash }); 
+        if(!parent) {
+            redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
+            await blocksCollection.updateOne({ chain, hash: block.hash }, { $set: { broadcast: true } }); 
+            return true; 
+        } 
+        
+        if(!parent.stored) {
+            await checkForConfirmation(database, chain, parent);
+            return false; 
+        } 
+
+        if(block.stored && parent.stored && parent.broadcast || block.stored && !parent) {
+            Logger.info('Publishing block', block.height || block.number);
+            redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
+            await blocksCollection.updateOne({ chain, hash: block.hash }, { $set: { broadcast: true } }); 
+            return true; 
+        } else {
+            return false;
+        }
+    } catch (error) {
+        Logger.error(error); 
+        return false; 
+    }
+}
+ 
