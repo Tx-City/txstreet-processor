@@ -24,7 +24,7 @@ const io = require('socket.io')(server, {
 });  
 
 const eventHandlers: any = {}; 
-const handlersPath: string = path.join(__dirname, 'socket-events'); 
+const handlersPath: string = path.join(__dirname, '..', 'lib', 'websocket', 'socket-events'); 
 var handlersloaded = false;
 const loadEvents = async(): Promise<boolean> => {
     if(handlersloaded) return true; 
@@ -36,7 +36,7 @@ const loadEvents = async(): Promise<boolean> => {
         if(filename.includes('.map')) continue;
         if(!filename.includes('.js')) continue; 
         let realname = filename.replace('.js', ''); 
-        const handlerPath = path.join(__dirname, 'socket-events', filename); 
+        const handlerPath = path.join(__dirname, '..', 'lib', 'websocket', 'socket-events', filename); 
         const handler = await import(handlerPath);
         eventHandlers[realname] = handler.default; 
         Logger.info("Loaded event", filename); 
@@ -46,13 +46,13 @@ const loadEvents = async(): Promise<boolean> => {
 }
 
 const redisHandlers: any = {}; 
-const redisPath = path.join(__dirname, 'redis', 'handlers'); 
+const redisPath = path.join(__dirname, '..', 'lib', 'websocket', 'redis', 'handlers'); 
 const filenames = fs.readdirSync(redisPath); 
 filenames.forEach(async filename => {
     if(!filename.includes('.js')) return; 
     if(filename.includes('.map')) return; 
     const realname = filename.replace('.js', '');
-    const handlerPath = path.join(__dirname, 'redis','handlers', filename);  
+    const handlerPath = path.join(__dirname, '..', 'lib', 'websocket', 'redis','handlers', filename);  
     const handler = await import(handlerPath);
     redisHandlers[realname] = handler.default; 
     redis.subscribe(realname);

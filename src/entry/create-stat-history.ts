@@ -4,8 +4,8 @@ dotenv.config();
 import minimist from 'minimist'; 
 Object.assign(process.env, minimist(process.argv.slice(2)));
 
-import { Logger } from "../../lib/utilities"
-import mongodb from '../../databases/mongodb';
+import { Logger } from "../lib/utilities"
+import mongodb from '../databases/mongodb';
 // @ts-ignore-nextline
 import deepEqual from 'deepequal'; 
 
@@ -73,22 +73,29 @@ const run = async () => {
             await cSnapshots.updateOne({ chain, interval }, { $set: currentHistory }, { upsert: true }); 
         }
         Logger.info(`Finished calculating stat-history ledger for interval: ${interval}`);
+        return true;
     } catch (error) {
-        console.error(error); 
+        console.error(error);
+        return true;
     }
-    return true;
 }
 
-if(!isCron) {
-    const execute = async () => {
-        try { 
-            await run();
-        } catch (e) {
-        } finally {
-            setTimeout(() => execute(), intervalMillis); 
+
+(async () => {
+    if(!isCron) {
+        const execute = async () => {
+            try { 
+                await run();
+            } catch (e) {
+            } finally {
+                setTimeout(() => execute(), intervalMillis); 
+            }
         }
+        execute();
+    } else {
+        console.log("running");
+        await run();
+        console.log("exiting");
+        process.exit();
     }
-    execute();
-} else {
-    run(); 
-}
+})();

@@ -9,9 +9,9 @@
         "sourceMap": true,
         "resolveJsonModule": true,
         "outDir": "dist",
+        "incremental": true,
         "baseUrl": ".",
         "paths": {
-            "@src/*": ["src/*"],
             "*": [
                 "node_modules/*"
             ]
