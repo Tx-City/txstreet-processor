@@ -24,6 +24,7 @@ const CORSConfig: CorsOptions = {
 // Initialize the express application & setup middleware.
 const app: express.Application = express();
 app.use(helmet());
+app.use(express.json());
 app.use(compression());
 app.use(cors({ origin: '*'}));
 

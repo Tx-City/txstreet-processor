@@ -10,6 +10,7 @@
         "resolveJsonModule": true,
         "outDir": "dist",
         "incremental": true,
+        "skipLibCheck": true,
         "baseUrl": ".",
         "paths": {
             "*": [

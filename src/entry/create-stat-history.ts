@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ path: __dirname + '/../../.env' });
 
 import minimist from 'minimist'; 
 Object.assign(process.env, minimist(process.argv.slice(2)));
@@ -54,7 +54,7 @@ const run = async () => {
         if(!lastAggregatedResult) lastAggregatedResult = {}; 
 
         const currentHistory = await cStatistics.findOne({ chain }); 
-        console.log('currentHistory:', currentHistory);
+        // console.log('currentHistory:', currentHistory);
         delete currentHistory._id; 
         const changeState: any = {}; 
         Object.keys(currentHistory).forEach((key: string) => {

@@ -1,4 +1,6 @@
-import { findMoonhead, findNftOwner } from "..";
+import { findNftOwner } from "..";
+//@ts-ignore
+import txStreetIds from "@txstreet/txstreet-token-ids";
 
 export default (chain: string, data: any) => {
     var obj: any = {};
@@ -26,10 +28,18 @@ export default (chain: string, data: any) => {
         if(data.maxFeePerGas) obj.mfpg = Number(data.maxFeePerGas);
         if(data.maxPriorityFeePerGas) obj.mpfpg = Number(data.maxPriorityFeePerGas);
         if(chain === "ETH") {
-            let moonhead: any = findMoonhead(obj.fr);
             let nft: any = findNftOwner(obj.fr, true);
-            if(nft) obj.char = nft;
-            if(moonhead) obj.char = moonhead.name;
+            if(nft) {
+                let split = nft.split("-");
+                if(split[0] === "moonheads"){
+                    const name = txStreetIds.getName(split[1]);
+                    obj.char = name;
+                }
+                else{
+                    obj.char = nft;
+                }
+                
+            }
         }        
     } else if(chain === "BTC" || chain === "LTC" || chain === "BCH") {
         obj.tx = data.hash;

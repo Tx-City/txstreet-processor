@@ -3,7 +3,6 @@ import average from "./functions/average";
 import median from "./functions/median";
 import formatBlock from "./functions/formatBlock";
 import formatTransaction from './functions/formatTransaction';
-import findMoonhead from './functions/findMoonhead';
 import findNftOwner from './functions/findNftOwner';
 import Logger from './functions/logger'
 import FalloutCollection from "./classes/FalloutCollection";
@@ -22,7 +21,6 @@ export {
     median,
     formatBlock,
     formatTransaction,
-    findMoonhead,
     findNftOwner,
     Logger,
     FalloutCollection,
