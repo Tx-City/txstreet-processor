@@ -15,10 +15,15 @@ class Opensea extends ChainImplementation {
   public redis: any; 
 
   async fetchContract(address: string): Promise<any> {
+    // console.log('test');
     if (this.nftList[address]) return this.nftList[address];
     const url = "https://api.opensea.io/api/v1/asset_contract/" + address;
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: { 'X-API-KEY': process.env.OPENSEA_KEY }
+      });
+      // const body = await response.text();
+      // console.log(body);
       const data: any = await response.json();
       if (!data.collection) return {};
       this.nftList[address] = data;
