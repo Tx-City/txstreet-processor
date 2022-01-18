@@ -47,8 +47,53 @@ setInterval(() => {
     }
 }, 1000 * 60 * 60 * 12);
 
+const watchStatistics = async() => {
+    const { database } = await mongodb();
+
+    console.log(`CREATING STATISTICS STREAM`);
+    const statistics = database.collection('statistics');
+
+    //get the documents keys for easy lookup from the stream results
+    const documentKeys: {[key:string]:string} = {};
+    const results = await statistics.find({}).project({chain: 1}).toArray();
+    for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        documentKeys[result._id] = result.chain;
+    }
+
+    const pipeline = [{ $match: { "operationType":"update" } }];
+    const stream = statistics.watch(pipeline);
+
+    stream.on('end', function() {
+        console.log('stream ended!');
+        process.exit(1);
+    });
+    stream.on('error', (err: any) => {
+        console.log(new Date() + ' error: ' + err);
+        process.exit(1);
+        // startStream();
+    });
+    stream.on('change', (next: any) => {
+        // console.log(next);
+        if (next.operationType !== 'update') return console.log('not update');
+        const chain = String(documentKeys[next.documentKey._id]).replace("-nohistory", "");
+        if(!tickers.includes(chain)) return console.log("bad chain", chain);
+        
+        const timestamp = new Date().getTime();
+        const state = next.updateDescription.updatedFields;
+
+        Object.keys(state).forEach((key: string) => {
+            if(!stats?.[chain]?.["5s"]) {
+                // console.log(stats);
+                return;
+            }
+            stats[chain]["5s"][key] = [{ timestamp, value: state[key] }];
+            io.to(`${chain}-stat-${key}`).emit('stat-updates', chain, key, state[key]);
+        });
+    });
+}
+
 const initNoHistory = async (ticker: string) => {
-    let resumeAfter: any = null;
     const { database } = await mongodb();
     const result = await database.collection('statistics').findOne({ chain: `${ticker}-nohistory` });
     if (result) {
@@ -57,44 +102,10 @@ const initNoHistory = async (ticker: string) => {
         Object.keys(result).forEach((key: string) => {
             stats[ticker]["5s"][key] = [{ timestamp, value: result[key] }];
         });
-    }
-    console.log(`CREATING NOHISTORY STREAM::: ${ticker}-nohistory`);
-    const statistics = database.collection('statistics');
-
-    function startStream(){
-        const nhPipeline = [{ $match: { 'fullDocument.chain': `${ticker}-nohistory` } }];
-        const nhStream = statistics.watch(nhPipeline, { fullDocument: 'updateLookup', resumeAfter });
-        nhStream.on('end', function() {
-            console.log('stream ended!');
-        });
-        nhStream.on('error', (err: any) => {
-            console.log(new Date() + ' error: ' + err)
-            startStream();
-        });
-        nhStream.on('change', (next: any) => {
-            resumeAfter = next._id;
-            if (next.operationType !== 'update') return console.log('not update');
-            if (!next.fullDocument) return console.log('not full document');
-            if (next.fullDocument.chain !== `${ticker}-nohistory`) return console.log('chain != ticker');
-
-            const timestamp = new Date().getTime();
-            const state = next.updateDescription.updatedFields;
-            // Logger.info(`State`, state);
-
-            // Only update the changed values. 
-
-            Object.keys(state).forEach((key: string) => {
-                stats[ticker]["5s"][key] = [{ timestamp, value: state[key] }];
-                io.to(`${ticker}-stat-${key}`).emit('stat-updates', ticker, key, state[key]);
-            });
-        });
-    }
-    startStream();
-    
+    }    
 }
 
 const initInterval = async (ticker: string, interval: string) => {
-    let resumeAfter: any = null;
     stats[ticker][interval] = {};
     lastKnownTimestamps[ticker][interval] = 0;
     try {
@@ -136,16 +147,16 @@ const initInterval = async (ticker: string, interval: string) => {
             const pipeline = [
                 { $match: { 'fullDocument.chain': ticker, 'fullDocument.interval': interval } }
             ]
-            const changeStream = collection.watch(pipeline, {resumeAfter});
+            const changeStream = collection.watch(pipeline);
             changeStream.on('end', function() {
                 console.log('stream ended!');
+                process.exit(1);
             });
             changeStream.on('error', (err: any) => {
                 console.log(new Date() + ' error: ' + err)
-                startStream();
+                process.exit(1);
             });
             changeStream.on('change', (next: any) => {
-                resumeAfter = next._id;
                 // Sanity checks. 
                 if (next.operationType !== 'insert') return console.log('not insert');
                 if (!next.fullDocument) return console.log('not full document');
@@ -163,7 +174,7 @@ const initInterval = async (ticker: string, interval: string) => {
                     if (!stats[ticker][interval][key])
                         stats[ticker][interval][key] = [];
                     stats[ticker][interval][key].push({ timestamp, value: state[key] });
-                    io.to(`${ticker}-stat-${key}`).emit('stat-updates', ticker, key, state[key]);
+                    // io.to(`${ticker}-stat-${key}`).emit('stat-updates', ticker, key, state[key]);
                 });
     
                 Object.keys(stats[ticker][interval]).forEach((key: string) => {
@@ -177,18 +188,6 @@ const initInterval = async (ticker: string, interval: string) => {
         Logger.error(error);
     }
 }
-
-tickers.forEach(async (ticker: string) => {
-    stats[ticker] = {};
-    lastKnownTimestamps[ticker] = {};
-    for (let i = 0; i < intervals.length; i++) {
-        const interval = intervals[i];
-        console.log("starting", ticker, interval);
-        await initInterval(ticker, interval);
-        console.log("done", ticker, interval);
-    }
-    await initNoHistory(ticker);
-});
 
 const convert = (string: string) => {
     string = (string || '').toLowerCase();
@@ -257,6 +256,19 @@ export default async (socket: SocketIO.Socket, chain: string, identifier: string
     return socket.emit('fetch-stat', identifier, null, response);
 }
 
-
-
+(async() => {
+    for (let i = 0; i < tickers.length; i++) {
+        const ticker = tickers[i];
+        stats[ticker] = {};
+        lastKnownTimestamps[ticker] = {};
+        for (let j = 0; j < intervals.length; j++) {
+            const interval = intervals[j];
+            console.log("starting", ticker, interval);
+            await initInterval(ticker, interval);
+            console.log("done", ticker, interval);
+        }
+        await initNoHistory(ticker);
+    }
+    watchStatistics();
+})();
 
