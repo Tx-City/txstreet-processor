@@ -81,9 +81,9 @@ nftRouter.post('/setCharacter', async (request: Request, response: Response) => 
 async function changeCharacter(address: string, message: string, signature: string) {
     //get id from message
     let slugAndId = String(message.substring(message.lastIndexOf(" ") + 1)).split("-");
-    if(slugAndId.length !== 2) return false;
-    let id = Number(slugAndId[1]);
-    let slug = slugAndId[0];
+    if(slugAndId.length < 2) return false;
+	let slug = slugAndId.slice(0, -1).join("-");
+    let id = Number(slugAndId[slugAndId.length - 1]);
     let addressLower = address.toLowerCase();
 
     //check to see if address owns this nft

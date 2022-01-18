@@ -30,15 +30,16 @@ export default (chain: string, data: any) => {
         if(chain === "ETH") {
             let nft: any = findNftOwner(obj.fr, true);
             if(nft) {
+                obj.char = nft;
                 let split = nft.split("-");
-                if(split[0] === "moonheads"){
-                    const name = txStreetIds.getName(split[1]);
-                    obj.char = name;
-                }
-                else{
-                    obj.char = nft;
+                obj.nftChar = {
+                    collectionSlug: split.slice(0, -1).join("-"),
+                    tokenId: split[split.length - 1]
                 }
                 
+                if(obj.nftChar.collectionSlug === "moonheads"){
+                    obj.char = txStreetIds.getName(Number(split[1]));
+                }
             }
         }        
     } else if(chain === "BTC" || chain === "LTC" || chain === "BCH") {
