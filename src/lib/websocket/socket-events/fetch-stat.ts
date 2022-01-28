@@ -48,7 +48,16 @@ setInterval(() => {
 }, 1000 * 60 * 60 * 12);
 
 const watchStatistics = async() => {
+    let lastUpdate = Date.now();
     const { database } = await mongodb();
+
+    setInterval(() => {
+        const diff = Date.now() - lastUpdate;
+        if(diff > 60000){
+            console.log("stream not update in a while");
+            process.exit(1);
+        }
+    }, 1000);
 
     console.log(`CREATING STATISTICS STREAM`);
     const statistics = database.collection('statistics');
@@ -76,6 +85,7 @@ const watchStatistics = async() => {
     stream.on('change', (next: any) => {
         // console.log(next);
         if (next.operationType !== 'update') return console.log('not update');
+        lastUpdate = Date.now();
         const chain = String(documentKeys[next.documentKey._id]).replace("-nohistory", "");
         if(!tickers.includes(chain)) return console.log("bad chain", chain);
         
@@ -94,8 +104,16 @@ const watchStatistics = async() => {
 }
 
 const watchHistory = async() => {
-
+    let lastUpdate = Date.now();
     const { database } = await mongodb();
+
+    setInterval(() => {
+        const diff = Date.now() - lastUpdate;
+        if(diff > 60000){
+            console.log("stream not update in a while");
+            process.exit(1);
+        }
+    }, 1000);
 
     console.log(`CREATING STATISTICS HISTORY STREAM`);
     const statisticsHistory = database.collection('statistics_history');
@@ -116,6 +134,7 @@ const watchHistory = async() => {
         // Sanity checks. 
         if (next.operationType !== 'insert') return console.log('not insert');
         if (!next.fullDocument) return console.log('not full document');
+        lastUpdate = Date.now();
         const ticker = next.fullDocument.chain;
         const interval = next.fullDocument.interval;
         if (!tickers.includes(ticker)) return console.log('bad ticker');
