@@ -10,21 +10,6 @@ export default async(chain: string): Promise<void> => {
         const tasks: Promise<any>[] = [];
         const houseData: any[] = []; 
         houses.forEach((house: any) => {
-            if(house.name === 'donation') {
-                const object = {
-                    name: house.name,
-                    title: house.title,
-                    dataSources: house.dataSources || ['wiki'],
-                    popupLength: house.popupLength || 75,
-                    colors: house.colors, 
-                    side: house.side || 0,
-                    priority: 1000000,
-                    tracked: house.tracked || false 
-                }
-
-                houseData.push(object); 
-                return;
-            }
             const task = async (): Promise<any> => {
                 try {
                     const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain);

@@ -34,7 +34,6 @@
     "eventemitter3": "^4.0.7",
     "moment": "^2.29.1",
     "zeromq": "^6.0.0-beta.6",
-    "@generalprotocols/anyhedge": "^0.14.2",
     "axios": "^0.21.4",
     "bchaddrjs-slp": "^0.2.14",
     "dotenv": "^10.0.0",

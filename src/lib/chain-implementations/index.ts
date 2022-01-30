@@ -4,22 +4,16 @@ export const enabledHooks: any = {
     ETH: [
         "DefaultHousing",
         "Uniswap",
-        "Donation",
         "Opensea"
     ],
     BTC: [
         "DefaultHousing",
-        "Donation",
     ],
     LTC: [
         "DefaultHousing",
-        "Donation",
     ],
     BCH: [
-        // "AnyHedge",
         "CashFusion",
-        // "CashShuffle",
-        "Donation",
         "EatBCH",
         "Memo",
         "SLP"
