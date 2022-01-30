@@ -15,7 +15,7 @@ class DefaultHousing extends ChainImplementation {
                 return this;
             const { database } = await mongodb(); 
             const collection = database.collection('houses');
-            const results = await collection.find({ chain: this.chain, name: { $nin: ["uniswap", "1inch", "opensea"] } }).toArray();  
+            const results = await collection.find({ chain: this.chain, name: { $nin: ["uniswap", "opensea"] } }).toArray();  
             for(let i = 0; i < results.length; i++) {
                 let doc = results[i]; 
                 if(!doc.contracts) continue;

@@ -15,6 +15,7 @@ export default async(chain: string, wikiname: string): Promise<void> => {
         const tasks: Promise<any>[] = [];
         const writeInstructions: any[] = [];
         files.forEach((filename: string) => {
+            console.log(filename);
             tasks.push(new Promise(async (resolve) => {
                 const data = (await import(path.join(dir, filename))).default; 
                 if(data.contracts) 
@@ -31,37 +32,37 @@ export default async(chain: string, wikiname: string): Promise<void> => {
             }));
         })
 
-        writeInstructions.push({
-            updateOne: {
-                filter: { name: 'donation', chain: 'BCH' },
-                update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
-                upsert: true
-            }
-        });
+        // writeInstructions.push({
+        //     updateOne: {
+        //         filter: { name: 'donation', chain: 'BCH' },
+        //         update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
+        //         upsert: true
+        //     }
+        // });
 
-        writeInstructions.push({
-            updateOne: {
-                filter: { name: 'donation', chain: 'ETH' },
-                update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
-                upsert: true
-            }
-        });
+        // writeInstructions.push({
+        //     updateOne: {
+        //         filter: { name: 'donation', chain: 'ETH' },
+        //         update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
+        //         upsert: true
+        //     }
+        // });
 
-        writeInstructions.push({
-            updateOne: {
-                filter: { name: 'donation', chain: 'BTC' },
-                update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
-                upsert: true
-            }
-        });
+        // writeInstructions.push({
+        //     updateOne: {
+        //         filter: { name: 'donation', chain: 'BTC' },
+        //         update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
+        //         upsert: true
+        //     }
+        // });
 
-        writeInstructions.push({
-            updateOne: {
-                filter: { name: 'donation', chain: 'LTC' },
-                update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
-                upsert: true
-            }
-        });
+        // writeInstructions.push({
+        //     updateOne: {
+        //         filter: { name: 'donation', chain: 'LTC' },
+        //         update: { $set: { popupLength: 300, priority: 1000000, side: 1, dataSources: ['html'], tracked: true, colors: ["ae2121", "lighten"], title: 'Donate to TxStreet' } },
+        //         upsert: true
+        //     }
+        // });
 
         await Promise.all(tasks); 
 
