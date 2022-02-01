@@ -1,4 +1,4 @@
-import ChainImplementation from '../../implementation'; 
+import ChainImplementation from '../../implementation';
 import { Logger } from "../../../../lib/utilities";
 // @ts-ignore-line
 import abiDecoder from "abi-decoder";
@@ -12,7 +12,7 @@ class Opensea extends ChainImplementation {
   public nftList: any = {}; //TODO cache in db
 
   public mongodb: any;
-  public redis: any; 
+  public redis: any;
 
   async fetchContract(address: string): Promise<any> {
     // console.log('test');
@@ -37,7 +37,7 @@ class Opensea extends ChainImplementation {
   async formatSale(transaction: any, decoded: any) {
     const nftAddr = decoded.params[0].value[4]; //bundle?
     const to = decoded.params[0].value[1]; //always true
-    const from = decoded.params[0].value[decoded.params[0].value[2] === "0x0000000000000000000000000000000000000000"?8:2]; //8 if accepting offer?
+    const from = decoded.params[0].value[decoded.params[0].value[2] === "0x0000000000000000000000000000000000000000" ? 8 : 2]; //8 if accepting offer?
     let tokenAmount = decoded.params[1].value[4];
     const tokenAddr = decoded.params[0].value[6];
     let token = "ETH";
@@ -64,12 +64,12 @@ class Opensea extends ChainImplementation {
 
     let parts = [
       transaction.extras.opensea.symbol
-      ? transaction.extras.opensea.symbol + " NFT"
-      : "NFT",
+        ? transaction.extras.opensea.symbol + " NFT"
+        : "NFT",
       tokenAmount + " " + token,
     ];
     let message = "";
-    
+
     if (transaction.from === from) {
       //start with nft
       message = parts[0] + " ➞ " + parts[1];
@@ -114,9 +114,9 @@ class Opensea extends ChainImplementation {
   }
 
   async init(mongodb: any, redis: any): Promise<ChainImplementation> {
-      try {
-        this.mongodb = mongodb;
-        this.redis = redis; 
+    try {
+      this.mongodb = mongodb;
+      this.redis = redis;
       if (process.env.USE_DATABASE !== "false") {
         const { database } = await mongodb();
         const collection = database.collection("houses");
@@ -124,6 +124,9 @@ class Opensea extends ChainImplementation {
           chain: this.chain,
           name: "opensea",
         });
+        for (let i = 0; i < result.contracts.length; i++) {
+          result.contracts[i] = result.contracts[i].toLowerCase();
+        }
         this.addresses = result.contracts;
         console.log('Addresses for opensea:', this.addresses);
       }
@@ -141,26 +144,26 @@ class Opensea extends ChainImplementation {
   async validate(transaction: any): Promise<boolean> {
     //Needed to test locally without db
     // return(transaction.to === '0x7Be8076f4EA4A4AD08075C2508e481d6C946D12b'.toLowerCase());
-    return this.addresses.includes(transaction.to);
+    return this.addresses.includes(transaction.to.toLowerCase());
   }
 
   async execute(transaction: any): Promise<boolean> {
-    if(transaction.house === 'opensea') 
-      return true; 
+    if (transaction.house === 'opensea')
+      return true;
     transaction.house = 'opensea';
 
-    if(transaction.to === '0x7Be8076f4EA4A4AD08075C2508e481d6C946D12b'.toLowerCase()) {
-      if(!transaction.extras)
-        transaction.extras = { showBubble: false }; 
-    
+    if (transaction.to.toLowerCase() === '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b') {
+      if (!transaction.extras)
+        transaction.extras = { showBubble: false };
+
       const decoded = abiDecoder.decodeMethod(transaction.input);
-      switch(decoded.name) {
+      switch (decoded.name) {
         case 'atomicMatch_':
-            try { await this.formatSale(transaction, decoded); } catch (error) { Logger.error(error); }
-            break;
-          case 'cacncelOrder_':
-            try { await this.formatCancel(transaction, decoded); } catch (error) { Logger.error(error); }
-            break;
+          try { await this.formatSale(transaction, decoded); } catch (error) { Logger.error(error); }
+          break;
+        case 'cacncelOrder_':
+          try { await this.formatCancel(transaction, decoded); } catch (error) { Logger.error(error); }
+          break;
       }
     }
     return true;

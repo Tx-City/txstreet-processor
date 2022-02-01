@@ -1,13 +1,13 @@
-import ChainImplementation from '../../implementation';
+import ChainImplementation from '../../implementation'; 
 import { Logger, decRound } from '../../../../lib/utilities';
 // @ts-ignore-line
-import abiDecoder from 'abi-decoder';
+import abiDecoder from 'abi-decoder'; 
 import axios from 'axios';
 
-import contract_0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D from "./0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D.json";
+import contract_0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f from "./0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f.json";
 
-const getToken = (uniswap: any, address: string) => {
-    return uniswap.tokenList[address];
+const getToken = (sushi: any, address: string) => {
+    return sushi.tokenList[address];
 }
 
 const tknSymbol = (token: any) => {
@@ -24,9 +24,9 @@ const swapPart = (token: any, amount: number, transaction: any) => {
     return decRound(fullAmount) + " " + tknSymbol(token);
 }
 
-const swap = (uniswap: any, address1: string, amount1: number, address2: string, amount2: number, transaction: any) => {
-    const token1 = getToken(uniswap, address1);
-    const token2 = getToken(uniswap, address2);
+const swap = (sushi: any, address1: string, amount1: number, address2: string, amount2: number, transaction: any) => {
+    const token1 = getToken(sushi, address1);
+    const token2 = getToken(sushi, address2);
 
     const inSwap = swapPart(token1, amount1, transaction);
     const outSwap = swapPart(token2, amount2, transaction);
@@ -48,54 +48,54 @@ const swap = (uniswap: any, address1: string, amount1: number, address2: string,
 }
 
 
-const getData = (uniswap: any, transaction: any): string | boolean => {
+const getData = (sushi:any, transaction: any): string | boolean => {
     try {
-        if (transaction.to.toLowerCase() != "0x7a250d5630b4cf539739df2c5dacb4c659f2488d" || !transaction.input) return false;
-        const decoded: any = abiDecoder.decodeMethod(transaction.input);
-        if (!decoded || !decoded.name) return false;
-        if (decoded.name == "swapExactTokensForETH"
-            || decoded.name == "swapExactTokensForTokens"
-            || decoded.name == "swapExactTokensForETHSupportingFeeOnTransferTokens"
+        if(transaction.to.toLowerCase() != "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f" || !transaction.input) return false;
+        const decoded: any = abiDecoder.decodeMethod(transaction.input); 
+        if(!decoded || !decoded.name) return false;
+        if (decoded.name == "swapExactTokensForETH" 
+            || decoded.name == "swapExactTokensForTokens" 
+            || decoded.name == "swapExactTokensForETHSupportingFeeOnTransferTokens" 
             || decoded.name == "swapExactTokensForTokensSupportingFeeOnTransferTokens") {
             const address1 = decoded.params[2].value[0];
             const amount1 = decoded.params[0].value;
             const address2 = decoded.params[2].value[decoded.params[2].value.length - 1];
             const amount2 = decoded.params[1].value;
 
-            return swap(uniswap, address1, amount1, address2, amount2, transaction);
-        } else if (decoded.name == "swapExactETHForTokens"
-            || decoded.name == "swapETHForExactTokens"
+            return swap(sushi, address1, amount1, address2, amount2, transaction);
+        } else if (decoded.name == "swapExactETHForTokens" 
+            || decoded.name == "swapETHForExactTokens" 
             || decoded.name == "swapExactETHForTokensSupportingFeeOnTransferTokens") {
             const address1 = decoded.params[1].value[0];
             const amount1 = transaction.value;
             const address2 = decoded.params[1].value[decoded.params[1].value.length - 1];
             const amount2 = decoded.params[0].value;
 
-            return swap(uniswap, address1, amount1, address2, amount2, transaction);
+            return swap(sushi, address1, amount1, address2, amount2, transaction);
         } else if (decoded.name == "swapTokensForExactTokens" || decoded.name == "swapTokensForExactETH") {
             const address1 = decoded.params[2].value[0];
             const amount1 = decoded.params[1].value;
             const address2 = decoded.params[2].value[decoded.params[2].value.length - 1];
             const amount2 = decoded.params[0].value;
 
-            return swap(uniswap, address1, amount1, address2, amount2, transaction);
-        } else if (decoded.name == "addLiquidity"
-            || decoded.name == "removeLiquidityWithPermit"
+            return swap(sushi, address1, amount1, address2, amount2, transaction);
+        } else if (decoded.name == "addLiquidity" 
+            || decoded.name == "removeLiquidityWithPermit" 
             || decoded.name == "removeLiquidity") {
             const address1 = decoded.params[0].value;
             const address2 = decoded.params[1].value;
-            const token1 = getToken(uniswap, address1);
-            const token2 = getToken(uniswap, address2);
+            const token1 = getToken(sushi,address1);
+            const token2 = getToken(sushi,address2);
             const action = decoded.name == "addLiquidity" ? "Added " : "Removed ";
             const message = action + tknSymbol(token1) + "/" + tknSymbol(token2) + " liquidity";
             transaction.extras.houseContent = message;
-        } else if (decoded.name == "addLiquidityETH"
-            || decoded.name == "removeLiquidityETHWithPermit"
-            || decoded.name == "removeLiquidityETH"
-            || decoded.name == "removeLiquidityETHSupportingFeeOnTransferTokens"
+        } else if (decoded.name == "addLiquidityETH" 
+            || decoded.name == "removeLiquidityETHWithPermit" 
+            || decoded.name == "removeLiquidityETH" 
+            || decoded.name == "removeLiquidityETHSupportingFeeOnTransferTokens" 
             || decoded.name == "removeLiquidityETHWithPermitSupportingFeeOnTransferTokens") {
             const address1 = decoded.params[0].value;
-            const token1 = getToken(uniswap, address1);
+            const token1 = getToken(sushi,address1);
             const action = decoded.name == "addLiquidityETH" ? "Added " : "Removed ";
             const message = action + tknSymbol(token1) + "/ETH liquidity";
             transaction.extras.houseContent = message;
@@ -111,59 +111,59 @@ const getData = (uniswap: any, transaction: any): string | boolean => {
 }
 
 
-class Uniswap extends ChainImplementation {
-    public addresses: string[] = [];
+class Sushi extends ChainImplementation {
+    public addresses: string[] = []; 
     public tokenList: any = {};
     public mongodb: any;
-    public redis: any;
+    public redis: any; 
 
     async init(mongodb: any, redis: any): Promise<ChainImplementation> {
         try {
             this.mongodb = mongodb;
-            this.redis = redis;
-            if (process.env.USE_DATABASE === "false")
+            this.redis = redis; 
+            if(process.env.USE_DATABASE === "false")
                 return this;
-            const { database } = await mongodb();
-            const collection = database.collection('houses');
-            const result = await collection.findOne({ chain: this.chain, name: "uniswap" });
+            const { database } = await mongodb(); 
+            const collection = database.collection('houses'); 
+            const result = await collection.findOne({ chain: this.chain, name: "sushi" });
             for (let i = 0; i < result.contracts.length; i++) {
-                result.contracts[i] = result.contracts[i].toLowerCase();
+              result.contracts[i] = result.contracts[i].toLowerCase();
             }
             this.addresses = result.contracts;
 
-            abiDecoder.addABI(contract_0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+            abiDecoder.addABI(contract_0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f);
 
             // TODO: Database caching. 
             let response = await axios.get('https://tokens.coingecko.com/uniswap/all.json')
-            let { tokens } = response.data;
+            let { tokens } = response.data; 
             tokens.forEach((token: any) => this.tokenList[token.address] = token)
 
             setInterval(async () => {
                 let response = await axios.get('https://tokens.coingecko.com/uniswap/all.json')
-                let { tokens } = response.data;
+                let { tokens } = response.data; 
                 tokens.forEach((token: any) => this.tokenList[token.address] = token)
-            }, 60 * 1000);
-            console.log('initialized uniswap');
+            }, 60 * 1000); 
+            console.log('initialized sushi');
         } catch (error) {
             Logger.error(error);
         } finally {
-            return this;
+            return this; 
         }
     }
 
     async validate(transaction: any): Promise<boolean> {
-        return this.addresses.includes(transaction.to.toLowerCase())
+        return this.addresses.includes(transaction.to)
     }
 
     async execute(transaction: any): Promise<boolean> {
-        if (transaction.house === "uniswap") return true;
-        transaction.house = 'uniswap'; //ALWAYS SET!
-        if (!transaction.extras) transaction.extras = {};
-        if (getData(this, transaction) && !transaction?.extras?.showBubble) {
+        if(transaction.house === "sushi") return true;
+        transaction.house = 'sushi'; //ALWAYS SET!
+        if(!transaction.extras) transaction.extras = {};
+        if(getData(this, transaction) && !transaction?.extras?.showBubble) {
             transaction.extras.showBubble = false;
         }
         return true;
     }
 }
 
-export default new Uniswap("ETH");
+export default new Sushi("ETH");

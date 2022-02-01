@@ -4,7 +4,8 @@ export const enabledHooks: any = {
     ETH: [
         "DefaultHousing",
         "Uniswap",
-        "Opensea"
+        "Opensea",
+        "Sushi"
     ],
     BTC: [
         "DefaultHousing",

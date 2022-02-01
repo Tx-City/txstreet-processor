@@ -53,7 +53,10 @@ export default class ETHPendingList {
                 maxPriorityFeePerGas: data.mpfpg || null,
                 value: Number(data.tot * Math.pow(10, 18)) || 0,
                 dropped: false,
-                processed: true }
+                processed: true,
+                extras: data.e,
+                pExtras: data.pe
+            }
 
 
             // Add the transaction to this list.
