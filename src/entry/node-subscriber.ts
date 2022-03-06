@@ -36,66 +36,6 @@ Object.keys(process.env).forEach(key => {
 if (chainsToSubscribe.length == 0)
     chainsToSubscribe = JSON.parse(process.env.CHAINS).map((ticker: string) => ticker.toUpperCase());
 
-const ensureIndexes = async (): Promise<boolean> => {
-    try {
-        if (process.env.USE_DATABASE !== "true")
-            return true;
-
-        const { database } = await mongodb();
-
-        const txCollections: any[] = [
-            database.collection('transactions_BTC'),
-            database.collection('transactions_ETH'),
-            database.collection('transactions_LTC'),
-            database.collection('transactions_BCH'),
-            database.collection('transactions_XMR')];
-
-        try { await database.collection('account_nonces').ensureIndex({ account: 1, chain: 1 }, { name: 'account_chain' }); } catch (e) { }
-        try { await database.collection('blocks').ensureIndex({ chain: 1, broadcast: 1, stored: 1, height: 1 }, { name: 'chain_broadcast_stored_height' }); } catch (e) { }
-        try { await database.collection('blocks').ensureIndex({ chain: 1, processed: 1, timestamp: 1 }, { name: 'chain_processed_timestamp' }); } catch (e) { }
-        try { await database.collection('blocks').ensureIndex({ chain: 1, hash: 1 }, { name: 'chain_hash', unique: true, partialFilterExpression: { hash: { $type: "string" } } }); } catch (e) { }
-        try { await database.collection('blocks').ensureIndex({ insertedAt: 1 }, { name: 'time_to_live', expireAfterSeconds: 1209600 }); } catch (e) { }
-        try { await database.collection('blocks').ensureIndex({ chain: 1, transactions: 1 }, { name: 'chain_transactions' }); } catch (e) { }
-
-        try { await database.collection('moonhead_owners').ensureIndex({ address: 1 }, { name: 'address' }); } catch (e) { }
-        try { await database.collection('moonhead_owners').ensureIndex({ tokenId: 1 }, { name: 'tokenId' }); } catch (e) { }
-
-        try { await database.collection('statistics').ensureIndex({ chain: 1 }, { name: 'chain' }); } catch (e) { }
-        try { await database.collection('statistics_history').ensureIndex({ chain: 1, interval: 1, created: -1 }, { name: 'chain_interval_created' }); } catch (e) { }
-        try { await database.collection('statistics_history_snapshots').ensureIndex({ chain: 1, interval: 1 }, { name: 'chain_interval' }); } catch (e) { }
-
-        try { await database.collection('transactions_BTC').ensureIndex({ confirmed: 1, processed: 1, blockHeight: 1, dropped: 1, fee: -1 }, { name: 'pending_txlist' }); } catch (e) { }
-        try { await database.collection('transactions_LTC').ensureIndex({ confirmed: 1, processed: 1, blockHeight: 1, dropped: 1, fee: -1 }, { name: 'pending_txlist' }); } catch (e) { }
-        try { await database.collection('transactions_BCH').ensureIndex({ confirmed: 1, processed: 1, blockHeight: 1, dropped: 1, fee: -1 }, { name: 'pending_txlist' }); } catch (e) { }
-        try { await database.collection('transactions_ETH').ensureIndex({ confirmed: 1, processed: 1, blockHeight: 1, lastProcessed: -1, dropped: 1, pendingSortPrice: -1 }, { name: 'pending_txlist' }); } catch (e) { }
-        try { await database.collection('transactions_ETH').ensureIndex({ contract: 1, to: 1, timestamp: -1 }); } catch (e) { }
-        try { await database.collection('transactions_ETH').ensureIndex({ contract: 1, insertedAt: -1 }); } catch (e) { }
-        try { await database.collection('transactions_ETH').ensureIndex({ from: 1, fromNonce: 1 }); } catch (e) { }
-        try { await database.collection('transactions_ETH').ensureIndex({ house: 1, insertedAt: 1 }); } catch (e) { }
-
-        for (let i = 0; i < txCollections.length; i++) {
-            let collection = txCollections[i];
-            Logger.info('CREATING INDEXES FOR CHAIN:', collection);
-            try { await collection.ensureIndex({ hash: 1 }, { name: 'hash', unique: true }); } catch (e) { }
-            try { await collection.ensureIndex({ house: 1 }, { name: 'house' }); } catch (e) { }
-            try { await collection.ensureIndex({ confirmed: 1, processed: 1, locked: 1, blockHeight: 1, lastProcessed: 1, timestamp: 1, processFailures: 1, dropped: 1 }, { name: 'general_purpose' }); } catch (e) { }
-            try { await collection.ensureIndex({ locked: 1, processed: 1, processFailures: 1, dropped: 1 }); } catch (e) { }
-            try { await collection.ensureIndex({ house: 1, timestamp: -1, insertedAt: 1 }); } catch (e) { }
-            try { await collection.ensureIndex({ locked: 1, processed: 1, lockedAt: 1, processFailures: 1 }); } catch (e) { }
-            try { await collection.ensureIndex({ processed: 1, insertedAt: 1 }); } catch (e) { }
-            try { await collection.ensureIndex({ processed: 1, timestamp: 1 }); } catch (e) { }
-            try { await collection.ensureIndex({ from: 1 }, { name: 'from' }); } catch (e) { }
-            try { await collection.ensureIndex({ to: 1 }, { name: 'to' }); } catch (e) { }
-            try { await collection.ansureIndex({ insertedAt: 1 }, { name: 'TTL', expireAfterSeconds: 1209600 }); } catch (e) { }
-
-        }
-
-        return true;
-    } catch (error) {
-        return true;
-    }
-}
-
 const getLatestBlockLoop = async (wrapper: any) => {
     if (process.env.USE_DATABASE !== "true") return;
     const { database } = await mongodb();
@@ -127,12 +67,12 @@ const getLatestBlockLoop = async (wrapper: any) => {
 
 const init = async () => {
     Logger.setLogLevel(Logger.LoggingLevel.Info);
-    let database: any = null;
-    if (process.env.USE_DATABASE === "true") {
-        const db = await mongodb();
-        database = db.database;
-        await ensureIndexes();
-    }
+    // let database: any = null;
+    // if (process.env.USE_DATABASE === "true") {
+    //     const db = await mongodb();
+    //     database = db.database;
+    //     await ensureIndexes();
+    // }
 
     if (chainsToSubscribe.includes('BTC')) {
         const wrapperClass = await import("../lib/node-wrappers/BTC");

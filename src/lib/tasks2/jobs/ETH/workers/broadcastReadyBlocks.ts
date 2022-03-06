@@ -5,62 +5,78 @@ import { formatBlock, formatTransaction, Logger, storeObject } from '../../../..
 // import calculateBlockStats from './calculateBlockStats';
 import fs from 'fs';
 import path from 'path';
-const dataDir = path.join(process.env.DATA_DIR as string || '/mnt/disks/txstreet_storage');        
+const dataDir = path.join(process.env.DATA_DIR as string || '/mnt/disks/txstreet_storage');
 
 
 setInterval(async () => {
     try {
         const { database } = await mongodb();
-        const collection = database.collection('blocks'); 
-        const blocks = await collection.find({ chain: 'ETH', processed: true, txsChecked: true, broadcast: false, hash: { $ne: null } }).sort({ height: 1 }).limit(1).toArray(); 
-        if(blocks.length < 1) return;
+        const collection = database.collection('blocks');
+        const blocks = await collection.find({ chain: 'ETH', processed: true, txsChecked: true, broadcast: false, hash: { $ne: null } }).sort({ height: 1 }).limit(1).toArray();
+        if (blocks.length < 1) return;
         const block = blocks[0];
-        if(!block) return;
-        Logger.info(`Found unprocessed block ${block.hash}`); 
+        if (!block) return;
+        Logger.info(`Found unprocessed block ${block.hash}`);
         await checkBlock(database, block);
     } catch (error) {
-        Logger.error(error); 
+        Logger.error(error);
     }
-}, 100).start(true); 
+}, 100).start(true);
 
 
 const storeBlock = async (database: any, block: any) => {
     try {
         const remainingTxs = await database.collection('transactions_ETH').find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).count();
-        if(remainingTxs > 0) {
+        if (remainingTxs > 0) {
             Logger.info(`Block ${block.hash} is still waiting on ${remainingTxs} transactions to be processed.`);
-            return false; 
+            return false;
         }
 
-        
-        if(!block.transactions)
+
+        if (!block.transactions)
             block.transactions = [];
 
-        block.txFull = {}; 
+        block.txFull = {};
         const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true, dropped: { $exists: false } }).toArray();
-        if(block.transactions && block.transactions.length > 0 && transactions.length === 0)
-            return false; 
+        if (block.transactions && block.transactions.length > 0 && transactions.length !== block.transactions.length) {
+            const hashes = transactions.map((tx: any) => tx.hash);
+            const missing = block.transactions.filter((hash: string) => hashes.indexOf(hash) == -1);
+            for (let i = 0; i < missing.length; i++) {
+                const hash = missing[i];
+                try {
+                    const existing = await database.collection('transactions_ETH').findOne({ hash, chain: "ETH" });
+                    if (existing !== null) {
+                        if((Date.now() - Date.parse(existing.lastInsert)) / 1000 > 3)
+                            await database.collection('transactions_ETH').updateOne({ hash, chain: "ETH" }, { $set: { processed: false, locked: false, processFailures: 0, lastInsert: new Date() }, $unset: { dropped: "" } })
+
+                    } else {
+                        await database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, confirmed: false, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
+                    }
+                } catch (e) { console.log(e); }
+            }
+            return false;
+        }
 
         transactions.forEach((transaction: any) => {
             const formatted = formatTransaction('ETH', transaction);
             block.txFull[formatted.tx] = formatted;
         });
 
-        Logger.info(`Stored Block:`, block.hash, 'TxFull', Object.values(block.txFull).length, 'Transactions:', transactions.length, 'Block transactions:', block.transactions?.length); 
+        Logger.info(`Stored Block:`, block.hash, 'TxFull', Object.values(block.txFull).length, 'Transactions:', transactions.length, 'Block transactions:', block.transactions?.length);
 
         const formattedBlock: any = formatBlock('ETH', block);
-        formattedBlock.note = 'broadcastReadyBlocks'; 
+        formattedBlock.note = 'broadcastReadyBlocks';
         const fileContents = JSON.stringify(formattedBlock);
-        
+
         const firstPart = block.hash[block.hash.length - 1];
-        const secondPart = block.hash[block.hash.length - 2]; 
-        try { await fs.promises.mkdir(path.join(dataDir, 'blocks', 'ETH', firstPart, secondPart), { recursive: true }); } catch (err) {}
+        const secondPart = block.hash[block.hash.length - 2];
+        try { await fs.promises.mkdir(path.join(dataDir, 'blocks', 'ETH', firstPart, secondPart), { recursive: true }); } catch (err) { }
         await storeObject(path.join('blocks', 'ETH', firstPart, secondPart, block.hash), fileContents);
         // await calculateBlockStats(block, transactions);
         await database.collection('blocks').updateOne({ chain: 'ETH', hash: block.hash }, { $set: { stored: true, broadcast: false } });
         block.stored = true;
         block.broadcast = false;
-        return true; 
+        return true;
     } catch (error) {
         Logger.error(error);
         return false;
@@ -68,60 +84,60 @@ const storeBlock = async (database: any, block: any) => {
 }
 
 const checkBlock = async (database: any, block: any, depth: number = 0) => {
-    if(depth > 1) return true; 
+    if (depth > 1) return true;
 
     try {
         // If the block is not stored, make sure all transactions are processed and then store it. 
-        if(!block.stored) {
-             if(!(await storeBlock(database, block)))
+        if (!block.stored) {
+            if (!(await storeBlock(database, block)))
                 return false;
         }
 
         // Validate that the block's parent is stored, if it exists
         let parent = null;
-        if(block.parentHash && depth === 0) 
-            parent = await database.collection('blocks').findOne({ chain: 'ETH', hash: block.parentHash }); 
+        if (block.parentHash && depth === 0)
+            parent = await database.collection('blocks').findOne({ chain: 'ETH', hash: block.parentHash });
 
-        if(parent && !parent.processed) {
-            Logger.info("Parent is not proccessed."); 
+        if (parent && !parent.processed) {
+            Logger.info("Parent is not proccessed.");
             return false;
         }
 
-        if(parent) {
-            if(!await checkBlock(database, parent, depth + 1))
-                return false; 
+        if (parent) {
+            if (!await checkBlock(database, parent, depth + 1))
+                return false;
         }
-        
+
         // If the previous block passed all checks (or doesn't exist, sanity, depth limit). 
-        if(block.stored && parent && parent.stored || block.stored && !parent) {
-            let uncles = await database.collection('blocks').find({ chain: 'ETH', hash: { $in: block.uncles || [] }}); 
-            let unclesStored = true; 
-            for(let i = 0; i < uncles.length; i++) {
+        if (block.stored && parent && parent.stored || block.stored && !parent) {
+            let uncles = await database.collection('blocks').find({ chain: 'ETH', hash: { $in: block.uncles || [] } });
+            let unclesStored = true;
+            for (let i = 0; i < uncles.length; i++) {
                 let uncle = uncles[i];
-                if(!uncle.processed) {
+                if (!uncle.processed) {
                     unclesStored = false;
                     break;
                 }
 
-                if(!uncle.stored) {
-                    if(!(await storeBlock(database, uncle))) {
-                        unclesStored = false; 
+                if (!uncle.stored) {
+                    if (!(await storeBlock(database, uncle))) {
+                        unclesStored = false;
                         break;
                     }
                 }
             }
 
             // If uncles aren't stored, the block isn't ready, stop.
-            if(!unclesStored) 
-                return false; 
+            if (!unclesStored)
+                return false;
 
-            if(!block.height) block.height = block.number; 
-            redis.publish('block', JSON.stringify({ chain: 'ETH', height: block.height, hash: block.hash })); 
-            await database.collection('blocks').updateOne({ chain: 'ETH', hash: block.hash }, { $set: { broadcast: true, note: 'broadcast-ready-block' } }); 
+            if (!block.height) block.height = block.number;
+            redis.publish('block', JSON.stringify({ chain: 'ETH', height: block.height, hash: block.hash }));
+            await database.collection('blocks').updateOne({ chain: 'ETH', hash: block.hash }, { $set: { broadcast: true, note: 'broadcast-ready-block' } });
             return true;
         } else {
             Logger.info("Block isn't ready, either block or parent is not stored");
-            return false; 
+            return false;
         }
     } catch (error) {
         Logger.error(error);
