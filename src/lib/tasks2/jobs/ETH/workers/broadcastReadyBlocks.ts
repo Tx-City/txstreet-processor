@@ -52,7 +52,7 @@ const storeBlock = async (database: any, block: any) => {
                     if (existing === null) {
                         database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, confirmed: true, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
                     } else {
-                        if (!existing.lastInsert || (Date.now() - Date.parse(existing.lastInsert)) / 1000 > 5)
+                        if (!existing.lastInsert || (Date.now() - Date.parse(existing.lastInsert)) / 1000 > 10)
                             await database.collection('transactions_ETH').updateOne({ hash }, { $set: { confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } })
                     }
                 } catch (e) { console.log(e); }
