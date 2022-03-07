@@ -50,10 +50,10 @@ const storeBlock = async (database: any, block: any) => {
                 try {
                     const existing = await database.collection('transactions_ETH').findOne({ hash });
                     if (existing === null) {
-                        database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, confirmed: true, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
+                        database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
                     } else {
                         if (!existing.lastInsert || (Date.now() - Date.parse(existing.lastInsert)) / 1000 > 10)
-                            await database.collection('transactions_ETH').updateOne({ hash }, { $set: { confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } })
+                            await database.collection('transactions_ETH').updateOne({ hash }, { $set: { blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } })
                     }
                 } catch (e) { console.log(e); }
             }
