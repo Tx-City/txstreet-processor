@@ -44,8 +44,9 @@ const storeBlock = async (database: any, block: any) => {
             const missing = block.transactions.filter((hash: string) => hashes.indexOf(hash) == -1);
             console.log(missing);
             for (let i = 0; i < missing.length; i++) {
+                if(i > 25) continue;
                 const hash = missing[i];
-                await new Promise(resolve => setTimeout(resolve, 10));
+                // await new Promise(resolve => setTimeout(resolve, 10));
                 try {
                     const existing = await database.collection('transactions_ETH').findOne({ hash });
                     if (existing === null) {
