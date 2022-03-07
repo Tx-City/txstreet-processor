@@ -149,7 +149,7 @@ export default async (chain: string): Promise<void> => {
                             blockInstructions.push({
                                 updateOne: {
                                     filter: { chain, hash: hash },
-                                    update: { $set: { processed: false, locked: false, note: '[cronjob]: eth-remove-bad-txs' },  $setOnInsert: { timestamp: Date.now(), insertedAt: new Date(), processFailures: 0, processMetadata: true, processTransactions: true } },
+                                    update: { $set: { processed: false, locked: false, note: '[cronjob]: eth-remove-bad-txs' },  $setOnInsert: { timestamp: Date.now(), insertedAt: new Date(), lastInsert: new Date(), processFailures: 0, processMetadata: true, processTransactions: true } },
                                     upsert: true 
                                 }  
                             });

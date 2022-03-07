@@ -50,12 +50,12 @@ const createIndexes = async (): Promise<boolean> => {
 
         try { await database.collection('statistics').createIndex({ chain: 1 }, { name: 'chain', unique: true }); } catch (e) { console.log(e) }
 
-        try { await database.collection('statistics').insertOne({ "chain": "ETH" }) } catch (e) { console.log(e) }
-        try { await database.collection('statistics').insertOne({ "chain": "ETH-nohistory" }) } catch (e) { console.log(e) }
-        try { await database.collection('statistics').insertOne({ "chain": "BTC" }) } catch (e) { console.log(e) }
-        try { await database.collection('statistics').insertOne({ "chain": "BCH" }) } catch (e) { console.log(e) }
-        try { await database.collection('statistics').insertOne({ "chain": "XMR" }) } catch (e) { console.log(e) }
-        try { await database.collection('statistics').insertOne({ "chain": "LTC" }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "ETH" }, { $setOnInsert: { "chain": "ETH" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "ETH-nohistory" }, { $setOnInsert: { "chain": "ETH-nohistory" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "BTC" }, { $setOnInsert: { "chain": "BTC" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "BCH" }, { $setOnInsert: { "chain": "BCH" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "XMR" }, { $setOnInsert: { "chain": "XMR" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "LTC" }, { $setOnInsert: { "chain": "LTC" } }, { upsert: true }) } catch (e) { console.log(e) }
 
         try { await database.collection('statistics_history').createIndex({ chain: 1, interval: 1, created: -1 }, { name: 'chain_interval_created' }); } catch (e) { console.log(e) }
         try { await database.collection('statistics_history').createIndex({ expires: 1 }, { name: 'TTL', expireAfterSeconds: 0 }); } catch (e) { console.log(e) }
@@ -68,7 +68,7 @@ const createIndexes = async (): Promise<boolean> => {
         try { await database.collection('transactions_ETH').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, lastProcessed: -1, dropped: 1, pendingSortPrice: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }
         // try { await database.collection('transactions_ETH').createIndex({ contract: 1, to: 1, timestamp: -1 }); } catch (e) { console.log(e) }
         try { await database.collection('transactions_ETH').createIndex({ contract: 1, insertedAt: -1, to: 1 }); } catch (e) { console.log(e) }
-        // try { await database.collection('transactions_ETH').createIndex({ from: 1, fromNonce: 1 }); } catch (e) { console.log(e) }
+        try { await database.collection('transactions_ETH').createIndex({ from: 1, nonce: 1 }); } catch (e) { console.log(e) }
         // try { await database.collection('transactions_ETH').createIndex({ house: 1, insertedAt: 1 }); } catch (e) { console.log(e) }
         try { await database.collection('transactions_ETH').createIndex({ lastInsert: 1 }, { name: 'TTL_lastInsert', expireAfterSeconds: 86400, partialFilterExpression: { "confirmed": false } }); } catch (e) { console.log(e) }
         try { await database.collection('transactions_ETH').createIndex({ confirmed: 1, processed: 1, locked: 1, blockHeight: 1, lastProcessed: 1, timestamp: 1, processFailures: 1, dropped: 1 }, { name: 'general_purpose' }); } catch (e) { console.log(e) }

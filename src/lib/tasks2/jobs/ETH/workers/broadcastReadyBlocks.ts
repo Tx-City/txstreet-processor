@@ -21,7 +21,7 @@ setInterval(async () => {
     } catch (error) {
         Logger.error(error);
     }
-}, 100).start(true);
+}, 500).start(true);
 
 
 const storeBlock = async (database: any, block: any) => {
@@ -37,20 +37,22 @@ const storeBlock = async (database: any, block: any) => {
             block.transactions = [];
 
         block.txFull = {};
+        // return false;
         const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true, dropped: { $exists: false } }).toArray();
         if (block.transactions && block.transactions.length > 0 && transactions.length !== block.transactions.length) {
             const hashes = transactions.map((tx: any) => tx.hash);
             const missing = block.transactions.filter((hash: string) => hashes.indexOf(hash) == -1);
+            console.log(missing);
             for (let i = 0; i < missing.length; i++) {
                 const hash = missing[i];
+                await new Promise(resolve => setTimeout(resolve, 10));
                 try {
-                    const existing = await database.collection('transactions_ETH').findOne({ hash, chain: "ETH" });
-                    if (existing !== null) {
-                        if((Date.now() - Date.parse(existing.lastInsert)) / 1000 > 3)
-                            await database.collection('transactions_ETH').updateOne({ hash, chain: "ETH" }, { $set: { processed: false, locked: false, processFailures: 0, lastInsert: new Date() }, $unset: { dropped: "" } })
-
+                    const existing = await database.collection('transactions_ETH').findOne({ hash });
+                    if (existing === null) {
+                        database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, confirmed: true, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
                     } else {
-                        await database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, confirmed: false, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
+                        if (!existing.lastInsert || (Date.now() - Date.parse(existing.lastInsert)) / 1000 > 5)
+                            await database.collection('transactions_ETH').updateOne({ hash }, { $set: { confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } })
                     }
                 } catch (e) { console.log(e); }
             }

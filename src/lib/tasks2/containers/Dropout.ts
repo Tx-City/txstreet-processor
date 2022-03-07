@@ -57,8 +57,8 @@ export default class TimeoutCollection<T> extends EventEmitter3 {
         if(timestampField) this._timestampField = timestampField;
         if(timestampFieldInMilliseconds) this._timestampFieldInMilliseconds = timestampFieldInMilliseconds;
         if(minimumCapacity) this._minimumCapacity = minimumCapacity; 
-        this._dropoutTaskInstance = setInterval(this._dropoutTask, 100).start(false);
-        this._writeTaskInstance = setInterval(this._writeTask, 100).start(false);
+        this._dropoutTaskInstance = setInterval(this._dropoutTask, 500).start(false);
+        this._writeTaskInstance = setInterval(this._writeTask, 500).start(false);
     }
 
     /**

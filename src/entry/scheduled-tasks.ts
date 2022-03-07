@@ -95,15 +95,15 @@ const run = async () => {
         switch(chain) {
             case "ETH":
             case "RINKEBY":
-                checkBadTxsInterval = 1;
+                checkBadTxsInterval = 100;
                 break; 
             case "LTC":
             case "BCH":
             case "XMR":
-                checkBadTxsInterval = 330;
+                checkBadTxsInterval = 1000;
                 break;
             case "BTC":
-                checkBadTxsInterval = 330;
+                checkBadTxsInterval = 1000;
                 break;
         }
 

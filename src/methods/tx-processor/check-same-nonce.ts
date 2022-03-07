@@ -16,14 +16,16 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
         transactions.forEach((transaction: any) => {
             tasks.push(new Promise(async (resolve) => {
                 try {
-                    let results = await collection.find({ from: { $eq: transaction.from }, fromNonce: transaction.fromNonce }).toArray() 
+                    let results = await collection.find({ from: { $eq: transaction.from }, nonce: transaction.nonce }).toArray() 
                     if(!results.length) return resolve(true); 
             
                     let deletedHashes: string[] = [];
                     
                     // If this is set to true we need to check something in the code/database.
                     let adminCheck: boolean = false;
+                    let hasConfirmation: boolean = false;
                     results.forEach((result: any) => {
+                        if(result.blockHash) hasConfirmation = true;
                         let usedTime = result.timestamp;
                         let currTime = transaction.timestamp;
                         if(currTime < usedTime) return;
@@ -32,6 +34,10 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
                         if(curr >= used) deletedHashes.push(result.hash); 
                         else adminCheck = true;
                     })
+
+                    if(hasConfirmation){
+                        return resolve(true);
+                    }
 
                     if(deletedHashes.length) {
                         transaction.deletedHashes = deletedHashes; 

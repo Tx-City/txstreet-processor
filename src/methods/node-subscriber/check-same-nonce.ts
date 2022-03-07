@@ -22,7 +22,9 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
             
             // If this is set to true we need to check something in the code/database.
             // let lowerFee: boolean = false;
+            let hasConfirmation: boolean = false;
             results.forEach((result: any) => {
+                if(result.blockHash) hasConfirmation = true;
                 if(result.hash === transaction.hash) return; 
                 // let used = result.maxFeePerGas || result.gasPrice 
                 // let curr = transaction.maxFeePerGas || transaction.gasPrice 
@@ -38,6 +40,9 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
                 //     lowerFee = true; 
                 // }
             })
+
+            if(hasConfirmation)
+                return transaction;
 
             if(deletedHashes.length) {
                 transaction.deletedHashes = deletedHashes; 
