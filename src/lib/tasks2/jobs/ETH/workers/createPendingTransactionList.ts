@@ -133,7 +133,7 @@ setInterval(async () => {
 
         // Iterate over the list of pending transactions.
         for (let i = 0; i < transactions.length; i++) {
-            if (pendingList.length >= 3000 * 4) break;
+            // if (pendingList.length >= 3000 * 4) break;
             const transaction = transactions[i];
             if (addedByHash[transaction.hash]) continue;
             transaction.from = transaction.from.toLowerCase()

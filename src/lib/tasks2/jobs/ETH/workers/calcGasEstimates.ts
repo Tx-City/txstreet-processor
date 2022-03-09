@@ -18,4 +18,4 @@ setInterval(async () => {
         /* ignored */
         console.log(error);
     }
-}, 500).start(true); 
+}, 1000).start(true); 
