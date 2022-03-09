@@ -81,6 +81,7 @@ setInterval(async () => {
         let host = (process.env.ETH_NODE as string).substring(5);
         host = host.substring(0, host.indexOf(':'));
         let response = await axios.post(`http://${host}/nonces`, { accounts: uniqueAccounts });
+        console.log(response);
         if(!response?.data?.[0]?.account) return;
         response.data.forEach((result: any) => {
             accounts[result.account] = result.count;
