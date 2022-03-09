@@ -41,8 +41,8 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
                 // }
             })
 
-            if(hasConfirmation)
-                return transaction;
+            // if(hasConfirmation)
+            //     return transaction;
 
             if(deletedHashes.length) {
                 transaction.deletedHashes = deletedHashes; 
