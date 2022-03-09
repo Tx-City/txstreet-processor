@@ -11,7 +11,9 @@ export default async (wrapper: BlockchainWrapper , transaction: any): Promise<an
         return transaction;
 
     try {
-        transaction.fromNonce = (await (wrapper as any).getTransactionCount(transaction.from)) || 0; 
+        const val = (await (wrapper as any).getTransactionCount(transaction.from)) || 0;
+        console.log(val);
+        transaction.fromNonce = val; 
         return transaction; 
     } catch (error) {
         return transaction;
