@@ -60,8 +60,8 @@ const processConfirmed = async (wrapper: Wrappers.BlockchainWrapper) => {
 const run = async () => {
     if(nodesToInit.includes('BTC')) {
         const btcWrapper = new Wrappers.BTCWrapper(
-            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: 8332 },
-            { host: process.env.BTC_NODE as string, port: 28332 })
+            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_PORT) || 8332 },
+            { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 })
         if(process.env.PROCESS_PENDING == "true")
             processPending(btcWrapper);
         if(process.env.PROCESS_CONFIRMED == "true")
@@ -70,8 +70,8 @@ const run = async () => {
 
     if(nodesToInit.includes('BCH')) {
         const bchWrapper = new Wrappers.BCHWrapper(
-            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: 8332 },
-            { host: process.env.BCH_NODE as string, port: 28332 })
+            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) || 8332 },
+            { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) || 28332 })
         if(process.env.PROCESS_PENDING == "true")
             processPending(bchWrapper);
         if(process.env.PROCESS_CONFIRMED == "true")
@@ -90,8 +90,8 @@ const run = async () => {
 
     if(nodesToInit.includes('LTC')) {
         const ltcWrapper = new Wrappers.LTCWrapper(
-            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: 9332 },
-            { host: process.env.BTC_NODE as string, port: 28332 })
+            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_PORT) || 9332 },
+            { host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_ZMQPORT) || 28332 })
         if(process.env.PROCESS_PENDING == "true")
             processPending(ltcWrapper);
         if(process.env.PROCESS_CONFIRMED == "true")

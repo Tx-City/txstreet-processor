@@ -35,9 +35,9 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
                         else adminCheck = true;
                     })
 
-                    // if(hasConfirmation){
-                    //     return resolve(true);
-                    // }
+                    if(hasConfirmation){
+                        return resolve(true);
+                    }
 
                     if(deletedHashes.length) {
                         transaction.deletedHashes = deletedHashes; 

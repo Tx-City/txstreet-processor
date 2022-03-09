@@ -47,16 +47,16 @@ const run = async () => {
     Logger.setLogLevel(Logger.LoggingLevel.Info);
     if(nodesToInit.includes('BTC')) {
         const btcWrapper = new Wrappers.BTCWrapper(
-            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: 8332 },
-            { host: process.env.BTC_NODE as string, port: 28332 }); 
+            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_PORT) || 8332 },
+            { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 }); 
 
         nonBlockingInfiniteLoop(btcWrapper); 
     }
 
     if(nodesToInit.includes('BCH')) {
         const bchWrapper = new Wrappers.BCHWrapper(
-            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: 8332 },
-            { host: process.env.BCH_NODE as string, port: 28332 }); 
+            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) || 8332 },
+            { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) || 28332 }); 
 
         nonBlockingInfiniteLoop(bchWrapper); 
     }
@@ -70,8 +70,8 @@ const run = async () => {
 
     if(nodesToInit.includes('LTC')) {
         const ltcWrapper = new Wrappers.LTCWrapper(
-            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: 9332 },
-            { host: process.env.LTC_NODE as string, port: 28332 }); 
+            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_PORT) || 9332 },
+            { host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_ZMQPORT) || 28332 }); 
 
         nonBlockingInfiniteLoop(ltcWrapper); 
     }

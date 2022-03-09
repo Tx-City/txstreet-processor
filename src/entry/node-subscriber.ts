@@ -77,8 +77,8 @@ const init = async () => {
     if (chainsToSubscribe.includes('BTC')) {
         const wrapperClass = await import("../lib/node-wrappers/BTC");
         let btcWrapper = new wrapperClass.default(
-            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: 8332 },
-            { host: process.env.BTC_NODE as string, port: 28332 });
+            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_PORT) || 8332 },
+            { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 });
 
 
         Hooks.initHooks('BTC', mongodb, redis);
@@ -99,8 +99,8 @@ const init = async () => {
     if (chainsToSubscribe.includes('BCH')) {
         const wrapperClass = await import("../lib/node-wrappers/BCH");
         let bchWrapper = new wrapperClass.default(
-            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: 8332 },
-            { host: process.env.BCH_NODE as string, port: 28332 });
+            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) || 8332 },
+            { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) || 28332 });
 
         Hooks.initHooks('BCH', mongodb, redis);
 
@@ -121,8 +121,8 @@ const init = async () => {
     if (chainsToSubscribe.includes('LTC')) {
         const wrapperClass = await import("../lib/node-wrappers/LTC");
         let ltcWrapper = new wrapperClass.default(
-            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: 9332 },
-            { host: process.env.LTC_NODE as string, port: 28332 })
+            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_PORT) || 9332 },
+            { host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_ZMQPORT) || 28332 })
 
         Hooks.initHooks('LTC', mongodb, redis);
 

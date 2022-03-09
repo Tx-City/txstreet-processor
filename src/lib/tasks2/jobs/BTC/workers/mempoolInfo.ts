@@ -13,8 +13,8 @@ let lastExecutionResults = {
 setInterval(async () => {
     try {
         const wrapper = new BTCWrapper(
-            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: 8332 },
-            { host: process.env.BTC_NODE as string, port: 28332 }); 
+            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_PORT) || 8332 },
+            { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 }); 
 
         const promise = () => new Promise((resolve, reject) => {
             wrapper.rpc.getMemPoolInfo((err: any, resp: any) => {

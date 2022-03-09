@@ -9,7 +9,7 @@ const wrappers: any = {
 
 export default async (chain: string): Promise<void> => {
     try {
-        const node = new wrappers[chain + "Wrapper"]({ username: 'user', password: 'pass', host: process.env[chain + "_NODE"], port: chain === "LTC" ? 9332 : 8332 });
+        const node = new wrappers[chain + "Wrapper"]({ username: 'user', password: 'pass', host: process.env[chain + "_NODE"], port: chain === "LTC" ? Number(process.env.LTC_NODE_PORT) || 9332 : Number(process.env[chain + "_NODE_PORT"]) || 8332 });
 
         const { database } = await mongodb();
         const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain || ''); 

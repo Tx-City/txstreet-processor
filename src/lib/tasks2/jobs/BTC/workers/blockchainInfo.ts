@@ -11,8 +11,8 @@ let lastExecutionResults = {
 setInterval(async () => {
     try {
         const wrapper = new BTCWrapper(
-            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: 8332 },
-            { host: process.env.BTC_NODE as string, port: 28332 }); 
+            { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: Number(process.env.BCH_NODE_PORT) || 8332 },
+            { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 }); 
         const promise = () => new Promise((resolve) => {
             wrapper.rpc.getBlockchainInfo((err: any, resp: any) => {
                 if(!resp || !resp.result) return resolve({ difficulty: '0', size: 0 });
