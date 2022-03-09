@@ -37,28 +37,30 @@ const storeBlock = async (database: any, block: any) => {
             block.transactions = [];
 
         block.txFull = {};
-        // return false;
-        const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true, dropped: { $exists: false } }).toArray();
-        if (block.transactions && block.transactions.length > 0 && transactions.length !== block.transactions.length) {
-            const hashes = transactions.map((tx: any) => tx.hash);
-            const missing = block.transactions.filter((hash: string) => hashes.indexOf(hash) == -1);
-            console.log(missing);
-            for (let i = 0; i < missing.length; i++) {
-                if(i > 25) continue;
-                const hash = missing[i];
-                // await new Promise(resolve => setTimeout(resolve, 10));
-                try {
-                    const existing = await database.collection('transactions_ETH').findOne({ hash });
-                    if (existing === null) {
-                        database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
-                    } else {
-                        if (!existing.lastInsert || (Date.now() - Date.parse(existing.lastInsert)) / 1000 > 10)
-                            await database.collection('transactions_ETH').updateOne({ hash }, { $set: { blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } })
-                    }
-                } catch (e) { console.log(e); }
-            }
-            return false;
-        }
+        const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true }).toArray();
+        if(block.transactions && block.transactions.length > 0 && transactions.length === 0)
+            return false; 
+        // const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true, dropped: { $exists: false } }).toArray();
+        // if (block.transactions && block.transactions.length > 0 && transactions.length !== block.transactions.length) {
+        //     const hashes = transactions.map((tx: any) => tx.hash);
+        //     const missing = block.transactions.filter((hash: string) => hashes.indexOf(hash) == -1);
+        //     // console.log(missing);
+        //     for (let i = 0; i < missing.length; i++) {
+        //         // if(i > 25) continue;
+        //         const hash = missing[i];
+        //         // await new Promise(resolve => setTimeout(resolve, 10));
+        //         try {
+        //             const existing = await database.collection('transactions_ETH').findOne({ hash });
+        //             if (existing === null) {
+        //                 database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
+        //             } else {
+        //                 if (!existing.lastInsert || (Date.now() - Date.parse(existing.lastInsert)) / 1000 > 10)
+        //                     await database.collection('transactions_ETH').updateOne({ hash }, { $set: { blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } })
+        //             }
+        //         } catch (e) { console.log(e); }
+        //     }
+        //     return false;
+        // }
 
         transactions.forEach((transaction: any) => {
             const formatted = formatTransaction('ETH', transaction);
