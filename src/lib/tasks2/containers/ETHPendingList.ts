@@ -85,7 +85,7 @@ export default class ETHPendingList {
         })
 
         // Initiate the _writeTask to create a new pending list every second. 
-        this._writeTaskInstance = setInterval(this._writeTask, 1000).start(false);
+        this._writeTaskInstance = setInterval(this._writeTask, 2000).start(false);
 
 
         setInterval(async () => {
@@ -95,7 +95,7 @@ export default class ETHPendingList {
             const result = await collection.find({ hash: { $in: hashes }, $or: [ { blockHash: { $ne: null }},{ dropped: { $exists: true }} ] }).project({ _id: 0, hash: 1 }).toArray(); 
             const toDelete = result.map((result: any) => result.hash); 
             this.remove(toDelete); 
-        }, 2000).start(false);
+        }, 10000).start(false);
     }
 
     /**

@@ -193,4 +193,4 @@ setInterval(async () => {
     } catch (error) {
         Logger.error(error);
     }
-}, 1000).start(true);
+}, 2000).start(true);
