@@ -25,6 +25,8 @@ export default class ETHPendingList {
     _initialized: boolean = false; 
     
     _remove: string[] = []; 
+
+    _toAdd: ProjectedEthereumTransaction[] = [];
     
     constructor() {
         this.add = this.add.bind(this);
@@ -96,6 +98,16 @@ export default class ETHPendingList {
             const toDelete = result.map((result: any) => result.hash); 
             this.remove(toDelete); 
         }, 10000).start(false);
+
+        setInterval(async () => {
+            if(!this._toAdd.length) return;
+            this.array = this.array.concat(this._toAdd);
+            this._toAdd = []; 
+            this.array = this.array.sort((a: ProjectedEthereumTransaction, b: ProjectedEthereumTransaction) => this._getSortValue(a) - this._getSortValue(b)); 
+            if(this.array.length > this.capacity)
+                this.array.splice(0, this.array.length - this.capacity); 
+            this._rebuildKeyMap();
+        }, 1000).start(false);
     }
 
     /**
@@ -105,11 +117,7 @@ export default class ETHPendingList {
      * @param transactions An array of transactions that we want to add. 
      */
     add(transactions: ProjectedEthereumTransaction[]) {
-        this.array = this.array.concat(transactions); 
-        this.array = this.array.sort((a: ProjectedEthereumTransaction, b: ProjectedEthereumTransaction) => this._getSortValue(a) - this._getSortValue(b)); 
-        if(this.array.length > this.capacity)
-            this.array.splice(0, this.array.length - this.capacity); 
-        this._rebuildKeyMap();
+        this._toAdd = this._toAdd.concat(transactions);
     }
 
     /**
