@@ -17,6 +17,8 @@ const getExecutionType = (): ExecutionType => {
         _currentExecutionType = ExecutionType.Small;
     else if(_currentExecutionType === ExecutionType.Small)
         _currentExecutionType = ExecutionType.Large;
+    // else if(_currentExecutionType === ExecutionType.Custom)
+    //     _currentExecutionType = ExecutionType.Large;
     return _currentExecutionType;
 }
 
@@ -31,7 +33,7 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
         case ExecutionType.Custom:
             where = { processed: true, confirmed: false, blockHeight: { $eq: null }, lastProcessed: { $lte: fifteenSeconds }, dropped: { $exists: false } }; 
             project = { _id: 0, hash: 1 };
-            limit = 250;
+            limit = 75;
             sort = { pendingSortPrice: -1 };  
             return { where, project, limit, sort };
         case ExecutionType.Large:
@@ -47,7 +49,7 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
                     }
                 }, 
                 { $sort: { pendingSortPrice: -1 } }, 
-                { $limit: 3000 }, 
+                { $limit: 40000 },
                 { $sort: { lastProcessed: 1 } }, 
                 { $limit: 250 },
                 { $project: { _id: 0, hash: 1 } }
@@ -134,8 +136,9 @@ export default async (chain: string): Promise<void> => {
         });
 
         if(writeInstructions.length > 0) {
-            await collection.bulkWrite(writeInstructions); 
+            console.log("eth bad tx removing " + deleteTxHashes.length, ExecutionType[_currentExecutionType]);
             redis.publish('removeTx', JSON.stringify({ chain, hashes: deleteTxHashes })); 
+            await collection.bulkWrite(writeInstructions); 
         }
 
         const blockInstructions: any[] = []; 

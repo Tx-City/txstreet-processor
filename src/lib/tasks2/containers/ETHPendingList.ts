@@ -143,6 +143,7 @@ export default class ETHPendingList {
             for(let i = 0; i < indexesToDelete.length; i++) 
                 delete this.array[indexesToDelete[i]]; 
             this.array = this.array.filter((value) => value); 
+            this._toAdd = this._toAdd.filter((value) => value);
             this._rebuildKeyMap();
         } 
     }
