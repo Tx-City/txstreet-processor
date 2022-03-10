@@ -10,7 +10,7 @@ import { ETHTransactionsSchema } from '../../../data/schemas';
 
 export default class ETHPendingList {
     // The maximum allowed size of the collection. 
-    public capacity: number = 20000;
+    public capacity: number = 50000;
     // Index -> Value 
     public array: ProjectedEthereumTransaction[] = []; 
     // Key -> Index 
