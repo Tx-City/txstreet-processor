@@ -20,6 +20,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                 let divider = 1;
                 switch(chain) {
                     case 'ETH':
+                    case 'ARBI':
                     case 'XMR':
                     case 'BTC':
                     case 'BCH':
@@ -39,6 +40,9 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                 switch(chain) {
                     case 'ETH':
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
+                        break;
+                    case 'ARBI':
+                        project = { _id: 0, value: 1, hash: 1, from: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, transactions: 1 };
                         break;
                     case 'XMR': 
                         project = { _id: 0, hash: 1, timestamp: 1, height: 1, difficulty: 1, transactions: 1, size: 1 }
@@ -72,7 +76,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     delete results[i].transactions;
                     results[i].transactions = txcount;
                     if(!results[i].gasUsedDif)
-                        results[i].gasUsedDif = 0; 
+                        results[i].gasUsedDif = 0.0; 
                 }
 
                 if(results.length > 0) {

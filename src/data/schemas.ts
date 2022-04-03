@@ -50,7 +50,7 @@ export const ETHBlocksSchema = avro.Type.forSchema({
                         { name: 'hash', type: 'string' },
                         { name: 'height', type: 'long' },
                         { name: 'timestamp', type: 'long', default: 0 },
-                        { name: 'gasUsedDif', type: ['double', 'null'], default: 0  },
+                        { name: 'gasUsedDif', type: ['double', 'null'], default: 0.0  },
                         { name: 'size', type: 'long', default: 0  },
                         { name: 'gasLimit', type: 'long', default: 0 },
                         { name: 'gasUsed', type: 'long', default: 0 },

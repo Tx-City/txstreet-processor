@@ -148,7 +148,9 @@ export default class TimeoutCollection<T> extends EventEmitter3 {
                 this._dirtyFlag = false; 
                 if (err) throw err
             });
-        } catch (error) {}
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     /**

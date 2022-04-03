@@ -13,7 +13,7 @@ import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchem
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 Logger.setLogLevel(Logger.LoggingLevel.Info);
 
-const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH']; 
+const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI']; 
 let chainToInit: string = null; 
 
 // Check the command line arguments to find one issuing a request for a supported chain. 
@@ -46,6 +46,9 @@ const initialize = async () => {
                 // Create a collection for blocks that lasts one day.
                 blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250); 
                 break;
+            case 'ARBI':
+                blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250); 
+                break;
             case 'XMR':
                 transactions = new DropoutContainer<ProjectedXMRTransaction>(`transactions-${chainToInit}.bin`, XMRTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true); 
                 // Create a collection for blocks that lasts one day.
@@ -60,11 +63,13 @@ const initialize = async () => {
                 break;
         }
 
-        // Create an overlap protected task for obtaining transactions. 
-        const obtainTransactionsTask: ObtainTransactionsFromDatabase = new ObtainTransactionsFromDatabase(chainToInit, transactions).start(true) as ObtainTransactionsFromDatabase;
-        obtainTransactionsTask.waitForFirstCompletion().then(x => {
-            transactions.setReady(true); 
-        });
+        if(chainToInit !== 'ARBI'){
+            // Create an overlap protected task for obtaining transactions. 
+            const obtainTransactionsTask: ObtainTransactionsFromDatabase = new ObtainTransactionsFromDatabase(chainToInit, transactions).start(true) as ObtainTransactionsFromDatabase;
+            obtainTransactionsTask.waitForFirstCompletion().then(x => {
+                transactions.setReady(true); 
+            });
+        }
         // Create an overlap protected task for obtaining blocks. 
         const obtainBlocksTask: ObtainBlocksFromDatabase = new ObtainBlocksFromDatabase(chainToInit, blocks).start(true) as ObtainBlocksFromDatabase; 
         obtainBlocksTask.waitForFirstCompletion().then(x => {

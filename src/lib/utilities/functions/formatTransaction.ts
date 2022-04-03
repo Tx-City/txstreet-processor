@@ -4,7 +4,7 @@ import txStreetIds from "@txstreet/txstreet-token-ids";
 
 export default (chain: string, data: any) => {
     var obj: any = {};
-    if(chain === "ETH" || chain == "RINKEBY") {
+    if(chain === "ETH" || chain == "RINKEBY" || chain === "ARBI") {
         obj.tx = (typeof data.hash === "undefined"? data.tx : data.hash);
         if(data.to) obj.to = data.to; 
         if(data.from) obj.fr = data.from;

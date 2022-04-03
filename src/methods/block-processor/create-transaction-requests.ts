@@ -19,7 +19,7 @@ export default async (wrapper: BlockchainWrapper, blockHash: string, blockHeight
         const writeInstructions: any[] = []; 
 
         // Default values to set whenever a document is created(upserted) in the database.
-        const $setOnInsert = { processed: true, confirmed: false, locked: false, node: true, insertedAt: new Date(), processFailures: 0 };
+        const $setOnInsert = { processed: true, confirmed: Boolean(blockHash), locked: false, node: true, insertedAt: new Date(), processFailures: 0 };
 
         // In the event the transactions[] contains full transactions. 
         if(typeof transactions[0] === 'object') {

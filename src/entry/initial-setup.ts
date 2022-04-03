@@ -51,6 +51,7 @@ const createIndexes = async (): Promise<boolean> => {
         try { await database.collection('statistics').createIndex({ chain: 1 }, { name: 'chain', unique: true }); } catch (e) { console.log(e) }
 
         try { await database.collection('statistics').updateOne({ "chain": "ETH" }, { $setOnInsert: { "chain": "ETH" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "ARBI" }, { $setOnInsert: { "chain": "ARBI" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "ETH-nohistory" }, { $setOnInsert: { "chain": "ETH-nohistory" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "BTC" }, { $setOnInsert: { "chain": "BTC" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "BCH" }, { $setOnInsert: { "chain": "BCH" } }, { upsert: true }) } catch (e) { console.log(e) }

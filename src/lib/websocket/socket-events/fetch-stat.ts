@@ -242,7 +242,7 @@ const convert = (string: string) => {
 
 export default async (socket: SocketIO.Socket, chain: string, identifier: string, config: FetchStatsConfig) => {
     if (!tickers.includes(chain))
-        return socket.emit('fetch-stat', identifier, 'Invalid chain supplied to request.');
+        return socket.emit('fetch-stat', identifier, 'Invalid chain supplied to request: ' + chain);
 
     const { key, history, historyInterval = '5s', historyDuration = '15m', returnValue, subscribe } = config;
     if (!key)

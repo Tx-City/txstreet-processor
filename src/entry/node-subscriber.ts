@@ -24,7 +24,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY']
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI']
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -164,6 +164,27 @@ const init = async () => {
         getLatestBlockLoop(ethWrapper);
 
         ethWrapper.initEventSystem();
+
+        Logger.info("Setup all event processors for chain.");
+
+    }
+
+    if (chainsToSubscribe.includes('ARBI')) {
+        const wrapperClass = await import("../lib/node-wrappers/ARBI");
+        let arbiWrapper = new wrapperClass.default();
+
+        // Hooks.initHooks('ETH', mongodb, redis);
+
+        Logger.info("Imported chain implementations");
+
+        arbiWrapper.on('confirmed-block', (blockHash: string) => {
+            Logger.info(`Got block from event: ${blockHash}`);
+            processBlock(arbiWrapper, blockHash);
+        });
+
+        // getLatestBlockLoop(ethWrapper);
+
+        arbiWrapper.initEventSystem();
 
         Logger.info("Setup all event processors for chain.");
 

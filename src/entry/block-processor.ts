@@ -19,7 +19,7 @@ import { Logger } from '../lib/utilities';
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {}; 
 
 // A hardcoded array of implemented blockchains.
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY']
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI']
 var nodesToInit: string[] = []; 
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -80,6 +80,12 @@ const run = async () => {
         const ethWrapper = new Wrappers.ETHWrapper(process.env.ETH_NODE as string);
 
         nonBlockingInfiniteLoop(ethWrapper); 
+    }
+
+    if(nodesToInit.includes('ARBI')) {
+        const arbiWrapper = new Wrappers.ARBIWrapper();
+
+        nonBlockingInfiniteLoop(arbiWrapper); 
     }
 
     if(nodesToInit.includes('RINKEBY')) {
