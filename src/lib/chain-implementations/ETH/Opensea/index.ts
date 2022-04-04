@@ -5,6 +5,7 @@ import abiDecoder from "abi-decoder";
 import fetch from "node-fetch";
 
 import contract_0x7be8076f4ea4a4ad08075c2508e481d6c946d12b from "./0x7be8076f4ea4a4ad08075c2508e481d6c946d12b.json";
+import contract_0x7f268357a8c2552623316e2562d90e642bb538e5 from "./0x7f268357a8c2552623316e2562d90e642bb538e5.json";
 
 
 class Opensea extends ChainImplementation {
@@ -34,8 +35,9 @@ class Opensea extends ChainImplementation {
     }
   }
 
-  async formatSale(transaction: any, decoded: any) {
-    const nftAddr = decoded.params[0].value[4]; //bundle?
+  async formatSale(transaction: any, decoded: any, type: number = 1) {
+    // if(type > 1) console.log("0x" + String(decoded.params[3].value).substring(162, 202));
+    const nftAddr = type === 1 ? decoded.params[0].value[4] : "0x" + String(decoded.params[3].value).substring(162, 202); //bundle?
     const to = decoded.params[0].value[1]; //always true
     const from = decoded.params[0].value[decoded.params[0].value[2] === "0x0000000000000000000000000000000000000000" ? 8 : 2]; //8 if accepting offer?
     let tokenAmount = decoded.params[1].value[4];
@@ -132,6 +134,7 @@ class Opensea extends ChainImplementation {
       }
 
       abiDecoder.addABI(contract_0x7be8076f4ea4a4ad08075c2508e481d6c946d12b);
+      abiDecoder.addABI(contract_0x7f268357a8c2552623316e2562d90e642bb538e5);
 
       console.log("initialized opensea");
     } catch (error) {
@@ -152,14 +155,15 @@ class Opensea extends ChainImplementation {
       return true;
     transaction.house = 'opensea';
 
-    if (transaction.to.toLowerCase() === '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b') {
+    const to = transaction.to.toLowerCase();
+    if (to === '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b' || to === '0x7f268357a8c2552623316e2562d90e642bb538e5') {
       if (!transaction.extras)
         transaction.extras = { showBubble: false };
 
       const decoded = abiDecoder.decodeMethod(transaction.input);
       switch (decoded.name) {
         case 'atomicMatch_':
-          try { await this.formatSale(transaction, decoded); } catch (error) { Logger.error(error); }
+          try { await this.formatSale(transaction, decoded, to === '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b'?1:2); } catch (error) { Logger.error(error); }
           break;
         case 'cacncelOrder_':
           try { await this.formatCancel(transaction, decoded); } catch (error) { Logger.error(error); }
