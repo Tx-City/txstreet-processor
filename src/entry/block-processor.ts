@@ -12,6 +12,7 @@ const logger = debug('src/index');
 
 // Misc imports 
 import processBlock from '../methods/block-processor/process-block'; 
+import processBlockTxs from '../methods/block-processor/process-block-txs'; 
 import * as Wrappers from '../lib/node-wrappers';
 import { Logger } from '../lib/utilities';
 
@@ -35,7 +36,11 @@ var running = true;
 // A simple infinite execution loop that doesn't block the event loop. 
 const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
     try {
-        await processBlock(wrapper); 
+        if(wrapper.ticker === "ARBI"){
+            await processBlockTxs(wrapper); 
+        }else{
+            await processBlock(wrapper); 
+        }
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1); 
     } catch (error) {
         Logger.error(error);

@@ -11,7 +11,7 @@ export default async(chain: string, wikiname: string): Promise<void> => {
         const collection = database.collection(process.env.DB_COLLECTION_HOUSES as string); 
         const dir = path.join(process.env.WIKI_DIR as string, wikiname, 'houses'); 
         const files = fs.readdirSync(dir).filter((file: string) => file.includes('.json'));
-
+        console.log(files);
         const tasks: Promise<any>[] = [];
         const writeInstructions: any[] = [];
         files.forEach((filename: string) => {

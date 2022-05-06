@@ -16,8 +16,8 @@ import xmrBlockBroadcast from '../lib/tasks/jobs/xmr-block-broadcast';
 import { Logger } from '../lib/utilities';
 Logger.setLogLevel(Logger.LoggingLevel.Info);
 import ethRecentContracts from '../lib/tasks/jobs/eth-recent-contracts';
-
-var allowed = ['BTC', 'LTC', 'ETH', 'RINKEBY', 'XMR', 'BCH']
+import { chainConfig } from '../data/chains';
+var allowed = Object.keys(chainConfig);
 var chains: string[] = []; 
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -63,13 +63,6 @@ const executeJob = async (job: () => Promise<void>, executionTime: number, onFin
 }
 
 
-const names: any = {
-    'BTC': 'bitcoin',
-    'ETH': 'ethereum',
-    'RINKEBY': 'ethereum',
-    'LTC': 'litecoin',
-    'BCH': 'bitcoincash' }
-
 const run = async () => {
     // Update pricing statistics every minute. 
     executeJob(updatePricing, minutes(1));
@@ -80,6 +73,7 @@ const run = async () => {
             switch(chain) {
                 case "ETH":
                 case "RINKEBY":
+                case "ARBI":
                     return;
                 case "LTC":
                 case "BTC":
@@ -93,6 +87,7 @@ const run = async () => {
 
         let checkBadTxsInterval = 0;
         switch(chain) {
+            case "ARBI":
             case "ETH":
             case "RINKEBY":
                 checkBadTxsInterval = 1;
@@ -109,6 +104,8 @@ const run = async () => {
 
         executeJob(() => {
             switch(chain) {
+                case "ARBI":
+                    return;
                 case "ETH":
                 case "RINKEBY":
                     return ethRemoveBadTxs(chain);
@@ -121,7 +118,7 @@ const run = async () => {
             }
         }, seconds(checkBadTxsInterval));
 
-        updateHouseData(chain, names[chain]);
+        updateHouseData(chain, chainConfig[chain].wikiname);
         executeJob(() => updateHousePriority(chain), minutes(1)); 
     });
     

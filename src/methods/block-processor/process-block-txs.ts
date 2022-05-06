@@ -1,0 +1,140 @@
+import { BlockchainWrapper } from '../../lib/node-wrappers';
+import { Logger, waitForTime, formatBlock } from '../../lib/utilities';
+
+import findNextRequest from "./find-next-request"
+import storeBlockDatabase from './store-block-database';
+import unlockRequest from './unlock-request';
+import findBlockDatabase from './find-block-database';
+// import createTransactionRequests from './create-transaction-requests';
+import createBlockFile from './create-block-file';
+import { formatTransaction } from '../../lib/utilities';
+import redis from '../../databases/redisEvents';
+import mongodb from "../../databases/mongodb";
+
+// Create localized logger
+import debug from 'debug';
+import processUncle from './process-uncle';
+
+const action = async (wrapper: BlockchainWrapper, blockId: string | number = null, depth: number = 0, searchRequest: boolean = true): Promise<void> => {
+    let request: any = null;
+    try { 
+        // Sanity check for block-processing depth.
+        if(depth > wrapper.blockDepthLimit) 
+            return; 
+
+        // The database key of the identifying property for this request.
+        // This is usually the hash, but if a user-generated request supplies a height it can change.
+        let databaseKey = 'hash'; 
+
+        // Obtain the block id (hash or height) to process if once was not provided
+        if(searchRequest) {
+            request = await findNextRequest(wrapper.ticker); 
+            if(blockId == null) {
+                if(request) {
+                    blockId = request.hash || request.height; 
+                    if(!request.hash && request.height != null) 
+                        databaseKey = 'height';
+                }
+            }
+            if(request)
+                Logger.info("Request found..."); 
+        } else {
+            request = { hash: blockId }
+        }
+
+        
+
+        // If there's nothing to process, process a short delay then return a success response. 
+        // This is to prevent spamming the database for requests between blocks. 
+        if(blockId == null) 
+            return await waitForTime(100); 
+
+        // Sanity check some defaults.
+        if(searchRequest) {
+            if(request.processMetadata === undefined)
+                request.processMetadata = true;
+            if(request.processTransactions === undefined)
+                request.processTransactions = true; 
+        }
+            
+        // Check if the block already exists in the datbase. 
+        // If it already exists, return a success response. 
+        let block = await findBlockDatabase(wrapper.ticker, databaseKey, blockId); 
+        if(block && !(request.processMetdata || request.processTransactions)) return; 
+        if(!searchRequest && block) {
+            request.processMetadata = block.timestamp == null;
+            request.processTransactions = block.timestamp == null;
+        }
+        
+        if(searchRequest)
+            Logger.info(`Found request: ${request.hash}`); 
+
+        if(request.processMetadata || (!block && blockId)) {
+            // Utilize the blockchain specific implementation to resolve the block data.
+            let resolvedBlock = await wrapper.getBlock(blockId, 2); 
+
+            // The exists field is appended to ensure that the execution flow is stopped in the event of an error
+            // that has already been logged by the localized logger in the blockchain implementation.
+            if(!resolvedBlock) {
+                Logger.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
+                await unlockRequest(wrapper.ticker, blockId as string); 
+                return await waitForTime(100);
+            }
+            // Assign block the be the resolved block. 
+            block = resolvedBlock;
+                        
+            if(resolvedBlock.parentHash && block.parentHash != "0x0000000000000000000000000000000000000000000000000000000000000000" && depth < wrapper.blockDepthLimit)
+                await action(wrapper, resolvedBlock.parentHash, depth + 1, false); 
+
+            if((wrapper as any).getUncle && resolvedBlock.uncles && resolvedBlock.uncles.length) {
+                const startTime = Date.now();
+                for(let i = 0; i < resolvedBlock.uncles.length; i++) {
+                    await processUncle(wrapper, blockId, i);
+                }
+                Logger.info(`Took ${Date.now() - startTime}ms to process uncles.`);
+            }
+        }
+
+
+        // Create a tmp value holding the transactions array for the block. 
+        // This is later passed into createTransactionRequests. 
+        // But we want to reduce block.transactions to an array of hashes for database storage. 
+        let transactions: any[] = block.transactions;
+        if(block.transactions?.length && typeof block.transactions[0] === 'object') {
+            block.transactions = block.transactions.map((tx: any) => tx.hash); 
+        }
+
+        block.txFull = {};
+        transactions.forEach((transaction: any) => {
+            const formatted = formatTransaction(wrapper.ticker, transaction);
+            block.txFull[formatted.tx] = formatted;
+        });
+        
+        // Store the block in the database 
+        await storeBlockDatabase(wrapper.ticker, block, databaseKey); 
+
+
+        const { database } = await mongodb();
+        console.log("storing");
+        await createBlockFile(wrapper.ticker, block);
+        console.log("stored");
+        await database.collection('blocks').updateOne({ chain: wrapper.ticker, hash: block.hash }, { $set: { stored: true } });
+        const formatted: any = formatBlock(wrapper.ticker, block);
+        redis.publish('block', JSON.stringify({ chain: wrapper.ticker, height: block.height, hash: block.hash, block: formatted }));
+        await database.collection('blocks').updateOne({ chain: wrapper.ticker, hash: block.hash }, { $set: { broadcast: true } });
+        console.log(block.height);
+    } catch (error) {
+        if(request && request.hash) 
+            await unlockRequest(wrapper.ticker, request.hash); 
+        Logger.error(error);
+    }
+}
+
+
+// This function handles Phase 1 of fulfilling a request to process a block.
+// Phase 2 is started inside of the redis message callback when a transaction processor
+// responds that a blocks transactions have been completely processed. You can find the
+// callback that registers this in src/index 
+export default async (wrapper: BlockchainWrapper, blockId: string | number = null, depth: number = 0, searchRequest: boolean = true): Promise<void> => {
+    await action(wrapper, blockId, depth, searchRequest); 
+}

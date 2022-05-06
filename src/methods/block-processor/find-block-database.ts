@@ -13,7 +13,7 @@ export default async (chain: string, key: string, value: any): Promise<any> => {
         // Here we need to make sure processed is true, as that's how we differentiate between 
         // a block and a request.
         const block = await collection.findOne({ chain, [key]: value });
-        if(block.processed) return block;
+        if(block && block.processed) return block;
 
         // Some error with rinkeby sending invalid blocks through the geth event. 
         // XXX: This ONLY happens on Rinkeby. 
@@ -22,7 +22,7 @@ export default async (chain: string, key: string, value: any): Promise<any> => {
             return true;
         }
 
-        return block.processed; 
+        return block?.processed; 
     } catch (error) {
         Logger.error(error); 
         return null;

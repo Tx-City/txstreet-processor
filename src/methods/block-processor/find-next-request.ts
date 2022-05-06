@@ -21,7 +21,7 @@ export default async (chain: string): Promise<string | null> => {
         // an 'in-the-middle' query.
         await session.withTransaction(async () => {
             // Find any unprocessed request. 
-            result = await collection.findOne({ chain, locked: false, processed: false }, { session }); 
+            result = await collection.findOne({ chain, locked: false, processed: false }, { session, sort: { lastInserted: -1 } }); 
             if(result) {
                 // Lock the request so other nodes can't get to it.
                 await collection.updateOne({ _id: result._id }, { $set: { locked: true } }, { session }); 

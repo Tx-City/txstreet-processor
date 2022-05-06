@@ -24,6 +24,7 @@ export default async (chain: string, block: any): Promise<any> => {
         const secondPart = block.hash[block.hash.length - 2]; 
         try { await fs.promises.mkdir(path.join(dataDir, 'blocks', chain, firstPart, secondPart), { recursive: true }); } catch (err) {}
         await storeObject(path.join('blocks', chain, firstPart, secondPart, block.hash), content);
+        console.log("stored");
 
         // Initialize database 
         const { database } = await mongodb(); 

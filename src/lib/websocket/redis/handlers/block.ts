@@ -5,7 +5,7 @@ let lastBlockHeights: any = {};
 let hashesForLastHeight: any = {}; 
 
 export default async (data: any): Promise<any> => {
-    const { chain, height, hash, from } = data; 
+    const { chain, height, hash, block } = data; 
     const room = `${chain}-blocks`; 
     const lastBlockHeight = lastBlockHeights[chain] || 0; 
     if(height > lastBlockHeight) {
@@ -17,7 +17,7 @@ export default async (data: any): Promise<any> => {
         lastBlocks[chain].push(hash); 
         if(!hashesForLastHeight[chain])
             hashesForLastHeight[chain] = [hash];
-        io.to(room).emit('block', hash); 
+        io.to(room).emit('block', block || hash); 
     } else if(height === lastBlockHeight) {
         if(hashesForLastHeight[chain].includes(hash))
             return;
@@ -27,6 +27,6 @@ export default async (data: any): Promise<any> => {
         if(lastBlocks[chain].length == 5)
             lastBlocks[chain].shift();
         lastBlocks[chain].push(hash); 
-        io.to(room).emit('block', hash); 
+        io.to(room).emit('block', block || hash); 
     }
 }
