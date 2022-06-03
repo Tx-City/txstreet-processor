@@ -61,6 +61,7 @@ const updateUserCharacters = async () => {
 //array of collections with priority on top
 const priority = [
     "moonheads",
+    "moonheads-zoomers",
     "cryptopunks",
     "boredapeyachtclub",
     "mutant-ape-yacht-club"
