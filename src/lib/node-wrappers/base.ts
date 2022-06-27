@@ -19,14 +19,21 @@ export default abstract class BlockchainWrapper extends EventEmitter {
     constructor(ticker: string) {
         super();
         this.ticker = ticker.toUpperCase();
-        this.logger = debug(`node-wrapper/${ticker}`); 
+        this.logger = debug(`node-wrapper/${ticker}`);
     }
 
     /**
      * Initializes any blockchain specific event systems for obtaining pending transaction data
      * from the mempool and newly confirmed blocks. 
      */
-    public abstract initEventSystem(): any; 
+    public abstract initEventSystem(): any;
+
+    /**
+    * Obtains array of transaction receipts.
+    * 
+    * @param block The block object with hash or id.
+    */
+    public abstract getTransactionReceipts?(block: any): any;
 
     /**
      * Obtains a transaction from the node with varying levels of information based on the vebosity.
@@ -43,7 +50,7 @@ export default abstract class BlockchainWrapper extends EventEmitter {
      * @param id The id of the block, usually a height or hash.
      * @param verbosity The level of data requested for the block, higher is more.
      */
-    public abstract getBlock(id: string | number, verbosity: number): any; 
+    public abstract getBlock(id: string | number, verbosity: number): any;
 
     /**
      * Resolves a block, returning all data associated with this block as well as ensuring that
@@ -53,7 +60,7 @@ export default abstract class BlockchainWrapper extends EventEmitter {
      * @param verbosity The level of data requested for the block, higher is more.
      * @param depth The current depth of the request. (How many times this request has been called from a single function call)
      */
-    public abstract resolveBlock(id: string | number, verbosity: number, epth: number): Promise<any>; 
+    public abstract resolveBlock(id: string | number, verbosity: number, epth: number): Promise<any>;
 
     /**
      * Determines rather or not the supplied data represents that of a transaction.
@@ -80,5 +87,5 @@ export default abstract class BlockchainWrapper extends EventEmitter {
     /**
      * Gets the current block height from the node
      */
-     public abstract getCurrentHeight(): Promise<null | number>; 
+    public abstract getCurrentHeight(): Promise<null | number>;
 }

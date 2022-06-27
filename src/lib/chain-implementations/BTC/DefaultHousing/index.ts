@@ -1,16 +1,12 @@
 import ChainImplementation from '../../implementation'; 
 import { Logger } from '../../../../lib/utilities';
+import mongodb from '../../../../databases/mongodb'; 
 
 class DefaultHousing extends ChainImplementation {
     public mapAddressToHouse: any = {};
 
-    public mongodb: any;
-    public redis: any; 
-
-    async init(mongodb: any, redis: any): Promise<ChainImplementation> {
+    async init(): Promise<ChainImplementation> {
         try {
-            this.mongodb = mongodb;
-            this.redis = redis; 
             if(process.env.USE_DATABASE === "false")
                 return this;
             const { database } = await mongodb(); 

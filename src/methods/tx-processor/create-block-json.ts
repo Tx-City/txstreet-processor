@@ -26,8 +26,8 @@ export default async (chain: string, block: any): Promise<any> => {
         const differences: any[] = [];
         transactions.forEach((transaction: any) => {
             let adjustedGas = transaction.gas;
-            if(transaction.input == "0x" && transaction.gas > 21000)
-                adjustedGas = 21000; 
+            // if(transaction.input == "0x" && transaction.gas > 21000)
+            //     adjustedGas = 21000; 
             if(transaction.receipt && adjustedGas > 21000)
                 differences.push(transaction.receipt.gasUsed / transaction.gas); 
             const formatted = formatTransaction(chain, transaction);

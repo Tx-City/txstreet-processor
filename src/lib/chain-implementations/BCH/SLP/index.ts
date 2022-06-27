@@ -2,21 +2,13 @@ import ChainImplementation from '../../implementation';
 import { Logger, decodeHex } from '../../../../lib/utilities';
 import axios from 'axios'; 
 import bchaddr from 'bchaddrjs-slp'; 
+import redis from '../../../../databases/redis'; 
+import mongodb from '../../../../databases/mongodb'; 
 
 class SLP extends ChainImplementation {
     public _what: any = {}; 
-    public mongodb: any;
-    public redis: any; 
-
-    async init(mongodb: any, redis: any): Promise<ChainImplementation> {
-        try {
-            this.mongodb = mongodb;
-            this.redis = redis; 
-        } catch (error) {``
-            Logger.error(error);
-        } finally {
-            return this; 
-        }
+    async init(): Promise<ChainImplementation> {
+        return this;
     }
 
     async validate(transaction: any): Promise<boolean> {
@@ -102,12 +94,12 @@ class SLP extends ChainImplementation {
     _getToken = async (txid: string): Promise<any> => {
         console.log('_getToken for id:', txid); 
         try {
-            let token: any = await this.redis.getAsync(`slp-${txid}`); 
+            let token: any = await redis.getAsync(`slp-${txid}`); 
             // console.log('Redis:', token); 
             if(token) return JSON.parse(token); 
             token = await this._getTokenFromDb(txid);
             if(token && token.json) {
-                this.redis.setAsync(`slp-${txid}`, JSON.stringify(token.json), "EX", 3600); 
+                redis.setAsync(`slp-${txid}`, JSON.stringify(token.json), "EX", 3600); 
                 return token.json; 
             }
         } catch (error) {
@@ -118,7 +110,7 @@ class SLP extends ChainImplementation {
         let ticker = response.symbol;
         if(ticker && ticker.length > 1){
             this._insertTickerToDb(txid, ticker, response);
-            this.redis.setAsync("slp-" + txid, JSON.stringify(response), "EX", 3600);
+            redis.setAsync("slp-" + txid, JSON.stringify(response), "EX", 3600);
             return response;
         }
 
@@ -126,7 +118,7 @@ class SLP extends ChainImplementation {
 
     _getTokenFromDb = async (txid: string) => {
         try {
-            const { database } = await this.mongodb();
+            const { database } = await mongodb();
             return await database.collection('slp_genesis').findOne({ hash: txid }); 
         } catch (err) {
             Logger.error(err);
@@ -136,7 +128,7 @@ class SLP extends ChainImplementation {
 
     _insertTickerToDb = async (txid: string, ticker: string, json: string) => {
         try {
-            const { database } = await this.mongodb();
+            const { database } = await mongodb();
             await database.collection('slp_genesis').updateOne({ chain: ticker, hash: txid }, { $set: { json } }, { upsert: true }); 
         } catch (error) {
             Logger.error(error);
@@ -190,10 +182,10 @@ class SLP extends ChainImplementation {
     _toCashAddress = async (address: string) => {
         let key = `toCashAddress-${address}`
         if(this._what[key]) return this._what[key]; 
-        let cached: any = await this.redis.getAsync(key);
+        let cached: any = await redis.getAsync(key);
         if(!cached) {
             cached = bchaddr.toCashAddress(address); 
-            this.redis.setAsync(key, cached, 'EX', 3600 * 72); 
+            redis.setAsync(key, cached, 'EX', 3600 * 72); 
         }
         this._what[key] = cached; 
         return cached; 

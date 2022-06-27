@@ -6,6 +6,8 @@ import axios from 'axios';
 
 import contract_0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f from "./0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f.json";
 
+import mongodb from '../../../../databases/mongodb'; 
+
 const getToken = (sushi: any, address: string) => {
     return sushi.tokenList[address];
 }
@@ -114,13 +116,9 @@ const getData = (sushi:any, transaction: any): string | boolean => {
 class Sushi extends ChainImplementation {
     public addresses: string[] = []; 
     public tokenList: any = {};
-    public mongodb: any;
-    public redis: any; 
 
-    async init(mongodb: any, redis: any): Promise<ChainImplementation> {
+    async init(): Promise<ChainImplementation> {
         try {
-            this.mongodb = mongodb;
-            this.redis = redis; 
             if(process.env.USE_DATABASE === "false")
                 return this;
             const { database } = await mongodb(); 

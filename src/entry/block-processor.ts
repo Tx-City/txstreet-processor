@@ -15,6 +15,8 @@ import processBlock from '../methods/block-processor/process-block';
 import processBlockTxs from '../methods/block-processor/process-block-txs'; 
 import * as Wrappers from '../lib/node-wrappers';
 import { Logger } from '../lib/utilities';
+import { initHooks } from '../lib/chain-implementations';
+
 
 // A collection of all initialized BlockchainNode instances. 
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {}; 
@@ -88,8 +90,8 @@ const run = async () => {
     }
 
     if(nodesToInit.includes('ARBI')) {
+        initHooks("ARBI");
         const arbiWrapper = new Wrappers.ARBIWrapper();
-
         nonBlockingInfiniteLoop(arbiWrapper); 
     }
 

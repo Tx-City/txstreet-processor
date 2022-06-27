@@ -1,6 +1,7 @@
 import BlockchainWrapper from "../base";
 import Web3 from 'web3'; 
 
+
 export default class ETHWrapper extends BlockchainWrapper {
     public web3: Web3;
     public options: { [key: string] : any }; 
@@ -52,7 +53,7 @@ export default class ETHWrapper extends BlockchainWrapper {
     public initEventSystem() {
         this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => {}).on('data', async (hash: string) => {
             try {
-                const transaction = await this.getTransaction(hash, 2); 
+                const transaction = await this.getTransaction(hash, 2);
                 this.emit('mempool-tx', transaction); 
             } catch (error) {
                 this.logger(error);
@@ -67,6 +68,8 @@ export default class ETHWrapper extends BlockchainWrapper {
     public async getCurrentHeight(): Promise<null | number> {
         return await this.web3.eth.getBlockNumber(); 
     }
+
+    public getTransactionReceipts: undefined;
 
     public async getTransaction(id: string, verbosity: number, blockId?: string | number): Promise<any> {
         try {

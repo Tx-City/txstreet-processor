@@ -1,7 +1,11 @@
 import { _implementations } from "./implementation";
 
 export const enabledHooks: any = {
+    ARBI: [
+        "DefaultHousing",
+    ],
     ETH: [
+        "Arbitrum",
         "DefaultHousing",
         "Uniswap",
         "Opensea",
@@ -21,11 +25,11 @@ export const enabledHooks: any = {
     ]
 }
 
-export const initHooks = async (chain: string, mongodb: any, redis: any) => {
+export const initHooks = async (chain: string) => {
     for (let i = 0; i < enabledHooks[chain].length; i++) {
         const className = enabledHooks[chain][i];
         const implClass = await import('./' + chain + '/' + className + '/index');
-        await implClass.default.init(mongodb, redis);
+        await implClass.default.init();
     }
 }
 

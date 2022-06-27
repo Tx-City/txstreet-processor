@@ -16,6 +16,7 @@ export default async () => {
         // new Worker(path.join(__dirname, 'createPendingTransactionList.js'), { workerData }); 
 
         new Worker(path.join(__dirname, 'calculateStats.js'), { workerData })
+        new Worker(path.join(__dirname, 'createPendingBatch.js'), { workerData })
         // new Worker(path.join(__dirname, 'mempoolInfo.js'), { workerData })
         // new Worker(path.join(__dirname, 'broadcastReadyBlocks.js'), { workerData })
         // new Worker(path.join(__dirname, 'calcGasEstimates.js'), { workerData })

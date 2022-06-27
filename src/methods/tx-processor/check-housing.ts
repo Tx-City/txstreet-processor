@@ -10,7 +10,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
     try {
         if(!initialized){
             console.log("initalizing " + wrapper.ticker + " hooks...");
-            await initHooks(wrapper.ticker, mongodb, redis);
+            await initHooks(wrapper.ticker);
             console.log("initalized " + wrapper.ticker + " hooks!");
             initialized = true;
         }

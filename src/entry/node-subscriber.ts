@@ -81,7 +81,7 @@ const init = async () => {
             { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 });
 
 
-        Hooks.initHooks('BTC', mongodb, redis);
+        Hooks.initHooks('BTC');
 
         btcWrapper.initEventSystem();
 
@@ -102,7 +102,7 @@ const init = async () => {
             { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) || 8332 },
             { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) || 28332 });
 
-        Hooks.initHooks('BCH', mongodb, redis);
+        Hooks.initHooks('BCH');
 
         bchWrapper.initEventSystem();
 
@@ -124,7 +124,7 @@ const init = async () => {
             { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_PORT) || 9332 },
             { host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_ZMQPORT) || 28332 })
 
-        Hooks.initHooks('LTC', mongodb, redis);
+        Hooks.initHooks('LTC');
 
         ltcWrapper.initEventSystem();
 
@@ -144,7 +144,7 @@ const init = async () => {
         const wrapperClass = await import("../lib/node-wrappers/ETH");
         let ethWrapper = new wrapperClass.default(process.env.ETH_NODE as string);
 
-        Hooks.initHooks('ETH', mongodb, redis);
+        Hooks.initHooks('ETH');
 
         Logger.info("Imported chain implementations");
 

@@ -141,6 +141,13 @@ export default class TimeoutCollection<T> extends EventEmitter3 {
 
         try { 
             const collection = Object.values(this._items)
+            for (let i = 0; i < collection.length; i++) {
+                const entry = collection[i];
+
+                //@ts-ignore
+                Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
+            }
+            
             const contents = this._schema.toBuffer({ timestamp: Date.now(), collection });
             const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');
             fs.writeFileSync(writingFilePath, contents);

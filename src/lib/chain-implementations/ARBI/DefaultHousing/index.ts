@@ -12,11 +12,11 @@ class DefaultHousing extends ChainImplementation {
                 return this;
             const { database } = await mongodb(); 
             const collection = database.collection('houses');
-            const results = await collection.find({ chain: this.chain, name: { $ne: [] } }).toArray();  
+            const results = await collection.find({ chain: this.chain }).toArray();  
             for(let i = 0; i < results.length; i++) {
                 let doc = results[i]; 
-                if(doc.contracts)
-                    doc.contracts.forEach((address: string) => this.mapAddressToHouse[address] = doc.name); 
+                if(!doc.contracts) continue;
+                doc.contracts.forEach((address: string) => this.mapAddressToHouse[address.toLowerCase()] = doc.name); 
             }
             console.log("initialized default housing");
         } catch (error) {
@@ -27,13 +27,13 @@ class DefaultHousing extends ChainImplementation {
     }
 
     async validate(transaction: any): Promise<boolean> {
-        return this.mapAddressToHouse[transaction.to] != null; 
+        return this.mapAddressToHouse[transaction.to.toLowerCase()] != null; 
     }
 
     async execute(transaction: any): Promise<boolean> {
-        transaction.house = this.mapAddressToHouse[transaction.to]; 
+        transaction.house = this.mapAddressToHouse[transaction.to.toLowerCase()];
         return true; 
     }
 }
 
-export default new DefaultHousing('LTC'); 
+export default new DefaultHousing('ARBI'); 

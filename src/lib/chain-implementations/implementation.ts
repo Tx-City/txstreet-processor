@@ -7,7 +7,7 @@ export default abstract class ChainImplementation {
         if(!_implementations[this.chain]) _implementations[this.chain] = []; 
         _implementations[this.chain].push(this);
     }
-    public abstract init(mongodb: any, redis: any): Promise<ChainImplementation>; 
+    public abstract init(): Promise<ChainImplementation>; 
     public abstract validate(transaction: any): Promise<boolean>;
     public abstract execute(transaction: any): Promise<boolean>; 
 }

@@ -32,36 +32,34 @@ export default (chain: string, data: any) => {
         obj.ty = Number(data.type) || 0;
         if (data.maxFeePerGas) obj.mfpg = Number(data.maxFeePerGas);
         if (data.maxPriorityFeePerGas) obj.mpfpg = Number(data.maxPriorityFeePerGas);
-        if (chain === "ETH") {
-            try {
-                let nft: any = findNftOwner(obj.fr, true);
-                if (nft) {
-                    obj.char = nft;
-                    let split = nft.split("-");
-                    obj.nftChar = {
-                        collectionSlug: split.slice(0, -1).join("-"),
-                        tokenId: split[split.length - 1]
-                    }
+        try {
+            let nft: any = findNftOwner(obj.fr, true);
+            if (nft) {
+                obj.char = nft;
+                let split = nft.split("-");
+                obj.nftChar = {
+                    collectionSlug: split.slice(0, -1).join("-"),
+                    tokenId: split[split.length - 1]
+                }
 
-                    if (obj.nftChar.collectionSlug === "moonheads") {
-                        obj.char = txStreetIds.getName(Number(split[1]));
-                    }
-                    if (obj.nftChar.collectionSlug === "moonheads-zoomers") {
-                        let realId = zoomerIds[obj.nftChar.tokenId];
-                        let zoomer = zoomers[realId];
-                        if (zoomer.attributes) {
-                            for (let i = 0; i < zoomer.attributes.length; i++) {
-                                const attr = zoomer.attributes[i];
-                                if (attr.trait_type === "Clan") obj.char = attr.value.toLowerCase();
-                            }
+                if (obj.nftChar.collectionSlug === "moonheads") {
+                    obj.char = txStreetIds.getName(Number(split[1]));
+                }
+                if (obj.nftChar.collectionSlug === "moonheads-zoomers") {
+                    let realId = zoomerIds[obj.nftChar.tokenId];
+                    let zoomer = zoomers[realId];
+                    if (zoomer.attributes) {
+                        for (let i = 0; i < zoomer.attributes.length; i++) {
+                            const attr = zoomer.attributes[i];
+                            if (attr.trait_type === "Clan") obj.char = attr.value.toLowerCase();
                         }
                     }
                 }
-            } catch (error) {
-                console.error(error);
-                delete obj.char;
-                delete obj.nftChar;
             }
+        } catch (error) {
+            console.error(error);
+            delete obj.char;
+            delete obj.nftChar;
         }
     } else if (chain === "BTC" || chain === "LTC" || chain === "BCH") {
         obj.tx = data.hash;

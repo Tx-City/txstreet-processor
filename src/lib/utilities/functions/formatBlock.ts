@@ -46,5 +46,7 @@ export default (chain: string, block: any): Promise<any> => {
         obj.height = block.height;
         obj.time = block.timestamp;
     }
+
+    if(block.lastInserted) obj.inserted = Math.round(block.lastInserted / 1000);
     return obj;
 }

@@ -2,6 +2,7 @@ const { workerData } = require('worker_threads');
 import mongodb from '../../../../../databases/mongodb';
 import { setInterval } from "../../../utils/OverlapProtectedInterval";
 import { Logger } from '../../../../../lib/utilities';
+import { chainConfig } from "../../../../../data/chains";
 import fs from 'fs';
 import path from 'path';
 
@@ -40,6 +41,7 @@ setInterval(async () => {
             }
 
             //delete block file from NFS
+            if(!chainConfig[chain].storeBlockFile) return;
             const firstPart = block.hash[block.hash.length - 1];
             const secondPart = block.hash[block.hash.length - 2];
             const filePath = path.join(dataDir, 'blocks', chain, firstPart, secondPart, block.hash);

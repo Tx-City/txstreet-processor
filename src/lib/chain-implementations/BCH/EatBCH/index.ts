@@ -1,17 +1,15 @@
 import ChainImplementation from '../../implementation'; 
 import { Logger } from '../../../../lib/utilities';
 import bchaddr from 'bchaddrjs-slp'; 
+import redis from '../../../../databases/redis'; 
+import mongodb from "../../../../databases/mongodb";
 
 class EatBCH extends ChainImplementation {
     public addresses: string[] = []; 
     public _what: any = {}; 
-    public mongodb: any;
-    public redis: any; 
 
-    async init(mongodb: any, redis: any): Promise<ChainImplementation> {
+    async init(): Promise<ChainImplementation> {
         try {
-            this.mongodb = mongodb;
-            this.redis = redis; 
             // Obtain addresses 
             if(process.env.USE_DATABASE !== "true")
                 return this; 
@@ -64,7 +62,7 @@ class EatBCH extends ChainImplementation {
     //todo make into global function
     _getUSDValue = async (bchPaid: number) => {
         if(process.env.USE_DATABASE !== "true") return "0.00";
-        const { database } = await this.mongodb(); 
+        const { database } = await mongodb(); 
         let value = await database.collection('statistics').findOne({ chain: 'BCH' }, { 'fiatPrice-usd': 1 }); 
         let price = value['fiatPrice-usd'] || 0;
         let usdPaid = (bchPaid * price).toFixed(2);
@@ -86,10 +84,10 @@ class EatBCH extends ChainImplementation {
     _toCashAddress = async (address: string) => {
         let key = `toCashAddress-${address}`
         if(this._what[key]) return this._what[key]; 
-        let cached: any = await this.redis.getAsync(key);
+        let cached: any = await redis.getAsync(key);
         if(!cached) {
             cached = bchaddr.toCashAddress(address); 
-            this.redis.setAsync(key, cached, 'EX', 3600 * 72); 
+            redis.setAsync(key, cached, 'EX', 3600 * 72); 
         }
         this._what[key] = cached; 
         return cached; 
@@ -98,10 +96,10 @@ class EatBCH extends ChainImplementation {
     _toLegacyAddress = async (address: string) => {
         let key = `toLegacyAddress-${address}`
         if(this._what[key]) return this._what[key]; 
-        let cached: any = await this.redis.getAsync(key);
+        let cached: any = await redis.getAsync(key);
         if(!cached) {
             cached = bchaddr.toLegacyAddress(address);
-            this.redis.setAsync(key, cached, 'EX', 3600 * 72); 
+            redis.setAsync(key, cached, 'EX', 3600 * 72); 
         }
         this._what[key] = cached;
         return cached; 

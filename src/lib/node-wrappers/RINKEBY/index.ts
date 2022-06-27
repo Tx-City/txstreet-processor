@@ -64,6 +64,8 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
         });
     }
 
+    public getTransactionReceipts: undefined;
+
     public async getTransaction(id: string, verbosity: number, blockId?: string | number): Promise<any> {
         try {
             const transaction: any = await this.web3.eth.getTransaction(id);

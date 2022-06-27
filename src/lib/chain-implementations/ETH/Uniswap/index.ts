@@ -6,6 +6,8 @@ import axios from 'axios';
 
 import contract_0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D from "./0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D.json";
 
+import mongodb from '../../../../databases/mongodb'; 
+
 const getToken = (uniswap: any, address: string) => {
     return uniswap.tokenList[address];
 }
@@ -114,13 +116,9 @@ const getData = (uniswap: any, transaction: any): string | boolean => {
 class Uniswap extends ChainImplementation {
     public addresses: string[] = [];
     public tokenList: any = {};
-    public mongodb: any;
-    public redis: any;
 
-    async init(mongodb: any, redis: any): Promise<ChainImplementation> {
+    async init(): Promise<ChainImplementation> {
         try {
-            this.mongodb = mongodb;
-            this.redis = redis;
             if (process.env.USE_DATABASE === "false")
                 return this;
             const { database } = await mongodb();

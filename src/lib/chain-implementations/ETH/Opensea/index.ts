@@ -7,13 +7,11 @@ import fetch from "node-fetch";
 import contract_0x7be8076f4ea4a4ad08075c2508e481d6c946d12b from "./0x7be8076f4ea4a4ad08075c2508e481d6c946d12b.json";
 import contract_0x7f268357a8c2552623316e2562d90e642bb538e5 from "./0x7f268357a8c2552623316e2562d90e642bb538e5.json";
 
+import mongodb from '../../../../databases/mongodb'; 
 
 class Opensea extends ChainImplementation {
   public addresses: string[] = [];
   public nftList: any = {}; //TODO cache in db
-
-  public mongodb: any;
-  public redis: any;
 
   async fetchContract(address: string): Promise<any> {
     // console.log('test');
@@ -115,10 +113,8 @@ class Opensea extends ChainImplementation {
       " Order";
   }
 
-  async init(mongodb: any, redis: any): Promise<ChainImplementation> {
+  async init(): Promise<ChainImplementation> {
     try {
-      this.mongodb = mongodb;
-      this.redis = redis;
       if (process.env.USE_DATABASE !== "false") {
         const { database } = await mongodb();
         const collection = database.collection("houses");

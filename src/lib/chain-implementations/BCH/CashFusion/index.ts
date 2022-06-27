@@ -3,19 +3,8 @@ import { Logger } from '../../../../lib/utilities';
 
 class CashFusion extends ChainImplementation {
 
-    public mongodb: any;
-    public redis: any; 
-
-    async init(mongodb: any, redis: any): Promise<ChainImplementation> {
-        try {
-            this.mongodb = mongodb;
-            this.redis = redis; 
-
-        } catch (error) {
-            Logger.error(error);
-        } finally {
-            return this; 
-        }
+    async init(): Promise<ChainImplementation> {
+        return this;
     }
 
     async validate(transaction: any): Promise<boolean> {

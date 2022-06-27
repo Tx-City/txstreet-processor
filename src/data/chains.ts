@@ -1,20 +1,27 @@
 export const chainConfig: any = {
     ETH: {
-        wikiname: 'ethereum'
+        wikiname: 'ethereum',
+        storeBlockFile: true
     },
     BTC: {
-        wikiname: 'bitcoin'
+        wikiname: 'bitcoin',
+        storeBlockFile: true
     },
     LTC: {
-        wikiname: 'litecoin'
+        wikiname: 'litecoin',
+        storeBlockFile: true
     },
     XMR: {
-        wikiname: 'monero'
+        wikiname: 'monero',
+        storeBlockFile: true
     },
     BCH: {
-        wikiname: 'bitcoincash'
+        wikiname: 'bitcoincash',
+        storeBlockFile: true
     },
     ARBI: {
-        wikiname: 'arbitrum'
+        wikiname: 'arbitrum',
+        rollup: true,
+        storeBlockFile: false
     }
 }
