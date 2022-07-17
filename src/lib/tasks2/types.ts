@@ -8,6 +8,7 @@ export interface ProjectedEthereumTransaction {
     gasPrice: number | undefined; 
     maxFeePerGas: number | undefined;
     maxPriorityFeePerGas: number | undefined;
+    gasUsed?: number | undefined;
     dropped: boolean | undefined;
     processed: boolean;
     extras?: any;

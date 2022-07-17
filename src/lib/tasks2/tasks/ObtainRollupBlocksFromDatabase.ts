@@ -63,6 +63,7 @@ export default class ObtainRollupBlocksFromDatabase extends OverlapProtectedInte
                         results[i].transactionsFull.forEach((transaction: any) => {
                             transaction.insertedAt = new Date(results[i].insertedAt).getTime();
                             transaction.timestamp = results[i].timestamp * 1000;
+                            transaction.gasUsed = transaction?.receipt?.gasUsed;
                         });
                         transactionResults = transactionResults.concat(results[i].transactionsFull);
                     }
