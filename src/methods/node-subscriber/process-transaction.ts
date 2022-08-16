@@ -3,7 +3,7 @@ import { Logger, waitForTime } from '../../lib/utilities';
 import claimTransaction from './claim-transaction';
 import storeTransaction from './store-transaction';
 import debug from 'debug';
-import updateAccountNonce from './updateAccountNonce';
+import updateAccountNonces from '../tx-processor/update-account-nonces';
 import checkSameNonce from './check-same-nonce';
 import checkBlocksForTx from './check-blocks-for-tx';
 import Bottleneck from 'bottleneck';
@@ -22,6 +22,7 @@ let hack = true;
 export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any> => {
     try { 
         // If we are unable to claim this transaction, do not continue. 
+        console.log(transaction.hash);
         if(!(await claimTransaction(wrapper.ticker, transaction.hash))) {
             return;
         }
@@ -43,12 +44,11 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
             return; 
 
             
-        if((wrapper as any).getTransactionCount && !transaction.fromNonce) {
-            transaction = await updateAccountNonce(wrapper, transaction); 
-            transaction = await checkSameNonce(wrapper, transaction);
-            if(!transaction) return; 
-        }
-        
+        // if((wrapper as any).getTransactionCount && !transaction.fromNonce) {
+        //     transaction = await updateAccountNonces(wrapper, [transaction]); 
+        //     transaction = await checkSameNonce(wrapper, transaction);
+        //     if(!transaction) return; 
+        // }
         await callChainHooks(wrapper.ticker, transaction); 
 
         if((wrapper as any).getPendingExtras) {

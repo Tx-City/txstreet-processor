@@ -45,6 +45,8 @@ setInterval(async () => {
         let hashes = transactions.map((t: any) => t.hash);
         let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedEthereumTransaction) => transaction.from))] as string[]
 
+        console.log("TRANSACTIONS: " + transactions.length);
+
         // Test Cache 
         let cachedHashes = Object.keys(cache);
         let requestHashes: string[] = [];

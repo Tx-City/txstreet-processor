@@ -90,7 +90,7 @@ export default class ARBIWrapper extends BlockchainWrapper {
     //     }
     // }
 
-        public async getTransactionReceipts(block: any): Promise<any[]> {
+    public async getTransactionReceipts(block: any): Promise<any[]> {
         try {
             let promises = [];
             for (let i = 0; i < block.transactions.length; i++) {
@@ -104,6 +104,8 @@ export default class ARBIWrapper extends BlockchainWrapper {
             return [];
         }
     }
+
+    public getTransactionReceipt: undefined;
     
 
     public async getTransaction(id: string, verbosity: number, blockId?: string | number): Promise<any> {

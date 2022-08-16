@@ -36,6 +36,13 @@ export default abstract class BlockchainWrapper extends EventEmitter {
     public abstract getTransactionReceipts?(block: any): any;
 
     /**
+    * Obtains array of transaction receipts.
+    * 
+    * @param block The block object with hash or id.
+    */
+     public abstract getTransactionReceipt?(hash: string): any;
+
+    /**
      * Obtains a transaction from the node with varying levels of information based on the vebosity.
      * 
      * @param id The id of the transaction, usually represented by a hash.
@@ -61,6 +68,13 @@ export default abstract class BlockchainWrapper extends EventEmitter {
      * @param depth The current depth of the request. (How many times this request has been called from a single function call)
      */
     public abstract resolveBlock(id: string | number, verbosity: number, epth: number): Promise<any>;
+
+    /**
+     * Gets the number of transactions sent by this account/address.
+     * 
+     * @param account The account/address.
+     */
+    public abstract getTransactionCount(account: string): Promise<number>;
 
     /**
      * Determines rather or not the supplied data represents that of a transaction.

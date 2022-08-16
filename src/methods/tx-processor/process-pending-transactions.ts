@@ -124,12 +124,12 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         await checkHousing(wrapper, transactions); 
 
         // Check to see if this wrapper implementation has a getTransactionCount function implemented. 
-        if((wrapper as any).getTransactionCount) {
-            // Get list of accounts that need their txCount updated. 
-            // var accounts: string[] = [... new Set(transactions.map(transaction => transaction.from))];
-            transactions = await updateAccountNonces(wrapper, transactions); 
-            transactions = await checkSameNonce(wrapper, transactions); 
-        }
+        // if((wrapper as any).getTransactionCount) {
+        //     // Get list of accounts that need their txCount updated. 
+        //     // var accounts: string[] = [... new Set(transactions.map(transaction => transaction.from))];
+        //     transactions = await updateAccountNonces(wrapper, transactions); 
+        //     transactions = await checkSameNonce(wrapper, transactions); 
+        // }
         
         // Update all successful transactions with the appropriate transaction data. 
         await storePendingTransaction(wrapper, transactions);

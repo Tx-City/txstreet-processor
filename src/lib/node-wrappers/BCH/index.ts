@@ -123,6 +123,10 @@ export default class BCHWrapper extends BlockchainWrapper {
 
     public getTransactionReceipts: undefined;
 
+    public getTransactionReceipt: undefined;
+
+    public getTransactionCount: undefined;
+
     public async getTransaction(id: string, verbosity: number, blockId?: string | number): Promise<any> {
         const getRawTransaction = () => new Promise((resolve, reject) => {
             this.rpc.getRawTransaction(id, Math.max(Math.min(verbosity, 1), 0), blockId, (err: string, resp: any) => {

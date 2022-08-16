@@ -57,6 +57,10 @@ export default class XMRWrapper extends BlockchainWrapper {
 
     public getTransactionReceipts: undefined;
 
+    public getTransactionReceipt: undefined;
+
+    public getTransactionCount: undefined;
+
     public async getTransaction(id: string, verbosity: number, blockId?: string | number): Promise<any> {
         try {
             const result = await this.rpc("get_transactions", "json", { txs_hashes: [id], decode_as_json: true }); 

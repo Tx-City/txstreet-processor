@@ -9,6 +9,7 @@ import checkHousing from './check-housing';
 import updateAccountNonces from './update-account-nonces';
 import { Logger } from '../../lib/utilities';
 import axios from 'axios'; 
+import redis from '../../databases/redis'; 
 
 export default async (wrapper: BlockchainWrapper): Promise<any> => {
     try {
@@ -61,18 +62,27 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             let host = (process.env.ETH_NODE as string).substring(5); 
             host = host.substring(0, host.indexOf(':')); 
 
+            // let receiptTasks: any[] = [];
+            // receiptTasks.push(axios.post(`http://${host}/transaction-receipts`, { hashes: transactionRequests.map((request: any) => request.hash) }));
+
+
             let receiptTasks: any[] = [];
-            receiptTasks.push(axios.post(`http://${host}/transaction-receipts`, { hashes: transactionRequests.map((request: any) => request.hash) }));
+            transactionRequests.forEach((transaction) => {
+                receiptTasks.push(wrapper.getTransactionReceipt(transaction.hash));
+            });
+
+            
             let codeTasks: any[] = []; 
             codeTasks.push(axios.post(`http://${host}/contract-codes`, { contracts: transactionRequests.map((request: any) => request.to) })); 
-            
-            let receiptResults = (await Promise.all(receiptTasks))[0].data;
+
+            let receiptResults = (await Promise.all(receiptTasks));
             for(let i = 0; i < receiptResults.length; i++) {
                 const receiptResult = receiptResults[i]; 
                 for(let x = 0; x < transactionRequests.length; x++) {
                     const transactionRequest = transactionRequests[x]; 
-                    if(transactionRequest.hash === receiptResult.hash) {
-                        transactionRequests[x].receipt = receiptResult.receipt; 
+                    if(transactionRequest.hash === receiptResult.transactionHash) {
+                        transactionRequests[x].receipt = receiptResult; 
+                        console.log(transactionRequests[x]);
                     }
                 }
             }
@@ -98,6 +108,14 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         // Find all requests that have completed successfully. 
         var transactions = transactionRequests.filter((result: any) => !result.failed && !result.bad); 
 
+        //set the nonce for all successful transaction confirms
+        transactions.forEach(async transaction => {
+            const key = (wrapper as any).ticker + "-nonce-" + transaction.from;
+            let cached: any = await redis.getAsync(key);
+            let oldNonce = Number(cached) || 0;
+            redis.setAsync(key, Math.max(transaction.nonce, oldNonce), 'EX', 3600); 
+        });
+
         // Unlock all failed transactions, this is in it's own try/catch to not stop execution flow.
         try { 
             await unlockFailedTransactions(wrapper, failures.map((result: any) => result.hash)); 
@@ -117,9 +135,9 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         // Houses
         await checkHousing(wrapper, transactions);
 
-        if((wrapper as any).getTransactionCount) {
-            transactions = await updateAccountNonces(wrapper, transactions); 
-        }
+        // if((wrapper as any).getTransactionCount) {
+        //     transactions = await updateAccountNonces(wrapper, transactions); 
+        // }
 
         // Update all successful transactions with the appropriate transaction data. 
         await storeConfirmedTransaction(wrapper, transactions);
