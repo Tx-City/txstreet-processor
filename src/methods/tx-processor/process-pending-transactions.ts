@@ -6,6 +6,8 @@ import removeBadTransactions from './remove-bad-transactions';
 import storePendingTransaction from './store-pending-transaction';
 import checkHousing from './check-housing';
 import updateAccountNonces from './update-account-nonces';
+import getReceipts from './get-receipts';
+import getContactCodes from './get-contact-codes';
 import { Logger } from '../../lib/utilities';
 import axios from 'axios';
 
@@ -57,39 +59,9 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
                     // In this event, we still want the confirmed data (receipts, fees, etc) but don't care about processing a block. 
                     if (wrapper.isTransactionConfirmed(transaction)) {
                         if (wrapper.ticker === "ETH") {
-                            let host = (process.env.ETH_NODE as string).substring(5);
-                            host = host.substring(0, host.indexOf(':'));
-
-                            transaction = await updateAccountNonces(wrapper, [transaction], true, true);
-
-                            // let receiptTasks: any[] = [];
-                            // receiptTasks.push(axios.post(`http://${host}/transaction-receipts`, { hashes: [transaction.hash] }));
-
-                            let receiptTasks: any[] = [];
-                            transactionRequests.forEach((transaction) => {
-                                receiptTasks.push(wrapper.getTransactionReceipt(transaction.hash));
-                            });
-
-
-                            // let codeTasks: any[] = [];
-                            // codeTasks.push(axios.post(`http://${host}/contract-codes`, { contracts: [transaction.to] }));
-
-                            // let receiptResults = (await Promise.all(receiptTasks))[0].data;
-                            let receiptResults = (await Promise.all(receiptTasks));
-                            for (let i = 0; i < receiptResults.length; i++) {
-                                const receiptResult = receiptResults[i];
-                                if (transaction.hash === receiptResult.hash) {
-                                    transaction.receipt = receiptResult.receipt;
-                                }
-                            }
-
-                            // let codeResults = (await Promise.all(codeTasks))[0].data;
-                            // for (let i = 0; i < codeResults.length; i++) {
-                            //     const codeResult = codeResults[i];
-                            //     if (transaction.to === codeResult.contract) {
-                            //         transaction.contract = true;
-                            //     }
-                            // }
+                            transaction = await updateAccountNonces(wrapper, [transaction], true, true, false);
+                            transaction = await getReceipts(wrapper, [transaction], true, false);
+                            transaction = await getContactCodes(wrapper, transaction, true, false, false);
                         }
                     }
 

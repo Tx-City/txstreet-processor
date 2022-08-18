@@ -1,9 +1,18 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import { Logger } from '../../lib/utilities';
 import redis from '../../databases/redis';
+import axios from 'axios';
 
+let globalWrapper: BlockchainWrapper = null;
 
-export default async (wrapper: BlockchainWrapper, transactions: any[], returnSingle = false, bypassCache = false): Promise<any> => {
+function setAccountValue(accountValues: any, account: string, value: number) {
+    accountValues[account] = value;
+    const key = (globalWrapper as any).ticker + "-nonce-" + account;
+    redis.setAsync(key, value, 'EX', 3600 * 12);
+}
+
+export default async (wrapper: BlockchainWrapper, transactions: any[], returnSingle = false, bypassCache = false, bulkApi = Boolean(process.env.USE_BULK_API)): Promise<any> => {
+    globalWrapper = wrapper;
     let calls = 0;
     let cachedCount = 0;
     try {
@@ -33,29 +42,33 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
         });
         await Promise.all(cachedTasks);
 
-        //create requests for accounts that aren't cached
-        let requests: { [key: string]: any }[] = [];
-        // let requestsArr: Promise<number>[] = [];
-        for (const account in accounts) {
-            if (typeof accountValues[account] !== "undefined") continue;
-            let request = wrapper.getTransactionCount(account);
-            calls++;
-            requests.push({ account, result: request });
-            // requestsArr.push(request);
-            // await new Promise(r => setTimeout(r, 5));
-        }
-        // await Promise.all(requestsArr);
+        if (bulkApi) {
+            let host = (process.env.ETH_NODE as string).substring(5);
+            host = host.substring(0, host.indexOf(':'));
+            let response = await axios.post(`http://${host}/nonces`, { accounts: Object.keys(accounts) });
+            response.data.forEach((result: any) => {
+                setAccountValue(accountValues, result.account, result.count);
+            });
+        } else {
 
-        for (let i = 0; i < requests.length; i++) {
-            const request = requests[i];
+            //create requests for accounts that aren't cached
+            let requests: { [key: string]: any }[] = [];
+            // let requestsArr: Promise<number>[] = [];
+            for (const account in accounts) {
+                if (typeof accountValues[account] !== "undefined") continue;
+                let request = wrapper.getTransactionCount(account);
+                calls++;
+                requests.push({ account, result: request });
+                // requestsArr.push(request);
+                // await new Promise(r => setTimeout(r, 5));
+            }
+            // await Promise.all(requestsArr);
 
-            // }
-            // requests.forEach(async (request: any) => {
-            let account = request.account;
-            let result = await request.result;
-            accountValues[account] = result;
-            const key = (wrapper as any).ticker + "-nonce-" + account;
-            redis.setAsync(key, result, 'EX', 3600 * 12);
+            for (let i = 0; i < requests.length; i++) {
+                const request = requests[i];
+                let result = await request.result;
+                setAccountValue(accountValues, request.account, result);
+            }
         }
 
 
