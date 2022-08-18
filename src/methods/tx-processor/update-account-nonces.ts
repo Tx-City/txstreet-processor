@@ -1,76 +1,70 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import { Logger } from '../../lib/utilities';
 import redis from '../../databases/redis';
-// import axios from 'axios';
-// import removeBadTransactions from './remove-bad-transactions';
 
 
-export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<any> => {
+export default async (wrapper: BlockchainWrapper, transactions: any[], returnSingle = false, bypassCache = false): Promise<any> => {
+    let calls = 0;
+    let cachedCount = 0;
     try {
         var accounts: { [key: string]: boolean } = {}
         var accountValues: { [key: string]: number } = {}
-        var accountCached: { [key: string]: boolean } = {}
-        // var fromToTxs: any = {};
 
+        let cachedTasks: Promise<boolean>[] = [];
         transactions.forEach(async (transaction: any) => {
-            transaction.from = transaction.from.toLowerCase();
-            const key = (wrapper as any).ticker + "-nonce-" + transaction.from;
-            if (!accounts[transaction.from] && !accountValues[transaction.from]) {
-                let cached: any = await redis.getAsync(key);
-                if (cached){
-                    accountValues[transaction.from] = Number(cached);
-                    accountCached[transaction.from] = true;
+            cachedTasks.push(new Promise<boolean>(async (resolve) => {
+                try {
+                    transaction.from = transaction.from.toLowerCase();
+                    const key = (wrapper as any).ticker + "-nonce-" + transaction.from;
+                    if (!bypassCache && !accounts[transaction.from] && !accountValues[transaction.from]) {
+                        let cached: any = await redis.getAsync(key);
+                        if (cached) {
+                            cachedCount++;
+                            accountValues[transaction.from] = Number(cached);
+                        }
+                    }
+                    accounts[transaction.from] = true;
+                    return resolve(true);
+                } catch (error) {
+                    console.error(error);
+                    return resolve(false);
                 }
-            }
-            accounts[transaction.from] = true;
-
-            // if (!fromToTxs[transaction.from])
-            //     fromToTxs[transaction.from] = [];
-            // fromToTxs[transaction.from].push(transaction);
+            }));
         });
+        await Promise.all(cachedTasks);
 
         //create requests for accounts that aren't cached
         let requests: { [key: string]: any }[] = [];
-        let requestsArr: Promise<number>[] = [];
+        // let requestsArr: Promise<number>[] = [];
         for (const account in accounts) {
-            if(accountValues[account]) continue;
+            if (typeof accountValues[account] !== "undefined") continue;
             let request = wrapper.getTransactionCount(account);
-            requests.push({account, result: request});
-            requestsArr.push(request);
-            await new Promise(r => setTimeout(r, 5));
+            calls++;
+            requests.push({ account, result: request });
+            // requestsArr.push(request);
+            // await new Promise(r => setTimeout(r, 5));
         }
-       await Promise.all(requestsArr);
+        // await Promise.all(requestsArr);
 
-        requests.forEach((request : any) => {
+        for (let i = 0; i < requests.length; i++) {
+            const request = requests[i];
+
+            // }
+            // requests.forEach(async (request: any) => {
             let account = request.account;
-            let result = request.result;
+            let result = await request.result;
             accountValues[account] = result;
             const key = (wrapper as any).ticker + "-nonce-" + account;
-            if(!accountCached[account]) redis.setAsync(key, result, 'EX', 3600);
-        });
+            redis.setAsync(key, result, 'EX', 3600 * 12);
+        }
+
 
         transactions.forEach(async (transaction: any) => {
             transaction.fromNonce = accountValues[transaction.from] || 0;
         });
 
-        // for (let i = 0; i < accounts.length; i++) {
-        //     const account = accounts[i];
-        //     const result = Number(results[i]);
-        //     fromToTxs[account].forEach((transaction: any) => {
-        //         transaction.fromNonce = result;
-        //     });
-
-        // }
-
-        // let host = (process.env.ETH_NODE as string).substring(5); 
-        // host = host.substring(0, host.indexOf(':')); 
-        // let response = await axios.post(`http://${host}/nonces`, { accounts }); 
-        // response.data.forEach((result: any) => {
-        //     fromToTxs[result.account].forEach((transaction: any) => {
-        //         transaction.fromNonce = result.count;
-        //     });
-        // })
-        console.log(transactions);
+        // console.log(calls + " nonce calls", cachedCount + " cached");
+        if (returnSingle) return transactions[0];
         return transactions;
     } catch (error) {
         Logger.error(error);

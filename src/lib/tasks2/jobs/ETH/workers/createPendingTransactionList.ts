@@ -8,6 +8,10 @@ import path from 'path';
 import { ETHTransactionsSchema } from '../../../../../data/schemas';
 import { ProjectedEthereumTransaction } from '../../../types';
 import axios from 'axios';
+import updateAccountNonces from '../../../../../methods/tx-processor/update-account-nonces';
+import * as Wrappers from '../../../../../lib/node-wrappers';
+
+const ethWrapper = new Wrappers.ETHWrapper(process.env.ETH_NODE as string);
 
 const readFile = (path: string) => new Promise<Buffer>((resolve, reject) => {
     fs.readFile(path, (err: NodeJS.ErrnoException, data: Buffer) => {
@@ -45,7 +49,7 @@ setInterval(async () => {
         let hashes = transactions.map((t: any) => t.hash);
         let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedEthereumTransaction) => transaction.from))] as string[]
 
-        console.log("TRANSACTIONS: " + transactions.length);
+        // console.log("TRANSACTIONS: " + transactions.length);
 
         // Test Cache 
         let cachedHashes = Object.keys(cache);
@@ -76,20 +80,7 @@ setInterval(async () => {
         transactions = transactions.map((transaction: any) => ({ ...transaction, ...cache[transaction.hash] }));
         // End TMP
 
-        const accounts: { [key: string]: number } = {};
-
-        // const writeNonceInstructions: any[] = [];
-
-        let host = (process.env.ETH_NODE as string).substring(5);
-        host = host.substring(0, host.indexOf(':'));
-        let response = await axios.post(`http://${host}/nonces`, { accounts: uniqueAccounts });
-        if(!response?.data?.[0]?.account) return;
-        response.data.forEach((result: any) => {
-            accounts[result.account] = result.count;
-        })
-
-        // if (writeNonceInstructions.length)
-        //     await database.collection('account_nonces').bulkWrite(writeNonceInstructions);
+        transactions = await updateAccountNonces(ethWrapper, transactions);
 
         // The amount of transactions added by an account. 
         const addedByAddress: any = {};
@@ -120,7 +111,7 @@ setInterval(async () => {
                 // The next transaction to 'process'
                 const nextToAdd = toMove[transaction.from][0];
                 // The next nonce is the currentTransactionCount + the amount of transactions added. 
-                const nextNonce = (addedByAddress[transaction.from] || 0) + (accounts[transaction.from] || 0);
+                const nextNonce = (addedByAddress[transaction.from] || 0) + (transaction.fromNonce || 0);
                 if (nextNonce === nextToAdd.nonce) {
                     // Remove the transaction from toMove
                     toMove[transaction.from].shift();
@@ -142,7 +133,7 @@ setInterval(async () => {
             if (!addedByAddress[transaction.from])
                 addedByAddress[transaction.from] = 0;
             // The next nonce is the currentTransactionCount + the amount of transactions added. 
-            const nextNonce = (addedByAddress[transaction.from] || 0) + (accounts[transaction.from] || 0);
+            const nextNonce = (addedByAddress[transaction.from] || 0) + (transaction.fromNonce || 0);
 
             if (nextNonce === transaction.nonce) {
                 pushAndCheckToMove(transaction);
@@ -167,7 +158,7 @@ setInterval(async () => {
 
         let count = 0;
         pendingList = pendingList.map((transaction: any) => {
-            transaction.fromNonce = accounts[transaction.from.toLowerCase()]
+            // transaction.fromNonce = accounts[transaction.from.toLowerCase()]
             transaction.type = transaction.maxFeePerGas ? 2 : 0;
             const formatted = formatTransaction("ETH", transaction)
             if (formatted.an == null) {

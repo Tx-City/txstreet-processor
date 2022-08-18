@@ -133,7 +133,7 @@ export default class LTCWrapper extends BlockchainWrapper {
                 if(err) return reject(err);
                 const transaction = resp.result;
                 if(transaction) {
-                    console.log(transaction); 
+                    // console.log(transaction); 
                     transaction.timestamp = transaction.time * 1000;
                     transaction.to = [];
                     transaction.from = [];

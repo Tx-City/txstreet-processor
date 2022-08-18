@@ -33,7 +33,7 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
         case ExecutionType.Custom:
             where = { processed: true, confirmed: false, blockHeight: { $eq: null }, lastProcessed: { $lte: fifteenSeconds }, dropped: { $exists: false } }; 
             project = { _id: 0, hash: 1 };
-            limit = 75;
+            limit = 10;
             sort = { pendingSortPrice: -1 };  
             return { where, project, limit, sort };
         case ExecutionType.Large:
@@ -51,13 +51,13 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
                 { $sort: { pendingSortPrice: -1 } }, 
                 { $limit: 40000 },
                 { $sort: { lastProcessed: 1 } }, 
-                { $limit: 250 },
+                { $limit: 25 },
                 { $project: { _id: 0, hash: 1 } }
             ];
         case ExecutionType.Small:
             where = { processed: true, confirmed: false, blockHeight: { $eq: null }, dropped: { $exists: false } };
             project = { _id: 0, hash: 1 }; 
-            limit = 250;
+            limit = 25;
             sort = { lastProcessed: 1 };
             return { where, project, limit, sort };  
             

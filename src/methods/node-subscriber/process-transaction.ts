@@ -22,7 +22,6 @@ let hack = true;
 export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any> => {
     try { 
         // If we are unable to claim this transaction, do not continue. 
-        console.log(transaction.hash);
         if(!(await claimTransaction(wrapper.ticker, transaction.hash))) {
             return;
         }
@@ -44,11 +43,11 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
             return; 
 
             
-        // if((wrapper as any).getTransactionCount && !transaction.fromNonce) {
-        //     transaction = await updateAccountNonces(wrapper, [transaction]); 
-        //     transaction = await checkSameNonce(wrapper, transaction);
-        //     if(!transaction) return; 
-        // }
+        if((wrapper as any).getTransactionCount && !transaction.fromNonce) {
+            transaction = await updateAccountNonces(wrapper, [transaction], true); 
+            transaction = await checkSameNonce(wrapper, transaction);
+            if(!transaction) return; 
+        }
         await callChainHooks(wrapper.ticker, transaction); 
 
         if((wrapper as any).getPendingExtras) {

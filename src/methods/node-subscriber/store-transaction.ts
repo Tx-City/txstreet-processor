@@ -26,7 +26,7 @@ const defaultTransactionFields = (ticker: string) => ({
 // Stores a #Block in the MongoDB Database.
 export default async (wrapper: BlockchainWrapper , transaction: any): Promise<Boolean> => {
     try {
-        console.log(transaction.hash);
+        // console.log(transaction.hash);
         // Merge the default fields into the current transaction data.
         transaction = { ...defaultTransactionFields(wrapper.ticker), ...transaction, }; 
 

@@ -62,18 +62,13 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             let host = (process.env.ETH_NODE as string).substring(5); 
             host = host.substring(0, host.indexOf(':')); 
 
-            // let receiptTasks: any[] = [];
-            // receiptTasks.push(axios.post(`http://${host}/transaction-receipts`, { hashes: transactionRequests.map((request: any) => request.hash) }));
-
-
             let receiptTasks: any[] = [];
             transactionRequests.forEach((transaction) => {
                 receiptTasks.push(wrapper.getTransactionReceipt(transaction.hash));
             });
-
             
-            let codeTasks: any[] = []; 
-            codeTasks.push(axios.post(`http://${host}/contract-codes`, { contracts: transactionRequests.map((request: any) => request.to) })); 
+            // let codeTasks: any[] = []; 
+            // codeTasks.push(axios.post(`http://${host}/contract-codes`, { contracts: transactionRequests.map((request: any) => request.to) })); 
 
             let receiptResults = (await Promise.all(receiptTasks));
             for(let i = 0; i < receiptResults.length; i++) {
@@ -82,21 +77,21 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
                     const transactionRequest = transactionRequests[x]; 
                     if(transactionRequest.hash === receiptResult.transactionHash) {
                         transactionRequests[x].receipt = receiptResult; 
-                        console.log(transactionRequests[x]);
+                        // console.log(transactionRequests[x]);
                     }
                 }
             }
 
-            let codeResults = (await Promise.all(codeTasks))[0].data; 
-            for(let i = 0; i < codeResults.length; i++) {
-                const codeResult = codeResults[i]; 
-                for(let x = 0; x < transactionRequests.length; x++) {
-                    const transactionRequest = transactionRequests[x]; 
-                    if(transactionRequest.to === codeResult.contract) {
-                        transactionRequests[x].contract = true; 
-                    }
-                }
-            }
+            // let codeResults = (await Promise.all(codeTasks))[0].data; 
+            // for(let i = 0; i < codeResults.length; i++) {
+            //     const codeResult = codeResults[i]; 
+            //     for(let x = 0; x < transactionRequests.length; x++) {
+            //         const transactionRequest = transactionRequests[x]; 
+            //         if(transactionRequest.to === codeResult.contract) {
+            //             transactionRequests[x].contract = true; 
+            //         }
+            //     }
+            // }
         }
 
         // Find all requests that have failed. 
@@ -135,9 +130,9 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         // Houses
         await checkHousing(wrapper, transactions);
 
-        // if((wrapper as any).getTransactionCount) {
-        //     transactions = await updateAccountNonces(wrapper, transactions); 
-        // }
+        if((wrapper as any).getTransactionCount) {
+            transactions = await updateAccountNonces(wrapper, transactions, false, true); 
+        }
 
         // Update all successful transactions with the appropriate transaction data. 
         await storeConfirmedTransaction(wrapper, transactions);

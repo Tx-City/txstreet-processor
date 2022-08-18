@@ -1,13 +1,13 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import { waitForTime } from '../../lib/utilities';
-import getPendingBatch from './get-pending-batch'; 
+import getPendingBatch from './get-pending-batch';
 import unlockFailedTransactions from './unlock-failed-transactions';
 import removeBadTransactions from './remove-bad-transactions';
 import storePendingTransaction from './store-pending-transaction';
 import checkHousing from './check-housing';
 import updateAccountNonces from './update-account-nonces';
 import { Logger } from '../../lib/utilities';
-import axios from 'axios'; 
+import axios from 'axios';
 
 import checkSameNonce from './check-same-nonce';
 
@@ -16,14 +16,14 @@ import checkSameNonce from './check-same-nonce';
 // exist we need to inform the client using redis.
 export default async (wrapper: BlockchainWrapper): Promise<any> => {
     try {
-        const transactionRequests = await getPendingBatch(wrapper); 
-        
+        const transactionRequests = await getPendingBatch(wrapper);
+
         // If there were no transactions, provide a small delay to allow for more inserts.
         // Since pending transactions come directly from the mempool, this delay can be relatively small.
-        if(transactionRequests.length < 1) {
-            await waitForTime(30 + Math.floor(Math.random() * 70)); 
-            return true; 
-        } 
+        if (transactionRequests.length < 1) {
+            await waitForTime(30 + Math.floor(Math.random() * 70));
+            return true;
+        }
 
         Logger.info(`Got pending batch of ${transactionRequests.length} transactions.`);
 
@@ -37,79 +37,89 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             // later with async/await.
             const task = new Promise(async (resolve) => {
                 try {
-                    if(!transactionRequest.hash) {
+                    if (!transactionRequest.hash) {
                         return resolve({ request: transactionRequest, failed: true });
                     }
 
                     let transaction = null;
-                    if(wrapper.isTransaction(transactionRequest)) 
-                        transaction = transactionRequest; 
-                    else transaction = await wrapper.getTransaction(transactionRequest.hash, 2); 
+                    if (wrapper.isTransaction(transactionRequest))
+                        transaction = transactionRequest;
+                    else transaction = await wrapper.getTransaction(transactionRequest.hash, 2);
 
-                    if(!transaction) 
-                        return resolve({ request: transactionRequest, failed: true }); 
-                        
+                    if (!transaction)
+                        return resolve({ request: transactionRequest, failed: true });
+
                     // Assign transaction.node for ease-of-access. 
-                    transaction.node = transactionRequest.node; 
-                    
+                    transaction.node = transactionRequest.node;
+
                     // Even though this is the processor for pending transactions, sometimes a user-request may come in where
                     // the transaction is confirmed, even though there's not a block for it to be included by to be processed.
                     // In this event, we still want the confirmed data (receipts, fees, etc) but don't care about processing a block. 
-                    if(wrapper.isTransactionConfirmed(transaction)) {
-                        if(wrapper.ticker === "ETH") {
-                            let host = (process.env.ETH_NODE as string).substring(5); 
-                            host = host.substring(0, host.indexOf(':')); 
-                
+                    if (wrapper.isTransactionConfirmed(transaction)) {
+                        if (wrapper.ticker === "ETH") {
+                            let host = (process.env.ETH_NODE as string).substring(5);
+                            host = host.substring(0, host.indexOf(':'));
+
+                            transaction = await updateAccountNonces(wrapper, [transaction], true, true);
+
+                            // let receiptTasks: any[] = [];
+                            // receiptTasks.push(axios.post(`http://${host}/transaction-receipts`, { hashes: [transaction.hash] }));
+
                             let receiptTasks: any[] = [];
-                            receiptTasks.push(axios.post(`http://${host}/transaction-receipts`, { hashes: [transaction.hash] }));
-                            let codeTasks: any[] = []; 
-                            codeTasks.push(axios.post(`http://${host}/contract-codes`, { contracts: [transaction.to] })); 
-                            
-                            let receiptResults = (await Promise.all(receiptTasks))[0].data;
-                            for(let i = 0; i < receiptResults.length; i++) {
-                                const receiptResult = receiptResults[i]; 
-                                if(transaction.hash === receiptResult.hash) {
-                                    transaction.receipt = receiptResult.receipt; 
+                            transactionRequests.forEach((transaction) => {
+                                receiptTasks.push(wrapper.getTransactionReceipt(transaction.hash));
+                            });
+
+
+                            // let codeTasks: any[] = [];
+                            // codeTasks.push(axios.post(`http://${host}/contract-codes`, { contracts: [transaction.to] }));
+
+                            // let receiptResults = (await Promise.all(receiptTasks))[0].data;
+                            let receiptResults = (await Promise.all(receiptTasks));
+                            for (let i = 0; i < receiptResults.length; i++) {
+                                const receiptResult = receiptResults[i];
+                                if (transaction.hash === receiptResult.hash) {
+                                    transaction.receipt = receiptResult.receipt;
                                 }
                             }
-                
-                            let codeResults = (await Promise.all(codeTasks))[0].data; 
-                            for(let i = 0; i < codeResults.length; i++) {
-                                const codeResult = codeResults[i]; 
-                                if(transaction.to === codeResult.contract) {
-                                    transaction.contract = true; 
-                                }
-                            }
+
+                            // let codeResults = (await Promise.all(codeTasks))[0].data;
+                            // for (let i = 0; i < codeResults.length; i++) {
+                            //     const codeResult = codeResults[i];
+                            //     if (transaction.to === codeResult.contract) {
+                            //         transaction.contract = true;
+                            //     }
+                            // }
                         }
                     }
 
-                    return resolve({ request: transactionRequest, transaction }); 
+                    return resolve({ request: transactionRequest, transaction });
                 } catch (error) {
                     Logger.error(error);
                     return resolve({ request: transactionRequest, failed: true });
                 }
-            }); 
+            });
 
             // Add it to the list of tasks, by not awaiting it here it allows asynchronous execution to be awaited later.
-            tasks.push(task); 
+            tasks.push(task);
         });
 
         // Since all of our Promises only resolve, we can get away with Promise.all here without any tricks.
-        const results = await Promise.all(tasks);         
+        const results = await Promise.all(tasks);
 
         // Find all requests that have failed. 
         const failures = results.filter((result: any) => result.failed);
 
         // Find all requests that have bad transactions.
-        const badTransactions = results.filter((result: any) => result.transaction == null); 
+        const badTransactions = results.filter((result: any) => result.transaction == null);
 
         // Find all requests that have completed successfully. 
-        var transactions = results.filter((result: any) => result.transaction).map((result: any) => result.transaction); 
+        var transactions = results.filter((result: any) => result.transaction).map((result: any) => result.transaction);
 
         // Unlock all failed transactions, this is in it's own try/catch to not stop execution flow.
-        try { 
-            await unlockFailedTransactions(wrapper, failures.map((result: any) => result.request.hash)); 
-        } catch (error) { 
+        try {
+            await unlockFailedTransactions(wrapper, failures.map((result: any) => result.request.hash));
+        } catch (error) {
             Logger.error(error);
         }
 
@@ -121,16 +131,16 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         }
 
         // Houses
-        await checkHousing(wrapper, transactions); 
+        await checkHousing(wrapper, transactions);
 
         // Check to see if this wrapper implementation has a getTransactionCount function implemented. 
-        // if((wrapper as any).getTransactionCount) {
-        //     // Get list of accounts that need their txCount updated. 
-        //     // var accounts: string[] = [... new Set(transactions.map(transaction => transaction.from))];
-        //     transactions = await updateAccountNonces(wrapper, transactions); 
-        //     transactions = await checkSameNonce(wrapper, transactions); 
-        // }
-        
+        if ((wrapper as any).getTransactionCount) {
+            // Get list of accounts that need their txCount updated. 
+            // var accounts: string[] = [... new Set(transactions.map(transaction => transaction.from))];
+            transactions = await updateAccountNonces(wrapper, transactions);
+            transactions = await checkSameNonce(wrapper, transactions);
+        }
+
         // Update all successful transactions with the appropriate transaction data. 
         await storePendingTransaction(wrapper, transactions);
 
@@ -138,8 +148,8 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         transactions.length = 0;
         badTransactions.length = 0;
         failures.length = 0;
-        results.length = 0; 
-        tasks.length = 0; 
+        results.length = 0;
+        tasks.length = 0;
         transactionRequests.length = 0;
 
         return true;

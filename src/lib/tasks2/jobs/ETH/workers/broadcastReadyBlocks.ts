@@ -28,6 +28,13 @@ const storeBlock = async (database: any, block: any) => {
     try {
         const remainingTxs = await database.collection('transactions_ETH').find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).count();
         if (remainingTxs > 0) {
+            let remainingFull = await database.collection('transactions_ETH').find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).limit(20).toArray();
+            for (let i = 0; i < remainingFull.length; i++) {
+                const tx = remainingFull[i];
+                if(tx.locked && Date.now() - tx.lockedAt > 3000){
+                    await database.collection('transactions_ETH').updateOne({ hash: tx.hash }, { $set: { locked: false, processed: false } });
+                }
+            }
             Logger.info(`Block ${block.hash} is still waiting on ${remainingTxs} transactions to be processed.`);
             return false;
         }
@@ -38,8 +45,13 @@ const storeBlock = async (database: any, block: any) => {
 
         block.txFull = {};
         const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true }).toArray();
-        if(block.transactions && block.transactions.length > 0 && transactions.length === 0)
-            return false; 
+        if(block.transactions && block.transactions.length > 0 && transactions.length === 0){
+            for (let i = 0; i < block.transactions.length; i++) {
+                const hash = block.transactions[i];
+                await database.collection('transactions_ETH').updateOne({ hash }, { $set: { blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } }, { upsert: true });
+            }
+            return false;
+        }
         // const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true, dropped: { $exists: false } }).toArray();
         // if (block.transactions && block.transactions.length > 0 && transactions.length !== block.transactions.length) {
         //     const hashes = transactions.map((tx: any) => tx.hash);
@@ -94,6 +106,7 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
     try {
         // If the block is not stored, make sure all transactions are processed and then store it. 
         if (!block.stored) {
+            Logger.info("Block not stored - " + block.hash);
             if (!(await storeBlock(database, block)))
                 return false;
         }

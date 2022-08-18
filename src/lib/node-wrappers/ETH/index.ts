@@ -61,6 +61,7 @@ export default class ETHWrapper extends BlockchainWrapper {
         });
 
         this.web3.eth.subscribe('newBlockHeaders', (error: any, result: any) => { }).on('data', (block: any) => {
+            // console.log("BLOCK TEST", block);
             this.emit('confirmed-block', block.hash);
         });
     }

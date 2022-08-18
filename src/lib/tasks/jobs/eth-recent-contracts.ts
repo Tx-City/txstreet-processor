@@ -43,7 +43,7 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
         let etherscanTasks: any[] = []; 
         for(let i = 0; i < results.length; i++) {
             const result = results[i];
-            if(!result.contract || result.nameless) {
+            if(/*!result.contract || */result.nameless) {
                 const promise = limiter.schedule(async () => {
                     try {
                         let response = await axios.get(`https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${result._id}&apiKey=${process.env.ETHERSCAN_API_KEY}`);
