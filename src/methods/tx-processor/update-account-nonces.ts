@@ -8,7 +8,7 @@ let globalWrapper: BlockchainWrapper = null;
 function setAccountValue(accountValues: any, account: string, value: number) {
     accountValues[account] = value;
     const key = (globalWrapper as any).ticker + "-nonce-" + account;
-    redis.setAsync(key, value, 'EX', 3600 * 12);
+    redis.setAsync(key, value, 'EX', 3600);
 }
 
 export default async (wrapper: BlockchainWrapper, transactions: any[], returnSingle = false, bypassCache = false, bulkApi = Boolean(process.env.USE_BULK_API)): Promise<any> => {

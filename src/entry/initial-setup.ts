@@ -44,6 +44,7 @@ const createIndexes = async (): Promise<boolean> => {
         try { await database.collection('blocks').createIndex({ chain: 1, transactions: 1 }, { name: 'chain_transactions' }); } catch (e) { console.log(e) }
 
         try { await database.collection('contracts_ETH').createIndex({ contract: 1 }, { name: 'contract_1', unique: true }); } catch (e) { console.log(e) }
+        try { await database.collection('contracts_ETH').createIndex({ lastUpdated: 1 }, { name: 'TTL_lastUpdated', expireAfterSeconds: 604800 }); } catch (e) { console.log(e) }
 
         try { await database.collection('moonhead_owners').createIndex({ address: 1 }, { name: 'address' }); } catch (e) { console.log(e) }
         try { await database.collection('moonhead_owners').createIndex({ tokenId: 1 }, { name: 'tokenId' }); } catch (e) { console.log(e) }

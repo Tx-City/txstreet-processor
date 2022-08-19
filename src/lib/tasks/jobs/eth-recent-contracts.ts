@@ -27,6 +27,7 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
                 txCount: 1,
                 contract: 1,
                 nameless: 1,
+                lastChecked: 1,
                 weightedTransactions: {
                     $add: [
                         "$txCount", 
@@ -43,7 +44,7 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
         let etherscanTasks: any[] = []; 
         for(let i = 0; i < results.length; i++) {
             const result = results[i];
-            if(/*!result.contract || */result.nameless) {
+            if(!result.contract || result.nameless || (result?.lastChecked && Date.now() - result.lastChecked > 300000)) {
                 const promise = limiter.schedule(async () => {
                     try {
                         let response = await axios.get(`https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${result._id}&apiKey=${process.env.ETHERSCAN_API_KEY}`);
@@ -53,7 +54,7 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
                                 const contract: any = {
                                     contract: result._id, 
                                     name: data.result[0].ContractName,
-                                    nameLastChecked: 0,
+                                    lastChecked: Date.now(),
                                     compilerVersion: data.result[0].CompilerVersion, 
                                     swarmSource: data.result[0].SwarmSource,
                                     deployedOn: 0, 
@@ -76,6 +77,7 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
                                     contract.nameless = false;
                                 }
 
+                                contract.lastUpdated = new Date();
                                 result.contract = contract; 
                                 await database.collection(`contracts_${chain}`).updateOne({ contract: result._id }, { $set: contract }, { upsert: true}); 
                                 return contract; 
@@ -105,7 +107,7 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
             bulk.push({
                 updateOne: { 
                     filter: { contract: result._id },
-                    update: { $inc: { weight } }
+                    update: { $inc: { weight }, $set: { lastUpdated: new Date() } }
                 }
             })
         }
