@@ -61,7 +61,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
                         if (wrapper.ticker === "ETH") {
                             transaction = await updateAccountNonces(wrapper, [transaction], true, true, false);
                             transaction = await getReceipts(wrapper, [transaction], true, false);
-                            transaction = await getContactCodes(wrapper, transaction, true, false, false);
+                            transaction = await getContactCodes(wrapper, [transaction], true, false);
                         }
                     }
 
