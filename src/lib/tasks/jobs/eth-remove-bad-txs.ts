@@ -49,7 +49,7 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
                     }
                 }, 
                 { $sort: { pendingSortPrice: -1 } }, 
-                { $limit: 40000 },
+                { $limit: 1000 },
                 { $sort: { lastProcessed: 1 } }, 
                 { $limit: 150 },
                 { $project: { _id: 0, hash: 1 } }
