@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { Logger } from '..';
+// import fs from 'fs';
+// import { Logger } from '..';
 import redis from "../../../databases/redis";
 
 export default async (path: string, encoding: string|null = null): Promise<string> => {
