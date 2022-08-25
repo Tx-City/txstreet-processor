@@ -98,6 +98,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
         // This will throw an error if the JSON data is not valid, hitting the catch
         // and telling cloudflare to not cache the data. 
         const parsed = JSON.parse(data);
+        if(!parsed) console.error("Cannot get: " + filePath);
         delete parsed.note;
         delete parsed.tx;
         if(!verbose){
