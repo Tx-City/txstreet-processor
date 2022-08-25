@@ -19,7 +19,7 @@ const updateLookupTable = async () => {
     try {
         const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
         const filePath = path.join(directory, "f", "misc", "nft_owners.json");
-        const foundData = await readNFSFile(filePath, 'utf8');
+        const foundData = await readNFSFile(filePath);
         if (foundData) {
             const all = JSON.parse(String(foundData));
             if (Array.isArray(all) && all[0].collectionSlug) {

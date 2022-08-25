@@ -45,16 +45,16 @@ setInterval(async () => {
             }
 
             //delete block file from NFS
-            if (!chainConfig[chain].storeBlockFile) continue;
-            const firstPart = block.hash[block.hash.length - 1];
-            const secondPart = block.hash[block.hash.length - 2];
-            const filePath = path.join(dataDir, 'blocks', chain, firstPart, secondPart, block.hash);
-            try {
-                fs.unlinkSync(filePath);
-                Logger.print(`Deleted file: ` + filePath);
-            } catch (err) {
-                Logger.error(err);
-            }
+            // if (!chainConfig[chain].storeBlockFile) continue;
+            // const firstPart = block.hash[block.hash.length - 1];
+            // const secondPart = block.hash[block.hash.length - 2];
+            // const filePath = path.join(dataDir, 'blocks', chain, firstPart, secondPart, block.hash);
+            // try {
+            //     fs.unlinkSync(filePath);
+            //     Logger.print(`Deleted file: ` + filePath);
+            // } catch (err) {
+            //     Logger.error(err);
+            // }
         }
     } catch (err) {
         Logger.error(err);

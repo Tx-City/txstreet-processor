@@ -35,7 +35,7 @@ staticRouter.get('/live/:file', async (request: Request, response: Response) => 
                 return response.set('content-type', 'application/json').send(data); 
             }
             const filePath = path.join(directory, 'live', file);
-            data = await readNFSFile(filePath, 'utf8'); 
+            data = await readNFSFile(filePath); 
 
             // Sanity
             if(!data || !data.length) {
@@ -89,7 +89,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
             Logger.info(`Static request served from memory cache.`);
             return response.set('content-type', 'application/json').send(data); 
         }
-        data = await readNFSFile(filePath, 'utf8'); 
+        data = await readNFSFile(filePath); 
         // Sanity
         if(!data || !data.length) {
             return sendError();

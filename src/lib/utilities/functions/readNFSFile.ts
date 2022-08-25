@@ -1,19 +1,17 @@
-import { exec } from 'child_process';
 import fs from 'fs';
 import { Logger } from '..';
+import redis from "../../../databases/redis";
 
-const execPromise = (command: string) => new Promise((resolve, reject) => {
-    exec(command, async (error, stdout, stderr) => {
-        if(error || stderr) return reject(error || stderr); 
-        return resolve(stdout); 
-    });
-})
+export default async (path: string, encoding: string|null = null): Promise<string> => {
+    // const config: any = { flag: 'rs' };
+    // if(encoding) config.encoding = encoding; 
+    // const data = await fs.promises.readFile(path, config); 
+    // return data;
 
-export default async (path: string, encoding: string|null = null): Promise<Buffer|string|null> => {
-    const config: any = { flag: 'rs' };
-    if(encoding) config.encoding = encoding; 
-    const data = await fs.promises.readFile(path, config); 
-    return data;
+    let response = await redis.getAsync(path);
+
+    return String(response);
+    // return JSON.parse(response);
 
     // The below commented code is used to read via FileDescriptor
     /*

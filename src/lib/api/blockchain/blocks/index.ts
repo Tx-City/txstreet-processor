@@ -61,12 +61,12 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
         const secondPart = existingBlock.hash[existingBlock.hash.length - 2]; 
         const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage'); 
         const filePath = path.join(directory, "blocks", chain, firstPart, secondPart, existingBlock.hash);
-        const foundData = await readNFSFile(filePath, 'utf8');  
+        const foundData = await readNFSFile(filePath);  
 
         if(!foundData) {
             return response.json({ success: false, code: 1, message: `File not found in storage` })
         } else {
-            return response.json({ success: true, data: JSON.parse(String(foundData)) });
+            return response.json({ success: true, data: JSON.parse(foundData) });
         }
     }
     else{

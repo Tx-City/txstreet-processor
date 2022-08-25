@@ -160,7 +160,7 @@ export default class BCHPendingList {
                     const firstPart = hash[hash.length - 1];
                     const secondPart = hash[hash.length - 2]; 
                     const filePath = path.join(directory, 'blocks', 'BCH', firstPart, secondPart, hash); 
-                    const data = await readNFSFile(filePath, 'utf8'); 
+                    const data = await readNFSFile(filePath); 
                     const block = JSON.parse(data as string); 
                     if(block) return block;
                     return null; 
