@@ -895,6 +895,20 @@ bitcore-lib-cash@^8.25.10:
     inherits "=2.0.1"
     lodash "^4.17.20"
 
+bitcore-lib-ltc@^8.25.36:
+  version "8.25.36"
+  resolved "https://registry.yarnpkg.com/bitcore-lib-ltc/-/bitcore-lib-ltc-8.25.36.tgz#9bc48bc1422ef822d6a763aad0bfeac844c924d8"
+  integrity sha512-bnIeQELQC4IVRpUp+OVuxXsJk8fX7wAMYGqJ3fZwoi3YM9w4RC0MiEEQB1R6Hjm53QW6xCjwTCzpV2eC5I43cw==
+  dependencies:
+    bech32 "=2.0.0"
+    bn.js "=4.11.8"
+    bs58 "^4.0.1"
+    buffer-compare "=1.1.1"
+    elliptic "^6.5.3"
+    inherits "=2.0.1"
+    lodash "^4.17.20"
+    scryptsy "2.1.0"
+
 bitcore-lib@^8.25.10, bitcore-lib@^8.25.28:
   version "8.25.28"
   resolved "https://registry.yarnpkg.com/bitcore-lib/-/bitcore-lib-8.25.28.tgz#6841715e187bf2d9038eb803216bd3e50eeb5497"
@@ -3811,6 +3825,11 @@ scrypt-js@^3.0.0, scrypt-js@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/scrypt-js/-/scrypt-js-3.0.1.tgz#d314a57c2aef69d1ad98a138a21fe9eafa9ee312"
   integrity sha512-cdwTTnqPu0Hyvf5in5asVdZocVDTNRmR7XEcJuIzMjJeSHybHl7vpB66AzwTaIg6CLSbtjcxc8fqcySfnTkccA==
+
+scryptsy@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/scryptsy/-/scryptsy-2.1.0.tgz#8d1e8d0c025b58fdd25b6fa9a0dc905ee8faa790"
+  integrity sha512-1CdSqHQowJBnMAFyPEBRfqag/YP9OF394FV+4YREIJX4ljD7OxvQRDayyoyyCk+senRjSkP6VnUNQmVQqB6g7w==
 
 secp256k1@^4.0.1:
   version "4.0.3"

@@ -257,6 +257,15 @@ export default class XMRPendingList {
             if(!this._dirtyFlag) return;
             this._dirtyFlag = false;
 
+            for (let i = 0; i < this.array.length; i++) {
+                const entry = this.array[i];
+                if (entry.extras && typeof entry.extras !== "string") entry.extras = JSON.stringify(entry.extras);
+                if (entry.pExtras && typeof entry.pExtras !== "string") entry.pExtras = JSON.stringify(entry.pExtras);
+
+                //@ts-ignore
+                Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
+            }
+
             const contents = XMRTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
 
             const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');

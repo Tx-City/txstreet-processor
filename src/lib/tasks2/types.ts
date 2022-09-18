@@ -37,6 +37,8 @@ export interface ProjectedXMRTransaction {
     processed: boolean;
     fee: number;
     size: number;
+    extras?: any;
+    pExtras?: any;
 }
 
 export interface ProjectedXMRBlock {
@@ -59,6 +61,8 @@ export interface ProjectedBTCTransaction {
     fee: number;
     size: number; 
     rsize: number; 
+    extras?: any;
+    pExtras?: any;
 }
 
 export interface ProjectedBTCBlock {

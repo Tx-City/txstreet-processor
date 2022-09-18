@@ -19,6 +19,7 @@
     "bitcoinjs-lib": "^5.2.0",
     "bitcore-lib": "^8.25.10",
     "bitcore-lib-cash": "^8.25.10",
+    "bitcore-lib-ltc": "^8.25.36",
     "bottleneck": "^2.19.5",
     "compression": "^1.7.4",
     "cors": "^2.8.5",

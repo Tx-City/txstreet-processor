@@ -90,7 +90,7 @@ const run = async () => {
             case "ARBI":
             case "ETH":
             case "RINKEBY":
-                checkBadTxsInterval = 100;
+                checkBadTxsInterval = 10;
                 break; 
             case "LTC":
             case "BCH":

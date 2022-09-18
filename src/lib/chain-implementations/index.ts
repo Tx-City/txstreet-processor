@@ -16,6 +16,9 @@ export const enabledHooks: any = {
     ],
     LTC: [
         "DefaultHousing",
+        "MWEB",
+        "MWEBPeg",
+        "Segwit"
     ],
     BCH: [
         "CashFusion",
@@ -33,7 +36,7 @@ export const initHooks = async (chain: string) => {
     }
 }
 
-export default async (chain: string, transaction: any, confirmed: boolean = false) => {
+export default async (chain: string, transaction: any) => {
     let tasks: Promise<boolean>[] = [];
     let implementations = _implementations[chain] || [];
     implementations.forEach((implementation) => {
@@ -42,7 +45,7 @@ export default async (chain: string, transaction: any, confirmed: boolean = fals
                 let result = await implementation.validate(transaction);
                 let executed = false;
                 if (result) executed = await implementation.execute(transaction);
-                if (result && confirmed && executed && (implementation as any).confirmed) await (implementation as any).confirmed(transaction);
+                if (result && transaction.blockHash && executed && (implementation as any).confirmed) await (implementation as any).confirmed(transaction);
                 return resolve(true);
             } catch (error) {
                 return resolve(false);

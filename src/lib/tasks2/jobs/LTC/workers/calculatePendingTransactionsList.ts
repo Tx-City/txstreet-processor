@@ -7,12 +7,28 @@ import { BTCTransactionsSchema } from "../../../../../data/schemas";
 import { ProjectedBTCTransaction } from "../../../types";
 import fs from 'fs';
 
-const cache: any = {}; 
+const cache: any = {};
+
+let lastBlock: any = false;
+
+const getLastBlock = async (height: number = 0) => {
+    const { database } = await mongodb();
+    const collection = database.collection(`blocks`);
+    let results = await collection.find({chain: "LTC", broadcast: true, height: {$gte: height}}).sort({height:-1}).limit(1).toArray();
+    if(results.length){
+        lastBlock = results[0];
+    } else {
+        setTimeout(() => {
+            getLastBlock(height);
+        }, 5000);
+    }
+}
 
 redis.subscribe('block');
 redis.events.on('block', (data) => {
     const { chain } = data;
     if(chain !== 'LTC') return; 
+    getLastBlock(data.height);
     interval.force(); 
 });
 
@@ -51,6 +67,17 @@ const interval = setInterval(async () => {
         for(let i = 0; i < pTransactions.length; i++) {
             let cached = cache[pTransactions[i].hash]; 
             Object.assign(pTransactions[i], cached); 
+        }
+
+        //make sure last block is set
+        if(!lastBlock) await getLastBlock();
+        //loop through all and remove mweb transactions that are older than last block. temporary until we can validate they were included
+        for (let i = pTransactions.length - 1; i >= 0; i--) {
+            let tx = pTransactions[i];
+            if(lastBlock.timestamp && tx?.extras?.mweb){
+                let difference = lastBlock.timestamp - (tx.insertedAt / 1000);
+                if(difference > 0) pTransactions.splice(i, 1);
+            }
         }
 
         // Remove unused cached items

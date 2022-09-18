@@ -34,6 +34,7 @@ export default (chain: string, block: any): Promise<any> => {
         obj.weight = block.weight;
         obj.timestamp = Math.round(Number(block.timestamp));
         obj.time = Math.round(Number(block.timestamp));
+        if(block.mweb) obj.mweb = block.mweb;
     }
 
     if(chain === "XMR") {
