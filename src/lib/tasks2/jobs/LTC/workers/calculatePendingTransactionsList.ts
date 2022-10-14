@@ -46,6 +46,7 @@ const interval = setInterval(async () => {
         const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'LTC-pendingTransactions.bin'); 
         let data = await readFile(dataPath);
         let parsed = BTCTransactionsSchema.fromBuffer(data);
+        console.log("LTC PENDING " + parsed.collection.length);
         let pTransactions = parsed.collection.sort((a: ProjectedBTCTransaction, b: ProjectedBTCTransaction) =>  b.fee - a.fee);
 
         let hashes: string[] = pTransactions.map((tx: ProjectedBTCTransaction) => tx.hash); 
