@@ -6,7 +6,7 @@ import redis from '../../../databases/redis';
 export default async (chain: string): Promise<void> => {
     try {
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+        const collection = database.collection('blocks'); 
         const block = await collection.find({ chain, stored: true, broadcast: false }).sort({ height: 1 }).limit(1).next(); 
         if(!block) return; 
         const parent = await collection.findOne({ chain, hash: block.hash });

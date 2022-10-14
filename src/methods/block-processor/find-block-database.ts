@@ -8,7 +8,7 @@ export default async (chain: string, key: string, value: any): Promise<any> => {
     try {
         // Initialize database.
         const { database } = await mongodb(); 
-        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS || '');
+        const collection = database.collection('blocks');
 
         // Here we need to make sure processed is true, as that's how we differentiate between 
         // a block and a request.

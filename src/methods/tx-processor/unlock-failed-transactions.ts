@@ -9,7 +9,7 @@ import mongodb from '../../databases/mongodb';
 export default async (wrapper: BlockchainWrapper, hashes: string[]): Promise<boolean> => {
     try {
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + wrapper.ticker || ''); 
+        const collection = database.collection('transactions_' + wrapper.ticker || ''); 
         
         // The query matching all documents that should be updated. 
         const where = { hash: { $in: hashes } }; 

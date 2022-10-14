@@ -21,7 +21,7 @@ import callChainHooks from '../../lib/chain-implementations';
 const getRequests = async (chain: string): Promise<[] | null> => {
     // Get a reference to the database collection, setup collections & sessions for transactions. 
     const { connection, database } = await mongodb();
-    const collection = database.collection(process.env.DB_COLLECTION_BLOCKS || '');
+    const collection = database.collection('blocks');
     let session = connection.startSession();
 
     try {

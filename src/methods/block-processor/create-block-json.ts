@@ -28,7 +28,7 @@ export default async (chain: string, block: any): Promise<any> => {
 
         // Initialize database 
         const { database } = await mongodb(); 
-        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS as string);
+        const collection = database.collection('blocks');
 
 
         const requiresBlocksForBroadcast: string[] = []; 

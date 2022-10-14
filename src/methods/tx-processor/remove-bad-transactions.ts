@@ -9,7 +9,7 @@ export default async (wrapper: BlockchainWrapper, hashes: string[]): Promise<boo
 
         // Initialize the database. 
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + wrapper.ticker || '');
+        const collection = database.collection('transactions_' + wrapper.ticker || '');
 
         // The query matching all documents that should be removed. 
         const where = { hash: { $in: hashes } }; 

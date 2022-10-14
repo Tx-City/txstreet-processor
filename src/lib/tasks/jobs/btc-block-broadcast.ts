@@ -6,7 +6,7 @@ import path from 'path';
 export default async (chain: string): Promise<void> => {
     try {
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+        const collection = database.collection('blocks'); 
         const block = await collection.find({ chain, stored: true, broadcast: false }).sort({ height: 1 }).limit(1).next(); 
         if(!block) {
             return; 
@@ -19,8 +19,8 @@ export default async (chain: string): Promise<void> => {
 }
 
 const checkForConfirmation = async (database: any, chain: string, block: any) => {
-    const txsCollection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain); 
-    const blocksCollection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+    const txsCollection = database.collection('transactions_' + chain); 
+    const blocksCollection = database.collection('blocks'); 
     
     const remainingTxs = await txsCollection.find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).count(); 
     if(!remainingTxs) {
@@ -41,7 +41,7 @@ const checkForConfirmation = async (database: any, chain: string, block: any) =>
 
 const checkBlock = async (database: any, chain: string, block: any): Promise<boolean> => {
     try {
-        const blocksCollection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+        const blocksCollection = database.collection('blocks'); 
         const parent = await blocksCollection.findOne({ chain, hash: block.previousblockhash }); 
         if(!parent) {
             redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 

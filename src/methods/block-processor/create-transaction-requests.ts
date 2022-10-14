@@ -13,7 +13,7 @@ export default async (wrapper: BlockchainWrapper, blockHash: string, blockHeight
         
         // Initialize database. 
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + wrapper.ticker || '');
+        const collection = database.collection('transactions_' + wrapper.ticker || '');
 
         // Set of instructions to be executed on the database in bulk.
         const writeInstructions: any[] = []; 

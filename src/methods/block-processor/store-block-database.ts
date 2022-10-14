@@ -10,7 +10,7 @@ export default async (chain: string, block: any, databaseKey: string): Promise<v
     try {
         // Initialize database.
         const { database } = await mongodb(); 
-        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS || '');
+        const collection = database.collection('blocks');
 
         // Upsert (Update, Create if not exists) this block in the database. 
         await collection.updateOne({ chain, [databaseKey]: block[databaseKey] }, { $set: { ...block, processed: true, txsChecked: dontCheckTxs.includes(chain), locked: false, note: '[block-processor]: store-block-db', stored: false, broadcast: false } }, { upsert: true }); 

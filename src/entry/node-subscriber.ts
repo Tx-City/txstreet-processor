@@ -43,14 +43,14 @@ const getLatestBlockLoop = async (wrapper: any) => {
         const height = await wrapper.getCurrentHeight();
         if (!isNaN(height) && height > 100) {
             //height is a valid number
-            const heightExistsInDb = await database.collection(process.env.DB_COLLECTION_BLOCKS as string).find({ chain: wrapper.ticker, height }).project({ height: 1 }).limit(1).toArray();
+            const heightExistsInDb = await database.collection('blocks').find({ chain: wrapper.ticker, height }).project({ height: 1 }).limit(1).toArray();
             if (!heightExistsInDb || !heightExistsInDb.length) {
                 const block = await wrapper.getBlock(height, 2);
                 if (block) {
                     Logger.info(`Height: ${height}, block: ${block}`);
 
 
-                    await database.collection(process.env.DB_COLLECTION_BLOCKS as string).updateOne(
+                    await database.collection('blocks').updateOne(
                         { chain: wrapper.ticker, hash: block.hash },
                         { $setOnInsert: { processed: false, locked: false, timestamp: Date.now(), insertedAt: new Date(), processFailures: 0 } },
                         { upsert: true });

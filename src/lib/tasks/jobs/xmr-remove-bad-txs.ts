@@ -8,7 +8,7 @@ export default async (chain: string): Promise<void> => {
         const node = new XMRWrapper(process.env.XMR_NODE as string);
 
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain || '');
+        const collection = database.collection('transactions_' + chain || '');
 
         const mempoolSizeStat = await database.collection("statistics").find({chain}).project({"mempool-size": 1}).toArray();
         if(!mempoolSizeStat?.[0]?.['mempool-size']){

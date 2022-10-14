@@ -13,7 +13,7 @@ export default async (chain: string, block: any): Promise<any> => {
         const { database } = await mongodb(); 
 
         // Obtain the txFull list from the database by querying all the transactions.
-        const transactions = await database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain || '').find({
+        const transactions = await database.collection('transactions_' + chain || '').find({
             hash: { $in: block.transactions },
             confirmed: true,
             dropped: { $exists: false }
@@ -34,7 +34,7 @@ export default async (chain: string, block: any): Promise<any> => {
             block.txFull[formatted.tx] = formatted;
         })
 
-        await database.collection(process.env.DB_COLLECTION_BLOCKS || '').updateOne(
+        await database.collection('blocks').updateOne(
             { chain, hash: block.hash },
             { $set: { gasUsedDif: (differences.reduce((a: any, b: any) => a + b, 0) / differences.length) * 100 } }
         );

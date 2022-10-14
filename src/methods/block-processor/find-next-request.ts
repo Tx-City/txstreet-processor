@@ -10,7 +10,7 @@ import { Logger } from '../../lib/utilities';
 export default async (chain: string): Promise<string | null> => {
     // Get a reference to the database collection, setup collections & sessions for transactions. 
     const { connection, database } = await mongodb(); 
-    const collection = database.collection(process.env.DB_COLLECTION_BLOCKS || '');
+    const collection = database.collection('blocks');
     let session = connection.startSession();
 
     try {

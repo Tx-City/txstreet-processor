@@ -36,7 +36,7 @@ export default async (wrapper: BlockchainWrapper , transaction: any): Promise<Bo
         
         if(process.env.USE_DATABASE == "true") {
             const { database } = await mongodb(); 
-            const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS  + '_' + wrapper.ticker || '');
+            const collection = database.collection('transactions_' + wrapper.ticker || '');
             // Find a transaction for this hash in the collection and update it, if one does not exist, create it. 
             const updateResults = await collection.updateOne({ hash: transaction.hash }, { 
                 $set: { lastInsert: new Date(),  note: '[node-sub]: store-tx'  },

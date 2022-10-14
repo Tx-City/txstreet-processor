@@ -5,14 +5,14 @@ import path from 'path';
 export default async(chain: string): Promise<void> => {
     try {
         const { database } = await mongodb(); 
-        const houses = await database.collection(process.env.DB_COLLECTION_HOUSES as string).find({ chain }).toArray(); 
+        const houses = await database.collection('houses').find({ chain }).toArray(); 
 
         const tasks: Promise<any>[] = [];
         const houseData: any[] = []; 
         houses.forEach((house: any) => {
             const task = async (): Promise<any> => {
                 try {
-                    const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain);
+                    const collection = database.collection('transactions_' + chain);
                     const fiveMinutesAgo = Date.now() - 300000;
                     const priority = await collection.find({ processed: true, house: house.name, timestamp: { $gte: fiveMinutesAgo } }).count(); 
 

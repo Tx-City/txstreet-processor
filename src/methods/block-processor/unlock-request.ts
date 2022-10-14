@@ -11,7 +11,7 @@ export default async (chain: string, hash: string): Promise<string | number | nu
     try {
         // Initialize database.
         const { database } = await mongodb(); 
-        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS || '');
+        const collection = database.collection('blocks');
 
         // Sets locked state to false and increments processFailures by 1. 
         return await collection.updateOne({ chain, hash }, { $set: { locked: false }, $inc: { processFailures: 1 } }); 

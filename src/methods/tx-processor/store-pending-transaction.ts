@@ -7,7 +7,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
     try {
         // Initialize the database.
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + wrapper.ticker || ''); 
+        const collection = database.collection('transactions_' + wrapper.ticker || ''); 
         
         // Create an array of instructions for the database. 
         const instructions: any[] = [];

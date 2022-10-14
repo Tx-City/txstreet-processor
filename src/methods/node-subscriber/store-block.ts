@@ -10,7 +10,7 @@ export default async (wrapper: BlockchainWrapper, hash: string): Promise<Boolean
     try {
         if(process.env.USE_DATABASE == "true") {
             const { database } = await mongodb(); 
-            const collection = database.collection(process.env.DB_COLLECTION_BLOCKS || '');
+            const collection = database.collection('blocks');
             
             await collection.updateOne({ chain: wrapper.ticker, hash }, { 
                 $set: { lastInserted: Date.now(), node: true, note: '[node-sub]: store-block' },

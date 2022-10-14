@@ -8,7 +8,7 @@ import mongodb from '../../../databases/mongodb';
 export default async(chain: string, wikiname: string): Promise<void> => {
     try {
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_HOUSES as string); 
+        const collection = database.collection('houses'); 
         const dir = path.join(process.env.WIKI_DIR as string, wikiname, 'houses'); 
         const files = fs.readdirSync(dir).filter((file: string) => file.includes('.json'));
         console.log(files);

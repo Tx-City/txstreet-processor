@@ -69,7 +69,7 @@ export default async (chain: string): Promise<void> => {
         const node = new ETHWrapper(process.env.ETH_NODE as string);
 
         const { database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + chain || ''); 
+        const collection = database.collection('transactions_' + chain || ''); 
 
         const executionType = getExecutionType(); 
         const queryInstructions = getQueryForExecutionType(chain, executionType);

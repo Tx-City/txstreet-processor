@@ -9,7 +9,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
     const batchSize = Number(process.env.PENDING_BATCH_SIZE || 25);
     try {
         const { connection, database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + wrapper.ticker || ''); 
+        const collection = database.collection('transactions_' + wrapper.ticker || ''); 
         
         // Create a database session to atomically execute multiple queries. 
         const session = connection.startSession(); 

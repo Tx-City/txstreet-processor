@@ -4,7 +4,7 @@ import LTCPendingList from '../../../containers/LTCPendingList';
 import { Worker } from 'worker_threads';
 
 export default async () => {
-    const keys = JSON.parse(process.env.ENV_KEYS);
+    const keys = Object.keys(process.env);
     const workerData: any = {}; 
     keys.forEach((key: string) => workerData[key] = process.env[key]); 
 

@@ -63,13 +63,13 @@ const start = async () => {
     // await initStats(); 
     const blockTasks: any[] = [];
     const houseTasks: any[] = [];
-    const allHouses = await database.collection(process.env.DB_COLLECTION_HOUSES as string).find({}).toArray(); 
+    const allHouses = await database.collection('houses').find({}).toArray(); 
     const tickers = JSON.parse(process.env.TICKERS as string); 
 
     const blockTask = (ticker: string) => new Promise(async (resolve) => {
         const where = { chain: ticker };
         const project: any = { _id: 0, hash: 1 }; 
-        const collection = database.collection(process.env.DB_COLLECTION_BLOCKS as string); 
+        const collection = database.collection('blocks'); 
         const blocks = await collection.find(where, project).sort({ height: -1, number: -1 }).limit(5).toArray(); 
         const hashes = blocks.map((block: any) => {
             return block.hash
@@ -81,7 +81,7 @@ const start = async () => {
     const houseTask = async (ticker: string) => {
         Logger.info("Finding house info for ticker:", ticker); 
         const houses = allHouses.filter((house: any) => house.chain === ticker); 
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS + '_' + ticker); 
+        const collection = database.collection('transactions_' + ticker); 
 
         for(let i = 0; i < houses.length; i++) {
             const house = houses[i];

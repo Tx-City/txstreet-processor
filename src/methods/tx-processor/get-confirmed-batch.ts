@@ -14,7 +14,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
     let session: any = null; 
     try {
         const { connection, database } = await mongodb();
-        const collection = database.collection(process.env.DB_COLLECTION_TRANSACTIONS  + '_' + wrapper.ticker || ''); 
+        const collection = database.collection('transactions_' + wrapper.ticker || ''); 
 
         // Create a database session to atomically execute multiple queries. 
         session = connection.startSession(); 

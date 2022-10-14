@@ -4,7 +4,7 @@ import { Worker } from 'worker_threads';
 import ETHPendingList from '../../../containers/ETHPendingList';
 
 export default async () => {
-    const keys = JSON.parse(process.env.ENV_KEYS);
+    const keys = Object.keys(process.env);
     const workerData: any = { }; 
     keys.forEach((key: string) => workerData[key] = process.env[key]); 
 
