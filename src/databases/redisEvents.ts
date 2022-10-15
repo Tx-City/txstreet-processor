@@ -4,12 +4,14 @@ import redis from 'redis';
 
 const publisher = redis.createClient({
     port: parseInt(process.env.REDIS_PORT || '6379'),
-    host: process.env.REDIS_HOST
+    host: process.env.REDIS_HOST,
+    password: process.env.REDIS_PASS
 });
 
 const subscriber = redis.createClient({
     port: parseInt(process.env.REDIS_PORT || '6379'),
-    host: process.env.REDIS_HOST
+    host: process.env.REDIS_HOST,
+    password: process.env.REDIS_PASS
 });
 
 const on = (key: string, callback: any) => {

@@ -5,7 +5,8 @@ import { Logger } from '../../../lib/utilities';
 
 const subscriber = redis.createClient({
     port: parseInt(process.env.REDIS_PORT),
-    host: process.env.REDIS_HOST
+    host: process.env.REDIS_HOST,
+    password: process.env.REDIS_PASS
 });
 
 const handlerPath = path.join(__dirname, 'handlers'); 
