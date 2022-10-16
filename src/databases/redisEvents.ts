@@ -1,17 +1,13 @@
 import { Logger } from '../lib/utilities';
 import EventEmitter from 'eventemitter3'; 
-import redis from 'redis';
+import * as redis from 'redis';
 
 const publisher = redis.createClient({
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    host: process.env.REDIS_HOST,
-    password: process.env.REDIS_PASS
+    url: process.env.REDIS_URI,
 });
 
 const subscriber = redis.createClient({
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    host: process.env.REDIS_HOST,
-    password: process.env.REDIS_PASS
+    url: process.env.REDIS_URI,
 });
 
 const on = (key: string, callback: any) => {
@@ -27,7 +23,7 @@ const subscribe = (key: string) => {
 }
 
 const publish = (key: string, value: string | object) => {
-    if(typeof value === "object")
+    if(typeof value !== "string")
         value = JSON.stringify(value);
     publisher.publish(key, value); 
 }
