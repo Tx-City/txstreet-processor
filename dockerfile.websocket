@@ -10,4 +10,4 @@ RUN yarn tsc
 
 EXPOSE 8101
 
-CMD ["node", "./entry/websocket-server"]
+CMD ["node", "./dist/entry/websocket-server"]
