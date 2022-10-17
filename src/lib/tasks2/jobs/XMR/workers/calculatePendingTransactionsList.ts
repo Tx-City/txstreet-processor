@@ -1,4 +1,4 @@
-import { formatTransaction, Logger, storeObject } from "../../../../../lib/utilities";
+import { formatTransaction, storeObject } from "../../../../../lib/utilities";
 import { setInterval } from "../../../utils/OverlapProtectedInterval";
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
@@ -19,6 +19,6 @@ const interval = setInterval(async () => {
         transactions = transactions.map((transaction: any) => formatTransaction('XMR', transaction)); 
         await storeObject(path.join('live', `pendingTxs-XMR`), JSON.stringify(transactions)); 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }, 15000);

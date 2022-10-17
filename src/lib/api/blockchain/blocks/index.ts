@@ -1,7 +1,7 @@
 import mongodb from "../../../../databases/mongodb"
 import { Request, Response, Router } from 'express';
 import getSubscriber from '../subscriber';
-import { Logger, readNFSFile } from "../../../../lib/utilities";
+import { readNFSFile } from "../../../../lib/utilities";
 import path from 'path'; 
 
 const router = Router();
@@ -26,7 +26,7 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
     if(request.params.id.toLowerCase().includes("0x")) 
         isHeight = false; 
     
-    Logger.info('Is height:', isHeight, request.params.id);
+    console.log('Is height:', isHeight, request.params.id);
 
     const id = isHeight ? Number(request.params.id) : request.params.id; 
     if(!id) return response.json({ success: false, code: -1, message: 'Block id not provided in request.' });

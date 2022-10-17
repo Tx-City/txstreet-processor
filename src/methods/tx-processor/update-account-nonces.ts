@@ -1,5 +1,4 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger } from '../../lib/utilities';
 import redis from '../../databases/redis';
 import axios from 'axios';
 
@@ -80,7 +79,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
         if (returnSingle) return transactions[0];
         return transactions;
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
     }
 }

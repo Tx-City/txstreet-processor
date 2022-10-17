@@ -1,9 +1,5 @@
-import debug from 'debug'; 
 import mongodb from '../../databases/mongodb';
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger } from '../../lib/utilities';
-
-const logger = debug('methods/store-block')
 
 // Stores a #Block in the MongoDB Database.
 export default async (wrapper: BlockchainWrapper, hash: string): Promise<Boolean> => {
@@ -18,7 +14,7 @@ export default async (wrapper: BlockchainWrapper, hash: string): Promise<Boolean
             }, { upsert: true });
         }
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
     return false;
 }

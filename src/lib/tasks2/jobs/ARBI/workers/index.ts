@@ -1,4 +1,3 @@
-import { Logger } from '../../../../../lib/utilities';
 import path from 'path';
 import { Worker } from 'worker_threads';
 // import ETHPendingList from '../../../containers/ETHPendingList';
@@ -21,6 +20,6 @@ export default async () => {
         // new Worker(path.join(__dirname, 'broadcastReadyBlocks.js'), { workerData })
         // new Worker(path.join(__dirname, 'calcGasEstimates.js'), { workerData })
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }

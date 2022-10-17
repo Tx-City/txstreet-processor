@@ -1,5 +1,5 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger, decRound } from '../../../../lib/utilities';
+import { decRound } from '../../../../lib/utilities';
 // @ts-ignore-line
 import abiDecoder from 'abi-decoder'; 
 import axios from 'axios';
@@ -143,7 +143,7 @@ class Sushi extends ChainImplementation {
             }, 60 * 1000); 
             console.log('initialized sushi');
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         } finally {
             return this; 
         }

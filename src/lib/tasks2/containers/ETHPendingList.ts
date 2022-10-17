@@ -1,5 +1,5 @@
 
-import { Logger, readNFSFile } from '../../../lib/utilities';
+import { readNFSFile } from '../../../lib/utilities';
 import { ProjectedEthereumTransaction } from '../types';
 import mongodb from '../../../databases/mongodb';
 import redis from '../../../databases/redisEvents';
@@ -180,14 +180,14 @@ export default class ETHPendingList {
                     return null;
                 } catch (error) {
                     attempts++;
-                    Logger.error(error);
+                    console.error(error);
                     return obtainBlock();
                 }
             }
 
             const block = await obtainBlock();
             if (!block) {
-                Logger.info(`ETHPendingList Failed to get data for block: ${hash}`);
+                console.log(`ETHPendingList Failed to get data for block: ${hash}`);
                 return;
             }
             if (block.insertedAt) block.insertedAt = new Date(block.insertedAt).getTime();
@@ -197,7 +197,7 @@ export default class ETHPendingList {
             // We have no use for confirmed transactions in the pending list. 
             this.remove(transactions);
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         }
     }
 
@@ -259,12 +259,12 @@ export default class ETHPendingList {
             for (let i = 0; i < results.length; i++)
                 results[i].insertedAt = new Date(results[i].insertedAt).getTime();
             this.add(results);
-            Logger.info(`Added ${results.length} results from the database, initialization completed`);
+            console.log(`Added ${results.length} results from the database, initialization completed`);
             this._initialized = true;
             console.log('Removing', this._remove.length);
             this.remove(this._remove);
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         }
     }
 

@@ -55,7 +55,7 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
                 const transaction = await this.getTransaction(hash, 2); 
                 this.emit('mempool-tx', transaction); 
             } catch (error) {
-                this.logger(error);
+                console.error(error);
             }
         }); 
 
@@ -94,7 +94,7 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
             const msg = error.message || error.toString()
             if(msg.includes("connection not open on send")) 
                 process.exit(1);
-            this.logger(error);
+            console.error(error);
             return null; 
         }
     }
@@ -131,7 +131,7 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
             if(msg.includes("connection not open on send")) 
                 process.exit(1);
             console.error(error); 
-            this.logger(error);
+            console.error(error);
             return null;
         }
     }
@@ -152,7 +152,7 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
             return { exists: true, block }; 
         } catch (error) {
             console.error(error); 
-            this.logger(error);
+            console.error(error);
             return { exists: false };
         }
     }
@@ -161,7 +161,7 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
         try {
             return await this.web3.eth.getTransactionCount(address); 
         } catch (error) {
-            this.logger(error);
+            console.error(error);
             return 0;
         }
     }
@@ -171,7 +171,7 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
             return await this.web3.eth.getCode(address); 
         } catch (error) {
             console.error(error);
-            this.logger(error);   
+            console.error(error);   
             return "0x";  
         }
     }

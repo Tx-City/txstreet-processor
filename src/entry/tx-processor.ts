@@ -6,18 +6,10 @@ dotenv.config();
 import minimist from 'minimist';
 Object.assign(process.env, minimist(process.argv.slice(2)));
 
-// Setup the logger for this file. 
-import debug from 'debug'; 
-const logger = debug('src/index'); 
-
 // Misc imports 
 import * as Wrappers from '../lib/node-wrappers';
 import processPendingTransactions from '../methods/tx-processor/process-pending-transactions'; 
 import processConfirmedTransactions from '../methods/tx-processor/process-confirmed-transactions';
-import { Logger } from '../lib/utilities';
-import { LoggingLevel } from '../lib/utilities/functions/logger';
-
-Logger.setLogLevel(LoggingLevel.Info);
 
 // A collection of all initialized BlockchainNode instances. 
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {}; 
@@ -38,7 +30,7 @@ const processPending = async (wrapper: Wrappers.BlockchainWrapper) => {
     try {
         await processPendingTransactions(wrapper); 
     } catch (error) {
-        logger(error);
+        console.error(error);
     } finally {
         process.nextTick(() => processPending(wrapper));
     }
@@ -50,7 +42,7 @@ const processConfirmed = async (wrapper: Wrappers.BlockchainWrapper) => {
     try {
         await processConfirmedTransactions(wrapper); 
     } catch (error) {
-        logger(error);
+        console.error(error);
     } finally {
         process.nextTick(() => processConfirmed(wrapper));
     }

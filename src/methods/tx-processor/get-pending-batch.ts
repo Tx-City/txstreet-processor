@@ -1,6 +1,5 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import mongodb from '../../databases/mongodb';
-import { Logger } from '../../lib/utilities';
 
 // This method obtains a batch of pending transactions (Transactions that have been submitted by
 // the mempool, but not yet verified to actually exist). 
@@ -56,7 +55,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
         session.endSession(); 
         return results;
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return [];
     } finally {
     }

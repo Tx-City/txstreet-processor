@@ -3,7 +3,6 @@
 // If it does, add the old transaction to deletedHashes
 // Otherwise, stop processing the transaction. 
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger } from '../../lib/utilities';
 import mongodb from '../../databases/mongodb'; 
 
 export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any> => {
@@ -54,11 +53,11 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
             // return lowerFee ? null : transaction
             return transaction;
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
             return transaction // Don't block execution, resolve. 
         }
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return transaction;
     }
 }

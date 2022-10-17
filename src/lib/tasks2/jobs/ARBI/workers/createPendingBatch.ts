@@ -1,13 +1,11 @@
 // IN PROGRESS - OPTIMIZATION|| Refactoring to use memory transactions, paused to fix other important issues. 
 
 import mongodb from '../../../../../databases/mongodb';
-import { formatTransaction, Logger, storeObject } from '../../../../../lib/utilities';
+import { storeObject } from '../../../../../lib/utilities';
 import { setInterval } from '../../../utils/OverlapProtectedInterval';
 import fs from 'fs';
 import path from 'path';
 import { ETHTransactionsSchema } from '../../../../../data/schemas';
-import { ProjectedEthereumTransaction } from '../../../types';
-import axios from 'axios';
 
 const readFile = (path: string) => new Promise<Buffer>((resolve, reject) => {
     fs.readFile(path, { flag: 'rs' }, (err: NodeJS.ErrnoException, data: Buffer) => {
@@ -57,6 +55,6 @@ setInterval(async () => {
         }
 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }, 2000).start(true);

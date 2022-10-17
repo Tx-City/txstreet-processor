@@ -1,15 +1,12 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger, waitForTime } from '../../lib/utilities';
+import { waitForTime } from '../../lib/utilities';
 import claimTransaction from './claim-transaction';
 import storeTransaction from './store-transaction';
-import debug from 'debug';
 import updateAccountNonces from '../tx-processor/update-account-nonces';
 import checkSameNonce from './check-same-nonce';
 import checkBlocksForTx from './check-blocks-for-tx';
 import Bottleneck from 'bottleneck';
 import callChainHooks from '../../lib/chain-implementations'; 
-
-const logger = debug('methods/process-transaction'); 
 const limiter = new Bottleneck({
     maxConcurrent: 4
 }); 
@@ -64,8 +61,8 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
         await storeTransaction(wrapper, transaction); 
 
         if(process.env.USE_DATABASE !== "true") 
-            Logger.info("Tx Processed:", transaction); 
+            console.log("Tx Processed:", transaction); 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }

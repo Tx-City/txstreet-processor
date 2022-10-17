@@ -7,13 +7,10 @@ Object.assign(process.env, minimist(process.argv.slice(2)));
 import DropoutContainer from '../lib/tasks2/containers/Dropout';
 import ObtainTransactionsFromDatabase from '../lib/tasks2/tasks/ObtainTransactionsFromDatabase';
 import { ProjectedEthereumTransaction, ProjectedEthereumBlock, ProjectedXMRTransaction, ProjectedXMRBlock, ProjectedBTCTransaction, ProjectedBTCBlock } from '../lib/tasks2/types';
-import { Logger } from '../lib/utilities';
 import path from 'path';
 import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchema, XMRTransactionsSchema } from '../data/schemas';
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 import ObtainRollupBlocksFromDatabase from '../lib/tasks2/tasks/ObtainRollupBlocksFromDatabase';
-
-Logger.setLogLevel(Logger.LoggingLevel.Info);
 
 const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI'];
 let chainToInit: string = null;
@@ -34,7 +31,7 @@ if (!chainToInit)
 // A function used to wrap the initialization instructions of this script in an async/await context. 
 const initialize = async () => {
     try {
-        Logger.info("INITIALIZE HAS BEEN CALLED, IS THIS INTENDED?")
+        console.log("INITIALIZE HAS BEEN CALLED, IS THIS INTENDED?")
         // Create a collection for transactions that lasts one day. 
         const { ETHTransactionsSchema } = require('../data/schemas');
         // Transactions collection
@@ -90,7 +87,7 @@ const initialize = async () => {
         require(path.join(__dirname, '..', 'lib', 'tasks2', 'jobs', chainToInit, 'workers', 'index.js')).default();
         require(path.join(__dirname, '..', 'lib', 'tasks2', 'jobs', 'common', 'workers', 'index.js')).default(chainToInit);
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }
 

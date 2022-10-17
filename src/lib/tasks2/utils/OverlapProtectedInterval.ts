@@ -1,5 +1,3 @@
-import { Logger } from "../../../lib/utilities";
-
 /**
  * The purpose of this implementation is to create an interval system which is time-accurate without allowing for
  * overlap between executions. 
@@ -28,7 +26,7 @@ export default class OverlapProtectedInterval {
             await this._task(); 
             this._lastExecutionFinish = Date.now(); 
         } catch (error) {
-            Logger.error(error); 
+            console.error(error); 
         } finally {
             this._execute(); 
         }
@@ -45,7 +43,7 @@ export default class OverlapProtectedInterval {
                 this._timeout = null; 
             } catch (error) {
                 console.error(error);
-                Logger.error(error); 
+                console.error(error); 
                 if(this._timeout)   
                     clearTimeout(this._timeout);
                 this._timeout = null; 

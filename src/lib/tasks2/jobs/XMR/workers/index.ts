@@ -1,6 +1,5 @@
 import path from 'path';
 import { Worker } from 'worker_threads';
-import { Logger } from '../../../../../lib/utilities';
 import XMRPendingList from '../../../containers/XMRPendingList';
 
 export default async () => {
@@ -17,6 +16,6 @@ export default async () => {
         new Worker(path.join(__dirname, 'mempoolInfo.js'), { workerData })
         new Worker(path.join(__dirname, 'calculatePendingTransactionsList.js'), { workerData })
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }

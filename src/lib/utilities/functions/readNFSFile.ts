@@ -1,5 +1,4 @@
 // import fs from 'fs';
-// import { Logger } from '..';
 import redis from "../../../databases/redis";
 
 export default async (path: string, encoding: string|null = null): Promise<string> => {
@@ -20,12 +19,12 @@ export default async (path: string, encoding: string|null = null): Promise<strin
     delete parts[parts.length -1 ];
     let directory = parts.join('/'); 
     const output = await execPromise(`cd ${directory} && find -name ${filename}`); 
-    Logger.info(`Command output: ${output}`)
+    console.log(`Command output: ${output}`)
     const fileDescriptor = await fs.promises.open(path, 'rs');
     const stats = await fileDescriptor.stat(); 
     const buffer = Buffer.alloc(stats.size);
     await fileDescriptor.read(buffer, 0, buffer.length, 0);
-    fileDescriptor.close().catch(error => Logger.error(error));
+    fileDescriptor.close().catch(error => console.error(error));
     return encoding ? buffer.toString(encoding as BufferEncoding) : buffer; 
     */ 
 } 

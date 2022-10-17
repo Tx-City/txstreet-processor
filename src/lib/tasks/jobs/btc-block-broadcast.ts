@@ -1,6 +1,6 @@
 import mongodb from '../../../databases/mongodb';
 import redis from '../../../databases/redis'; 
-import { formatTransaction, formatBlock, Logger, storeObject } from '../../../lib/utilities';
+import { formatTransaction, formatBlock, storeObject } from '../../../lib/utilities';
 import path from 'path';
 
 export default async (chain: string): Promise<void> => {
@@ -14,7 +14,7 @@ export default async (chain: string): Promise<void> => {
         await checkBlock(database, chain, block); 
         
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }
 
@@ -55,7 +55,7 @@ const checkBlock = async (database: any, chain: string, block: any): Promise<boo
         } 
 
         if(block.stored && parent.stored && parent.broadcast || block.stored && !parent) {
-            Logger.info('Publishing block', block.height || block.number);
+            console.log('Publishing block', block.height || block.number);
             redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
             await blocksCollection.updateOne({ chain, hash: block.hash }, { $set: { broadcast: true } }); 
             return true; 
@@ -63,7 +63,7 @@ const checkBlock = async (database: any, chain: string, block: any): Promise<boo
             return false;
         }
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return false; 
     }
 }

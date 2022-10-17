@@ -1,5 +1,4 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger } from '../../../../lib/utilities';
 
 import mongodb from '../../../../databases/mongodb'; 
 
@@ -20,7 +19,7 @@ class DefaultHousing extends ChainImplementation {
             }
             console.log("initialized default housing");
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         } finally {
             return this; 
         }

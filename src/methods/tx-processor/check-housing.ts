@@ -1,5 +1,4 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger } from '../../lib/utilities'; 
 // import mongodb from '../../databases/mongodb';
 // import redis from '../../databases/redis'
 import { initHooks, default as callChainHooks } from '../../lib/chain-implementations'; 
@@ -29,7 +28,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
         await Promise.all(tasks); 
         return true;
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
     }
 }

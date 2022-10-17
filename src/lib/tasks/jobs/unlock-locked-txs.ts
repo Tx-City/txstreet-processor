@@ -1,4 +1,3 @@
-import { Logger } from '../../../lib/utilities';
 import mongodb from '../../../databases/mongodb';
 
 export default async (chain: string): Promise<void> => {
@@ -12,6 +11,6 @@ export default async (chain: string): Promise<void> => {
         where.confirmed = false; 
         await txCollection.updateMany(where, update, { ordered: false }); 
     } catch (error) {   
-        Logger.error(error);
+        console.error(error);
     }
 }

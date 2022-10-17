@@ -3,7 +3,6 @@
 // If it does, add the old transaction to deletedHashes
 // Otherwise, stop processing the transaction. 
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger } from '../../lib/utilities';
 import mongodb from '../../databases/mongodb'; 
 
 export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<any[]> => {
@@ -45,11 +44,11 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
                     }
             
                     if(adminCheck) 
-                        Logger.warn(`Unexpected occurance in check-same-nonce for transaction`, transaction.hash, `on chain`, wrapper.ticker); 
+                        console.warn(`Unexpected occurance in check-same-nonce for transaction`, transaction.hash, `on chain`, wrapper.ticker); 
 
                     return resolve(true); 
                 } catch (error) {
-                    Logger.error(error);
+                    console.error(error);
                     return resolve(true); // Don't block execution, resolve. 
                 }
             }));
@@ -57,7 +56,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
         await Promise.all(tasks); 
         return transactions; 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return transactions;
     }
 }

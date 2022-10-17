@@ -1,11 +1,7 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { formatTransaction, Logger } from '../../lib/utilities';
-
-import debug from 'debug'; 
+import { formatTransaction } from '../../lib/utilities';
 import mongodb from '../../databases/mongodb';
 import redis from '../../databases/redis';
-
-const logger = debug('methods/store-transaction')
 
 /**
  * Returns a simple object containing default fields and values for transactions to be
@@ -51,7 +47,7 @@ export default async (wrapper: BlockchainWrapper , transaction: any): Promise<Bo
                 redis.publish('pendingTx', JSON.stringify({ chain: wrapper.ticker, node: true, ...formatted }));
         }
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
     return false;
 }

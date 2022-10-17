@@ -1,4 +1,4 @@
-import { formatBlock, Logger, storeObject  } from '../../lib/utilities';
+import { formatBlock, storeObject  } from '../../lib/utilities';
 import fs from 'fs';
 import path from 'path';
 const dataDir = path.join(process.env.DATA_DIR as string || '/mnt/disks/txstreet_storage');
@@ -22,7 +22,7 @@ export default async (chain: string, block: any): Promise<any> => {
 
         return block; 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return null;
     }
 }

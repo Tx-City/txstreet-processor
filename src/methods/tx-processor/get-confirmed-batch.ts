@@ -1,10 +1,6 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import mongodb from '../../databases/mongodb';
 
-// Create localized laggers
-import debug from 'debug'; 
-const logger = debug('methods/get-confirmed-batch');
-
 // This method obtains a batch of confirmed transactions (Transactions that have been submitted by
 // a confirmed block, but have not had their data processed yet). 
 export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
@@ -52,7 +48,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
         
         return results;
     } catch (error) {
-        logger(error);
+        console.error(error)
         return [];
     } finally { 
         if(session)

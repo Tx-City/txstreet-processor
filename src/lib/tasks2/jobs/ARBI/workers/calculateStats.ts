@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { Logger } from "../../../../../lib/utilities";
 import { setInterval } from "../../../utils/OverlapProtectedInterval";
 import { ETHBlocksSchema, ETHTransactionsSchema } from '../../../../../data/schemas';
 import { ProjectedEthereumBlock, ProjectedEthereumTransaction } from "../../../types";
@@ -99,9 +98,9 @@ const interval = setInterval(async () => {
                     
                     return resolve();  
                 } catch (error) {
-                    Logger.error(error);
-                    Logger.info('Attempting to decode schema...'); 
-                    try { Logger.info(`Decoded information for error:`, ETHTransactionsSchema.decode(data)); } catch (error) { Logger.info('Schema could not be decoded.') }  
+                    console.error(error);
+                    console.log('Attempting to decode schema...'); 
+                    try { console.log(`Decoded information for error:`, ETHTransactionsSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }  
                     return reject(error); 
                 }
             }); 
@@ -131,9 +130,9 @@ const interval = setInterval(async () => {
                     lastKnownBlock = blocks[blocks.length - 1]; 
                     return resolve();  
                 } catch (error) {
-                    Logger.error(error);
-                    Logger.info('Attempting to decode schema...'); 
-                    try { Logger.info(`Decoded information for error:`, ETHBlocksSchema.decode(data)); } catch (error) { Logger.info('Schema could not be decoded.') }
+                    console.error(error);
+                    console.log('Attempting to decode schema...'); 
+                    try { console.log(`Decoded information for error:`, ETHBlocksSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }
                     return reject(error); 
                 }
             }); 
@@ -145,24 +144,24 @@ const interval = setInterval(async () => {
         // the others can execute and if they depend on the failed task the lastExecutionResult will be available to use. 
         const startTime = Date.now(); 
 
-        // try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { Logger.error(error); };
-        // try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { Logger.error(error); };
-        // try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { Logger.error(error) }
-        // try { lastExecutionResults['tipPrice'] = await tipPrice(lastKnownBlock); } catch (error) { Logger.error(error) }
-        // try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['gasTarget'] = await gasTarget(lastKnownBlock); } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['gasLimit'] = await gasLimit(lastKnownBlock); } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['medianGasUsed'] = await medianGasUsed(blocks); } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { Logger.error(error) }
+        // try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
+        try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
+        try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['tipPrice'] = await tipPrice(lastKnownBlock); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { console.error(error) }
+        try { lastExecutionResults['gasTarget'] = await gasTarget(lastKnownBlock); } catch (error) { console.error(error) }
+        try { lastExecutionResults['gasLimit'] = await gasLimit(lastKnownBlock); } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianGasUsed'] = await medianGasUsed(blocks); } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
     } catch (error) {  
-        Logger.error(error); 
+        console.error(error); 
     } finally {
         // Wrapping a try/catch inside of a finally looks a little messy, but it's required to prevent a critical failure in the event
         // of a database error. We do this in finally so that we can make sure to update values that have successfully updated in the event
@@ -181,7 +180,7 @@ const interval = setInterval(async () => {
             }
 
         } catch (error) {
-            Logger.error(error); 
+            console.error(error); 
         }
     }
 }, 1000).start(true);

@@ -1,5 +1,4 @@
 
-import { Logger } from '../../../lib/utilities';
 import mongodb from '../../../databases/mongodb';
 import redis from '../../../databases/redis'; 
 
@@ -15,9 +14,9 @@ export default async (chain: string): Promise<void> => {
             await collection.updateOne({ chain, hash: block.hash }, { $set: { broadcast: true } }); 
             redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
         } else {
-            Logger.info(`Waiting on parent block`);
+            console.log(`Waiting on parent block`);
         }
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }

@@ -6,16 +6,11 @@ dotenv.config();
 import minimist from 'minimist';
 Object.assign(process.env, minimist(process.argv.slice(2)));
 
-// Setup the logger for this file. 
-import debug from 'debug';
-const logger = debug('src/index');
-
 // Misc imports 
 import processTransaction from '../methods/node-subscriber/process-transaction';
 import processBlock from '../methods/node-subscriber/process-block';
 import mongodb from '../databases/mongodb';
 import * as Hooks from '../lib/chain-implementations';
-import { Logger } from '../lib/utilities';
 import redis from '../databases/redis';
 if (process.env.USE_DATABASE === "true")
     mongodb();
@@ -47,7 +42,7 @@ const getLatestBlockLoop = async (wrapper: any) => {
             if (!heightExistsInDb || !heightExistsInDb.length) {
                 const block = await wrapper.getBlock(height, 2);
                 if (block) {
-                    Logger.info(`Height: ${height}, block: ${block}`);
+                    console.log(`Height: ${height}, block: ${block}`);
 
 
                     await database.collection('blocks').updateOne(
@@ -60,13 +55,12 @@ const getLatestBlockLoop = async (wrapper: any) => {
         }
         setTimeout(() => { getLatestBlockLoop(wrapper); }, 1000);
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         setTimeout(() => { getLatestBlockLoop(wrapper); }, 1000);
     }
 }
 
 const init = async () => {
-    Logger.setLogLevel(Logger.LoggingLevel.Info);
     // let database: any = null;
     // if (process.env.USE_DATABASE === "true") {
     //     const db = await mongodb();
@@ -133,7 +127,7 @@ const init = async () => {
         });
 
         ltcWrapper.on('confirmed-block', (blockHash: string) => {
-            Logger.info(`Got block from event: ${blockHash}`);
+            console.log(`Got block from event: ${blockHash}`);
             processBlock(ltcWrapper, blockHash);
         });
 
@@ -146,7 +140,7 @@ const init = async () => {
 
         Hooks.initHooks('ETH');
 
-        Logger.info("Imported chain implementations");
+        console.log("Imported chain implementations");
 
         ethWrapper.on('mempool-tx', (transaction: any) => {
             if (!transaction.blockHeight && transaction.blockNumber) {
@@ -157,7 +151,7 @@ const init = async () => {
         });
 
         ethWrapper.on('confirmed-block', (blockHash: string) => {
-            Logger.info(`Got block from event: ${blockHash}`);
+            console.log(`Got block from event: ${blockHash}`);
             processBlock(ethWrapper, blockHash);
         });
 
@@ -165,7 +159,7 @@ const init = async () => {
 
         ethWrapper.initEventSystem();
 
-        Logger.info("Setup all event processors for chain.");
+        console.log("Setup all event processors for chain.");
 
     }
 
@@ -175,10 +169,10 @@ const init = async () => {
 
         // Hooks.initHooks('ETH', mongodb, redis);
 
-        Logger.info("Imported chain implementations");
+        console.log("Imported chain implementations");
 
         arbiWrapper.on('confirmed-block', (blockHash: string) => {
-            Logger.info(`Got block from event: ${blockHash}`);
+            console.log(`Got block from event: ${blockHash}`);
             processBlock(arbiWrapper, blockHash);
         });
 
@@ -186,7 +180,7 @@ const init = async () => {
 
         arbiWrapper.initEventSystem();
 
-        Logger.info("Setup all event processors for chain.");
+        console.log("Setup all event processors for chain.");
 
     }
 

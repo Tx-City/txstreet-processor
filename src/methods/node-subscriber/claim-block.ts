@@ -1,8 +1,4 @@
-import debug from 'debug'; 
 import redis from '../../databases/redis'; 
-import { Logger } from '../../lib/utilities';
-
-const logger = debug('methods/claim-block')
 
 // This function is used to ensure that multiple nodes cannot process the same block
 // by using REDIS with the EX (Expire) and NX(Not Exists) arguments we can ensure that
@@ -13,7 +9,7 @@ export default async (chain: string, hash: string): Promise<Boolean> => {
             return true;
         return await redis.setAsync(`${chain}-block-${hash}`, '1', 'NX', 'EX', 60 * 15); 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
     return false;
 }

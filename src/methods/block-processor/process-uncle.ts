@@ -1,5 +1,5 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger, waitForTime } from '../../lib/utilities';
+import { waitForTime } from '../../lib/utilities';
 
 import findNextRequest from "./find-next-request"
 import storeBlockDatabase from './store-block-database';
@@ -8,10 +8,6 @@ import findBlockDatabase from './find-block-database';
 import createTransactionRequests from './create-transaction-requests';
 import createBlockJson from './create-block-json';
 
-// Create localized logger
-import debug from 'debug';
-import { request } from 'http';
-const logger = debug('methods/process-block');
 
 
 // if(block.parentHash && block.parentHash != "0x0000000000000000000000000000000000000000000000000000000000000000" && depth < this.blockDepthLimit)
@@ -28,12 +24,12 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number, uncl
 
         // Utilize the blockchain specific implementation to resolve the block data.
         let resolvedBlock = await anyWrapper.getUncle(blockId, uncleIndex); 
-        Logger.info(`Uncle:`, resolvedBlock);
+        console.log(`Uncle:`, resolvedBlock);
         
         // The exists field is appended to ensure that the execution flow is stopped in the event of an error
-        // that has already been logged by the localized logger in the blockchain implementation.
+        // that has already been logged by the localized log in the blockchain implementation.
         if(!resolvedBlock) {
-            Logger.warn(`Could not get uncle ${uncleIndex} for hash ${blockId} results: ${resolvedBlock}`)
+            console.warn(`Could not get uncle ${uncleIndex} for hash ${blockId} results: ${resolvedBlock}`)
             return; 
         }
             
@@ -48,7 +44,7 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number, uncl
         
         await storeBlockDatabase(wrapper.ticker, block, 'hash'); 
         
-        Logger.info(`Uncle transactions: ${block.transactions}`);
+        console.log(`Uncle transactions: ${block.transactions}`);
 
         // When storing a transaction in the local database, mark it with blockHeight so it can be queried easily.
         await createTransactionRequests(wrapper, block.hash, block.height, transactions);
@@ -59,7 +55,7 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number, uncl
             await createBlockJson(wrapper.ticker, block); 
         }
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }
 

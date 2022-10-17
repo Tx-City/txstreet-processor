@@ -1,5 +1,4 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger } from '../../../../lib/utilities';
 import bchaddr from 'bchaddrjs-slp'; 
 import redis from '../../../../databases/redis'; 
 import mongodb from "../../../../databases/mongodb";
@@ -19,7 +18,7 @@ class EatBCH extends ChainImplementation {
             this.addresses = house.eatbchAddresses.map((obj: any) => obj.address);
             // addToCommonAddresses(addresses)
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         } finally {
             return this; 
         }

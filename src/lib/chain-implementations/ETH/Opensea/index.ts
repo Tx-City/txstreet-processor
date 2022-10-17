@@ -1,5 +1,4 @@
 import ChainImplementation from '../../implementation';
-import { Logger } from "../../../../lib/utilities";
 // @ts-ignore-line
 import abiDecoder from "abi-decoder";
 import fetch from "node-fetch";
@@ -28,7 +27,7 @@ class Opensea extends ChainImplementation {
       this.nftList[address] = data;
       return data;
     } catch (error) {
-      Logger.error(error);
+      console.error(error);
       return {};
     }
   }
@@ -134,7 +133,7 @@ class Opensea extends ChainImplementation {
 
       console.log("initialized opensea");
     } catch (error) {
-      Logger.error(error);
+      console.error(error);
     } finally {
       return this;
     }
@@ -159,10 +158,10 @@ class Opensea extends ChainImplementation {
       const decoded = abiDecoder.decodeMethod(transaction.input);
       switch (decoded.name) {
         case 'atomicMatch_':
-          try { await this.formatSale(transaction, decoded, to === '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b'?1:2); } catch (error) { Logger.error(error); }
+          try { await this.formatSale(transaction, decoded, to === '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b'?1:2); } catch (error) { console.error(error); }
           break;
         case 'cacncelOrder_':
-          try { await this.formatCancel(transaction, decoded); } catch (error) { Logger.error(error); }
+          try { await this.formatCancel(transaction, decoded); } catch (error) { console.error(error); }
           break;
       }
     }

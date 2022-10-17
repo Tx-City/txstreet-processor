@@ -1,6 +1,6 @@
 import mongodb from "../../../../databases/mongodb"
 import { Request, Response, Router } from 'express';
-import { formatTransaction, Logger } from "../../../../lib/utilities";
+import { formatTransaction } from "../../../../lib/utilities";
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.get('/:chain/:address', async (request: Request, response: Response) => {
         const results = await collection.find(where).sort({ timestamp: -1 }).limit(100).toArray(); 
         return response.json({ success: true, transactions: results.map((any: any) => formatTransaction(chain, any)) }); 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return response.json({ success: false, code: 0, message: `Unknown error handling request.` }); 
     }
 }); 

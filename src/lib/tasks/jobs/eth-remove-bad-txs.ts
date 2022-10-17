@@ -1,7 +1,6 @@
 import path from 'path';
 import redis from '../../../databases/redis'; 
 import mongodb from '../../../databases/mongodb';
-import { Logger } from '../../../lib/utilities';
 import { ETHWrapper } from '../../../lib/node-wrappers'; 
 
 enum ExecutionType {
@@ -94,7 +93,7 @@ export default async (chain: string): Promise<void> => {
                     const nodeTx = await node.getTransaction(transaction.hash, 2);
                     return resolve({ hash: transaction.hash, nodeTx }); 
                 } catch (error) {
-                    Logger.error(error);
+                    console.error(error);
                     return resolve({ hash: transaction.hash, nodeTx: null }); 
                 }
             }));
@@ -169,7 +168,7 @@ export default async (chain: string): Promise<void> => {
         }
 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }
 

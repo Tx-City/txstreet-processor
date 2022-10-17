@@ -9,7 +9,7 @@ import redis from '../lib/websocket/redis';
 import mongodb from '../databases/mongodb'; 
 import { lastBlocks  } from '../lib/websocket/redis/handlers/block';
 import { lastHouseTxs  } from '../lib/websocket/redis/handlers/pendingTx';
-import { formatTransaction, Logger } from '../lib/utilities';
+import { formatTransaction } from '../lib/utilities';
 const app = Express(); 
 
 
@@ -28,9 +28,9 @@ const handlersPath: string = path.join(__dirname, '..', 'lib', 'websocket', 'soc
 var handlersloaded = false;
 const loadEvents = async(): Promise<boolean> => {
     if(handlersloaded) return true; 
-    Logger.info("Loading events..."); 
+    console.log("Loading events..."); 
     const filenames = fs.readdirSync(handlersPath); 
-    Logger.info("Found files:", filenames); 
+    console.log("Found files:", filenames); 
     for(let i = 0; i < filenames.length; i++) {
         const filename = filenames[i];
         if(filename.includes('.map')) continue;
@@ -39,7 +39,7 @@ const loadEvents = async(): Promise<boolean> => {
         const handlerPath = path.join(__dirname, '..', 'lib', 'websocket', 'socket-events', filename); 
         const handler = await import(handlerPath);
         eventHandlers[realname] = handler.default; 
-        Logger.info("Loaded event", filename); 
+        console.log("Loaded event", filename); 
     }
     handlersloaded = true;
     return true; 
@@ -79,7 +79,7 @@ const start = async () => {
     });
 
     const houseTask = async (ticker: string) => {
-        Logger.info("Finding house info for ticker:", ticker); 
+        console.log("Finding house info for ticker:", ticker); 
         const houses = allHouses.filter((house: any) => house.chain === ticker); 
         const collection = database.collection('transactions_' + ticker); 
 
@@ -95,7 +95,7 @@ const start = async () => {
                 
             lastHouseTxs[ticker][house.name] = txs.map((tx: any) => formatTransaction(ticker, tx)); 
         }
-        Logger.info("Finished finding house info for ticker:", ticker); 
+        console.log("Finished finding house info for ticker:", ticker); 
         return true; 
     }
 
@@ -113,7 +113,7 @@ const start = async () => {
         try { 
             await loadEvents(); 
         } catch (error) {
-            Logger.error(error); 
+            console.error(error); 
             socket.disconnect(); 
             return; 
         }
@@ -129,9 +129,9 @@ const start = async () => {
         response.status(200).send("OK"); 
     });
 
-    server.listen(process.env.WEBSOCKET_PORT || 80, () => Logger.info('Server listening on port 80'));
+    server.listen(process.env.WEBSOCKET_PORT || 80, () => console.log('Server listening on port 80'));
     // if(process.env.SSL_ENABLED.toUpperCase() === "TRUE")
-    //     server.listen(80, () => Logger.info('Server listening on port 443'));
+    //     server.listen(80, () => console.log('Server listening on port 443'));
 }
 
 start(); 

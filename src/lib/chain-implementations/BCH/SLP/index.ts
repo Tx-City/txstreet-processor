@@ -1,5 +1,5 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger, decodeHex } from '../../../../lib/utilities';
+import { decodeHex } from '../../../../lib/utilities';
 import axios from 'axios'; 
 import bchaddr from 'bchaddrjs-slp'; 
 import redis from '../../../../databases/redis'; 
@@ -22,7 +22,7 @@ class SLP extends ChainImplementation {
             if(!op_return) continue; 
             
             const code = asmArray[1]; 
-            Logger.info(`Code:`, code);
+            console.log(`Code:`, code);
             const links: any[] = []; 
             switch(code) {
                 case "534c5000":
@@ -84,7 +84,7 @@ class SLP extends ChainImplementation {
                     transaction.house = "slp"; 
                     links.push({l:"https://simpleledger.info/#tx/" + transaction.hash});
                     transaction.extras.l = links;
-                    Logger.info("SLP Found a transaction:", transaction.hash);
+                    console.log("SLP Found a transaction:", transaction.hash);
         
             }
         }
@@ -103,7 +103,7 @@ class SLP extends ChainImplementation {
                 return token.json; 
             }
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         }
 
         let response = await this._getFromBitcoinCom(txid);
@@ -121,7 +121,7 @@ class SLP extends ChainImplementation {
             const { database } = await mongodb();
             return await database.collection('slp_genesis').findOne({ hash: txid }); 
         } catch (err) {
-            Logger.error(err);
+            console.error(err);
             return false; 
         }
     }
@@ -131,7 +131,7 @@ class SLP extends ChainImplementation {
             const { database } = await mongodb();
             await database.collection('slp_genesis').updateOne({ chain: ticker, hash: txid }, { $set: { json } }, { upsert: true }); 
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
             return false;
         }
     }
@@ -143,7 +143,7 @@ class SLP extends ChainImplementation {
             var data = response.data;
             return data;
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
             return false;
         }
     }

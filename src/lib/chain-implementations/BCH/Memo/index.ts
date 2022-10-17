@@ -1,5 +1,5 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger,decodeHex, swapEndian } from '../../../../lib/utilities';
+import { decodeHex, swapEndian } from '../../../../lib/utilities';
 
 class Memo extends ChainImplementation {
     async init(): Promise<ChainImplementation> {

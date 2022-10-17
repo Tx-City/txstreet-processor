@@ -1,4 +1,4 @@
-import { Logger, median } from "../../../../lib/utilities";
+import { median } from "../../../../lib/utilities";
 import { ProjectedEthereumTransaction } from "../../types";
 
 // The last value calculated during the execution of this task. 
@@ -15,7 +15,7 @@ export default async (transactions: ProjectedEthereumTransaction[]) => {
         // Update the lastExecutionResult. 
         lastExecutionResult = _median;
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     } finally {
         return lastExecutionResult;
     }

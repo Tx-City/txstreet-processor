@@ -1,5 +1,5 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger, waitForTime } from '../../lib/utilities';
+import { waitForTime } from '../../lib/utilities';
 
 import findNextRequest from "./find-next-request"
 import storeBlockDatabase from './store-block-database';
@@ -8,8 +8,6 @@ import findBlockDatabase from './find-block-database';
 import createTransactionRequests from './create-transaction-requests';
 import createBlockJson from './create-block-json';
 
-// Create localized logger
-import debug from 'debug';
 import processUncle from './process-uncle';
 
 const action = async (wrapper: BlockchainWrapper, blockId: string | number = null, depth: number = 0, searchRequest: boolean = true): Promise<void> => {
@@ -34,7 +32,7 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
                 }
             }
             if(request)
-                Logger.info("Request found..."); 
+                console.log("Request found..."); 
         } else {
             request = { hash: blockId }
         }
@@ -64,16 +62,16 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
         }
         
         if(searchRequest)
-            Logger.info(`Found request: ${request.hash}`); 
+            console.log(`Found request: ${request.hash}`); 
 
         if(request.processMetadata || (!block && blockId)) {
             // Utilize the blockchain specific implementation to resolve the block data.
             let resolvedBlock = await wrapper.getBlock(blockId, 2); 
 
             // The exists field is appended to ensure that the execution flow is stopped in the event of an error
-            // that has already been logged by the localized logger in the blockchain implementation.
+            // that has already been logged by the localized log in the blockchain implementation.
             if(!resolvedBlock) {
-                Logger.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
+                console.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
                 await unlockRequest(wrapper.ticker, blockId as string); 
                 return await waitForTime(100);
             }
@@ -88,7 +86,7 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
                 for(let i = 0; i < resolvedBlock.uncles.length; i++) {
                     await processUncle(wrapper, blockId, i);
                 }
-                Logger.info(`Took ${Date.now() - startTime}ms to process uncles.`);
+                console.log(`Took ${Date.now() - startTime}ms to process uncles.`);
             }
         }
 
@@ -117,7 +115,7 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
     } catch (error) {
         if(request && request.hash) 
             await unlockRequest(wrapper.ticker, request.hash); 
-        Logger.error(error);
+        console.error(error);
     }
 }
 

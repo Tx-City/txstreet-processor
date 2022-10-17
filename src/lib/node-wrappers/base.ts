@@ -1,5 +1,4 @@
 import EventEmitter from 'eventemitter3';
-import debug, { Debugger } from 'debug';
 
 export default abstract class BlockchainWrapper extends EventEmitter {
     // The market-ticker for the blockchain's main currency.
@@ -7,9 +6,6 @@ export default abstract class BlockchainWrapper extends EventEmitter {
 
     // The amount of depth (in blocks) that a single request can fulfill.
     public blockDepthLimit: number = 5;
-
-    // The logger that prints out any debug information.
-    public logger: Debugger;
 
     /**
      * Initializes a new BlockchainWrapper.
@@ -19,7 +15,6 @@ export default abstract class BlockchainWrapper extends EventEmitter {
     constructor(ticker: string) {
         super();
         this.ticker = ticker.toUpperCase();
-        this.logger = debug(`node-wrapper/${ticker}`);
     }
 
     /**

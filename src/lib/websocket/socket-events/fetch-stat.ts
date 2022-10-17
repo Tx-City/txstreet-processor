@@ -1,4 +1,3 @@
-import { Logger } from '../../../lib/utilities';
 import SocketIO from 'socket.io';
 import mongodb from '../../../databases/mongodb';
 import io from '../../../entry/websocket-server'
@@ -164,7 +163,7 @@ const initNoHistory = async (ticker: string) => {
     const { database } = await mongodb();
     const result = await database.collection('statistics').findOne({ chain: `${ticker}-nohistory` });
     if (result) {
-        // Logger.info('Found nohistory', result);
+        // console.log('Found nohistory', result);
         const timestamp = new Date();
         Object.keys(result).forEach((key: string) => {
             stats[ticker]["5s"][key] = [{ timestamp, value: result[key] }];
@@ -212,7 +211,7 @@ const initHistory = async (ticker: string, interval: string) => {
         }
 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }
 

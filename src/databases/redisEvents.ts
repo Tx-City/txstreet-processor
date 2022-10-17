@@ -1,4 +1,3 @@
-import { Logger } from '../lib/utilities';
 import EventEmitter from 'eventemitter3'; 
 import * as redis from 'redis';
 
@@ -35,7 +34,7 @@ subscriber.on('message', (channel: string, messageStr: string) => {
         const message = JSON.parse(messageStr); 
         events.emit(channel, message); 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 });
 

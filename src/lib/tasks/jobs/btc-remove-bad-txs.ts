@@ -1,7 +1,6 @@
 import redis from '../../../databases/redis'; 
 import { BTCWrapper, LTCWrapper, BCHWrapper } from '../../../lib/node-wrappers'; 
 import mongodb from '../../../databases/mongodb';
-import { Logger } from '../../../lib/utilities';
 
 const wrappers: any = {
     BTCWrapper, LTCWrapper, BCHWrapper
@@ -23,7 +22,7 @@ export default async (chain: string): Promise<void> => {
         const mempoolSizeStatValue = mempoolSizeStat[0]['mempool-size'];
 
         node.rpc.getrawmempool(false, async (err: string, result: any) => {
-            if(err) return Logger.error('err:', err);
+            if(err) return console.error('err:', err);
 
             let doDelete = true;
             //mempool length is abnormally small, so dont process it because it would delete transactions we dont want to delete
@@ -57,7 +56,7 @@ export default async (chain: string): Promise<void> => {
                 }
             });
             if(writeInstructions.length && doDelete) {
-                Logger.print(`Removed ${writeInstructions.length} bad transactions`);
+                console.log(`Removed ${writeInstructions.length} bad transactions`);
                 await collection.bulkWrite(writeInstructions, { ordered: false });
                 redis.publish('removeTx', JSON.stringify({ chain, hashes: deleteHashes }));
             }
@@ -72,6 +71,6 @@ export default async (chain: string): Promise<void> => {
 
         });
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }

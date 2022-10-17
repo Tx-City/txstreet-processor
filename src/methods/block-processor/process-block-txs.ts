@@ -1,5 +1,5 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger, waitForTime, formatBlock } from '../../lib/utilities';
+import { waitForTime, formatBlock } from '../../lib/utilities';
 
 // import findNextRequest from "./find-next-request"
 // import storeBlockDatabase from './store-block-database';
@@ -11,12 +11,6 @@ import { formatTransaction } from '../../lib/utilities';
 import redis from '../../databases/redisEvents';
 import mongodb from "../../databases/mongodb";
 import callChainHooks from '../../lib/chain-implementations';
-
-
-// Create localized logger
-// import debug from 'debug';
-// import processUncle from './process-uncle';
-
 
 const getRequests = async (chain: string): Promise<[] | null> => {
     // Get a reference to the database collection, setup collections & sessions for transactions. 
@@ -42,7 +36,7 @@ const getRequests = async (chain: string): Promise<[] | null> => {
 
         return results;
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return null;
     } finally {
         await session.endSession();
@@ -69,7 +63,7 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
         //         }
         //     }
         //     if(request)
-        //         Logger.info("Request found..."); 
+        //         console.log("Request found..."); 
         // } else {
         //     request = { hash: blockId }
         // }
@@ -99,7 +93,7 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
         // }
 
         // if(searchRequest)
-        //     Logger.info(`Found request: ${request.hash}`); 
+        //     console.log(`Found request: ${request.hash}`); 
 
         // if(request.processMetadata || (!block && blockId)) {
         // Utilize the blockchain specific implementation to resolve the block data.
@@ -114,9 +108,9 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 let resolvedBlock = await wrapper.getBlock(blockId, 2);
 
                 // The exists field is appended to ensure that the execution flow is stopped in the event of an error
-                // that has already been logged by the localized logger in the blockchain implementation.
+                // that has already been logged by the localized log in the blockchain implementation.
                 if (!resolvedBlock) {
-                    Logger.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
+                    console.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
                     await unlockRequest(wrapper.ticker, blockId as string);
                     return await waitForTime(100);
                 }
@@ -126,7 +120,7 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 //     for(let i = 0; i < resolvedBlock.uncles.length; i++) {
                 //         await processUncle(wrapper, blockId, i);
                 //     }
-                //     Logger.info(`Took ${Date.now() - startTime}ms to process uncles.`);
+                //     console.log(`Took ${Date.now() - startTime}ms to process uncles.`);
                 // }
                 // }
                 block = { ...resolvedBlock, ...block };
@@ -197,7 +191,7 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
     } catch (error) {
         if (request && request.hash)
             await unlockRequest(wrapper.ticker, request.hash);
-        Logger.error(error);
+        console.error(error);
     }
 }
 

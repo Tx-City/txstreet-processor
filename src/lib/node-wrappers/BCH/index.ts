@@ -221,7 +221,7 @@ export default class BCHWrapper extends BlockchainWrapper {
 
             return transaction;
         } catch (error) {
-            this.logger(error);
+            console.error(error);
             return null;  
         }
     }
@@ -324,7 +324,7 @@ export default class BCHWrapper extends BlockchainWrapper {
             return block;
         } catch (error) {
             console.error(error);
-            this.logger(error);
+            console.error(error);
             return null;
         }
     }
@@ -338,7 +338,7 @@ export default class BCHWrapper extends BlockchainWrapper {
                 await this.resolveBlock(block.parentHash, verbosity, depth + 1); 
             return { exists: true, block }; 
         } catch (error) {
-            this.logger(error);
+            console.error(error);
             return { exists: false };
         }
     }

@@ -1,5 +1,4 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger } from '../../lib/utilities';
 import axios from 'axios';
 
 export default async (wrapper: BlockchainWrapper, transactions: any[], returnSingle = false, bulkApi = Boolean(process.env.USE_BULK_API)): Promise<any> => {
@@ -36,7 +35,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
         if (returnSingle) return transactions[0];
         return transactions;
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
     }
 }

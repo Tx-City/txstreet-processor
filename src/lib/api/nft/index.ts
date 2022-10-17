@@ -1,7 +1,6 @@
 import mongodb from "../../../databases/mongodb"
 import { Request, Response, Router } from 'express';
 import Web3 from "web3";
-import { Logger } from "../../../lib/utilities";
 //@ts-ignore
 import txStreetTokens from "@txstreet/txstreet-token-ids";
 import zoomersJson from '../../../lib/json/zoomers.json';
@@ -41,7 +40,7 @@ nftRouter.get('/inventory/:address', async (request: Request, response: Response
         }
         return response.json({ success: true, nfts: results });
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return response.json({ success: false, code: 0, message: `Unknown error handling request.` });
     }
 });
@@ -61,7 +60,7 @@ nftRouter.get('/getCharacter/:address', async (request: Request, response: Respo
         }
         return response.json({ success: false, code: 1, message: `No set character found.` });
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return response.json({ success: false, code: 0, message: `Unknown error handling request.` });
     }
 });
@@ -89,7 +88,7 @@ nftRouter.post('/setCharacter', async (request: Request, response: Response) => 
         // const results = await collection.find({address}).project({ _id: 0, tokenId: 1, collectionSlug: 1, collectionAddress: 1 }).toArray(); 
         // return response.json({ success: true, nfts: results }); 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return response.json({ success: false, code: 0, message: `Unknown error handling request.` });
     }
 });
@@ -128,7 +127,7 @@ async function ownsCharacter(address: string, slug: string, id: number) {
         if (result.length === 1) return true;
         return false;
     } catch (err) {
-        Logger.error(err);
+        console.error(err);
         return false;
     }
 }
@@ -142,7 +141,7 @@ async function changeDbCharacter(address: string, slug: string, id: number, sign
         await collection.updateOne({ address }, { $set: { tokenId: id, collectionSlug: slug, signature, updated: new Date() } }, { upsert: true });
         return true;
     } catch (err) {
-        Logger.error(err);
+        console.error(err);
         return false;
     }
 }

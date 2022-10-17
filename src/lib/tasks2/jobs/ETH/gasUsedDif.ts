@@ -2,7 +2,7 @@
  * This file is not used as a worker_thread because the results are required by the medianFee-usd statistic to accurately 
  * be calculated, because of this we will export an async function that allows medianFee-usd to wait for completion. 
  */
-import { Logger, median} from "../../../../lib/utilities";
+import { median} from "../../../../lib/utilities";
 import { ProjectedEthereumBlock } from '../../types';
 
 // The last value calculated during the execution of this task. 
@@ -19,7 +19,7 @@ export default async (blocks: ProjectedEthereumBlock[]): Promise<number> => {
         // Update the value of the last exectuin result. 
         lastExecutionResult = _median;
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     } finally {
         // In the event of successful calculation, the last-known value has already been updated.
         // In the event of an error, we will use the previously set last-known value.

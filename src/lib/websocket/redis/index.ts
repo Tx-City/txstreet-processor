@@ -1,7 +1,6 @@
 import * as redis from 'redis';
 import fs from 'fs';
 import path from 'path';
-import { Logger } from '../../../lib/utilities';
 
 const subscriber = redis.createClient({
     url: process.env.REDIS_URI,
@@ -32,7 +31,7 @@ subscriber.on('message', (channel: string, messageStr: string) => {
         const handler = handlers[channel]; 
         if(handler) handler(message); 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 });
 

@@ -1,4 +1,3 @@
-import { Logger } from "../../../../../lib/utilities";
 import { setInterval } from "../../../utils/OverlapProtectedInterval";
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
@@ -26,7 +25,7 @@ setInterval(async () => {
             lastExecutionResults['blockchainSize'] = results.size;
         }
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     } finally {
         // Wrapping a try/catch inside of a finally looks a little messy, but it's required to prevent a critical failure in the event
         // of a database error. We do this in finally so that we can make sure to update values that have successfully updated in the event
@@ -44,7 +43,7 @@ setInterval(async () => {
                 console.log(lastExecutionResults);
             }
         } catch (error) {
-            Logger.error(error); 
+            console.error(error); 
         }
     }
 }, 5000).start(true);

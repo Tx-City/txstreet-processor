@@ -1,7 +1,6 @@
 import redis from '../../../databases/redis'; 
 import { XMRWrapper } from '../../../lib/node-wrappers';
 import mongodb from '../../../databases/mongodb';
-import { Logger } from '../../../lib/utilities';
 
 export default async (chain: string): Promise<void> => {
     try {
@@ -50,7 +49,7 @@ export default async (chain: string): Promise<void> => {
         });
 
         if(writeInstructions.length && doDelete) {
-            Logger.print(`Removed ${writeInstructions.length} bad transactions`);
+            console.log(`Removed ${writeInstructions.length} bad transactions`);
             await collection.bulkWrite(writeInstructions, { ordered: false });
             redis.publish('removeTx', JSON.stringify({ chain, hashes: deleteHashes }));
         }
@@ -63,6 +62,6 @@ export default async (chain: string): Promise<void> => {
         //     //add to db if it doesn't exist
         // }
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }

@@ -1,7 +1,7 @@
 // IN PROGRESS - OPTIMIZATION|| Refactoring to use memory transactions, paused to fix other important issues. 
 
 import mongodb from '../../../../../databases/mongodb';
-import { formatTransaction, Logger, storeObject } from '../../../../../lib/utilities';
+import { formatTransaction, storeObject } from '../../../../../lib/utilities';
 import { setInterval } from '../../../utils/OverlapProtectedInterval';
 import fs from 'fs';
 import path from 'path';
@@ -167,7 +167,7 @@ setInterval(async () => {
             return formatted;
         });
 
-        if (count > 0) Logger.print(`Found ${count} accounts without a fromNonce in pending transaction creation`);
+        if (count > 0) console.log(`Found ${count} accounts without a fromNonce in pending transaction creation`);
 
         // pendingList = pendingList.sort((a: any, b: any) => b.gp - a.gp);
         const content = JSON.stringify(pendingList);
@@ -184,6 +184,6 @@ setInterval(async () => {
         }
 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }, 2000).start(true);

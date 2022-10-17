@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { XMRBlocksSchema, XMRTransactionsSchema } from '../../../../../data/schemas';
 import { ProjectedXMRBlock, ProjectedXMRTransaction } from "../../../types";
-import { Logger } from "../../../../../lib/utilities";
 import { setInterval } from "../../../utils/OverlapProtectedInterval";
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
@@ -80,9 +79,9 @@ setInterval(async () => {
                     transactions = transactions.sort((a: ProjectedXMRTransaction, b: ProjectedXMRTransaction) => a.insertedAt - b.insertedAt);
                     return resolve();  
                 } catch (error) {
-                    Logger.error(error);
-                    Logger.info('Attempting to decode schema...'); 
-                    try { Logger.info(`Decoded information for error:`, XMRTransactionsSchema.decode(data)); } catch (error) { Logger.info('Schema could not be decoded.') }  
+                    console.error(error);
+                    console.log('Attempting to decode schema...'); 
+                    try { console.log(`Decoded information for error:`, XMRTransactionsSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }  
                     return reject(error); 
                 }
             }); 
@@ -113,9 +112,9 @@ setInterval(async () => {
 
                     return resolve();  
                 } catch (error) {
-                    Logger.error(error);
-                    Logger.info('Attempting to decode schema...'); 
-                    try { Logger.info(`Decoded information for error:`, XMRBlocksSchema.decode(data)); } catch (error) { Logger.info('Schema could not be decoded.') }
+                    console.error(error);
+                    console.log('Attempting to decode schema...'); 
+                    try { console.log(`Decoded information for error:`, XMRBlocksSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }
                     return reject(error); 
                 }
             }); 
@@ -125,19 +124,19 @@ setInterval(async () => {
 
         // These tasks are all individually wrapped because their failures are not task-haulting. Even if one of these tasks fail to execute, 
         // the others can execute and if they depend on the failed task the lastExecutionResult will be available to use. 
-        try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as number; } catch (error) { Logger.error(error); };
-        try { lastExecutionResults['bps'] = await bps(transactions); } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['medianFee-aByte'] = await medianFeeAByte(transactions);  } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(pricePerIncrement, transactions);  } catch (error) { Logger.error(error) }
-        try { lastExecutionResults['medianFee-fee'] = await medianFeeFee(transactions) } catch (error) { Logger.error(error) }
+        try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
+        try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
+        try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as number; } catch (error) { console.error(error); };
+        try { lastExecutionResults['bps'] = await bps(transactions); } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianFee-aByte'] = await medianFeeAByte(transactions);  } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(pricePerIncrement, transactions);  } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianFee-fee'] = await medianFeeFee(transactions) } catch (error) { console.error(error) }
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     } finally {
         // Wrapping a try/catch inside of a finally looks a little messy, but it's required to prevent a critical failure in the event
         // of a database error. We do this in finally so that we can make sure to update values that have successfully updated in the event
@@ -155,7 +154,7 @@ setInterval(async () => {
                 console.log(lastExecutionResults);
             }
         } catch (error) {
-            Logger.error(error); 
+            console.error(error); 
         }
     }
 }, 1000).start(true);

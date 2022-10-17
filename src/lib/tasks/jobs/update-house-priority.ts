@@ -1,4 +1,4 @@
-import { Logger, storeObject } from '../../../lib/utilities';
+import { storeObject } from '../../../lib/utilities';
 import mongodb from '../../../databases/mongodb';
 import path from 'path';
 
@@ -39,7 +39,7 @@ export default async(chain: string): Promise<void> => {
         await Promise.all(tasks); 
         await storeObject(path.join('live', `houses-${chain}`), JSON.stringify(houseData)); 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }
 

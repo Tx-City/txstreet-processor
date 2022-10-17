@@ -1,5 +1,4 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger } from '../../../../lib/utilities';
 // import redis from '../../../../databases/redis'; 
 // import mongodb from "../../../../databases/mongodb";
 
@@ -9,7 +8,7 @@ class MWEBPeg extends ChainImplementation {
         try {
 
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         } finally {
             return this; 
         }

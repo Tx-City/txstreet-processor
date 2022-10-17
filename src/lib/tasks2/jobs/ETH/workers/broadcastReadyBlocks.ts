@@ -1,7 +1,7 @@
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
 import { setInterval } from '../../../utils/OverlapProtectedInterval';
-import { formatBlock, formatTransaction, Logger, storeObject } from '../../../../../lib/utilities';
+import { formatBlock, formatTransaction, storeObject } from '../../../../../lib/utilities';
 // import calculateBlockStats from './calculateBlockStats';
 import fs from 'fs';
 import path from 'path';
@@ -16,10 +16,10 @@ setInterval(async () => {
         if (blocks.length < 1) return;
         const block = blocks[0];
         if (!block) return;
-        Logger.info(`Found unprocessed block ${block.hash}`);
+        console.log(`Found unprocessed block ${block.hash}`);
         await checkBlock(database, block);
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }, 500).start(true);
 
@@ -35,7 +35,7 @@ const storeBlock = async (database: any, block: any) => {
                     await database.collection('transactions_ETH').updateOne({ hash: tx.hash }, { $set: { locked: false, processed: false } });
                 }
             }
-            Logger.info(`Block ${block.hash} is still waiting on ${remainingTxs} transactions to be processed.`);
+            console.log(`Block ${block.hash} is still waiting on ${remainingTxs} transactions to be processed.`);
             return false;
         }
 
@@ -79,7 +79,7 @@ const storeBlock = async (database: any, block: any) => {
             block.txFull[formatted.tx] = formatted;
         });
 
-        Logger.info(`Stored Block:`, block.hash, 'TxFull', Object.values(block.txFull).length, 'Transactions:', transactions.length, 'Block transactions:', block.transactions?.length);
+        console.log(`Stored Block:`, block.hash, 'TxFull', Object.values(block.txFull).length, 'Transactions:', transactions.length, 'Block transactions:', block.transactions?.length);
 
         const formattedBlock: any = formatBlock('ETH', block);
         formattedBlock.note = 'broadcastReadyBlocks';
@@ -95,7 +95,7 @@ const storeBlock = async (database: any, block: any) => {
         block.broadcast = false;
         return true;
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
     }
 }
@@ -106,7 +106,7 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
     try {
         // If the block is not stored, make sure all transactions are processed and then store it. 
         if (!block.stored) {
-            Logger.info("Block not stored - " + block.hash);
+            console.log("Block not stored - " + block.hash);
             if (!(await storeBlock(database, block)))
                 return false;
         }
@@ -117,7 +117,7 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
             parent = await database.collection('blocks').findOne({ chain: 'ETH', hash: block.parentHash });
 
         if (parent && !parent.processed) {
-            Logger.info("Parent is not proccessed.");
+            console.log("Parent is not proccessed.");
             return false;
         }
 
@@ -154,11 +154,11 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
             await database.collection('blocks').updateOne({ chain: 'ETH', hash: block.hash }, { $set: { broadcast: true, note: 'broadcast-ready-block' } });
             return true;
         } else {
-            Logger.info("Block isn't ready, either block or parent is not stored");
+            console.log("Block isn't ready, either block or parent is not stored");
             return false;
         }
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
     }
 }

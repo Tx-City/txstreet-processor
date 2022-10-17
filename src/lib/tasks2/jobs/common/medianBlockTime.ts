@@ -1,4 +1,4 @@
-import { average, Logger } from '../../../../lib/utilities';
+import { average } from '../../../../lib/utilities';
 import { ProjectedEthereumBlock, ProjectedXMRBlock } from '../../types';
 
 export default (blocks: ProjectedEthereumBlock[] | ProjectedXMRBlock[]) => {

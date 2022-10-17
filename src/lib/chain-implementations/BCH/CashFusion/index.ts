@@ -1,5 +1,4 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger } from '../../../../lib/utilities';
 
 class CashFusion extends ChainImplementation {
 

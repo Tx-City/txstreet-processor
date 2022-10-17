@@ -1,7 +1,5 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import mongodb from '../../databases/mongodb'; 
-import { Logger } from '../../lib/utilities';
-
 
 export default async (wrapper: BlockchainWrapper, transaction: any): Promise<boolean> => {
     try {
@@ -14,7 +12,7 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<boo
             return true; 
         return false; 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
 
     }

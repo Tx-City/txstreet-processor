@@ -1,7 +1,6 @@
 import mongodb from '../../../databases/mongodb';
 import OverlapProtectedInterval from "../utils/OverlapProtectedInterval";
 import DropoutContainer from '../containers/Dropout';
-import { Logger } from '../../../lib/utilities';
 import { setTimeout } from 'timers';
 
 export default class ObtainTransactionsFromDatabase extends OverlapProtectedInterval {
@@ -51,7 +50,7 @@ export default class ObtainTransactionsFromDatabase extends OverlapProtectedInte
                 }
                 this._done = true;
             } catch (error) {
-                Logger.error(error); 
+                console.error(error); 
                 console.error(error);
             }
         }, 250); 

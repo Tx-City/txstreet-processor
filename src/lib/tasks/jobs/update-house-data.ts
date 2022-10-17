@@ -1,4 +1,3 @@
-import { Logger } from '../../../lib/utilities';
 import fs from 'fs';
 import path from 'path'; 
 import mongodb from '../../../databases/mongodb';
@@ -37,9 +36,9 @@ export default async(chain: string, wikiname: string): Promise<void> => {
         if(writeInstructions.length > 0) 
             await collection.bulkWrite(writeInstructions); 
 
-        Logger.info("Housing data updated");
+        console.log("Housing data updated");
 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
     }
 }

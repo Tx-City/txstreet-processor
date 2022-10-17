@@ -1,6 +1,5 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import mongodb from '../../databases/mongodb';
-import { Logger } from '../../lib/utilities';
 
 // The purpose of this method is to create transaction requests in the database.
 // Since transactions are multi-stage objects, assigning the blockHeight to the transaction
@@ -61,10 +60,10 @@ export default async (wrapper: BlockchainWrapper, blockHash: string, blockHeight
             await database.collection(`blocks`).updateOne({ chain: wrapper.ticker, hash: blockHash }, { $set: { processTransactions: false, lastTransactionFetch: Date.now() } });
         }
 
-        Logger.info(`Transaction requests created for hash: ${blockHash}, height: ${blockHeight}`)
+        console.log(`Transaction requests created for hash: ${blockHash}, height: ${blockHeight}`)
         return true;
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return false;  
     }
 }

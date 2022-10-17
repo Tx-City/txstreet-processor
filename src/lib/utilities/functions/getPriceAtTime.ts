@@ -1,6 +1,5 @@
 import axios from "axios";
 import { isNull } from "util";
-import { Logger } from "..";
 
 export default async (ticker: string, fromTime: number, toTime: number) => {
     let retriesLeft = 5; 
@@ -43,7 +42,7 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
                 results = result.data.prices[index];
             }
         } catch (error) {
-            Logger.error(error); 
+            console.error(error); 
         } finally {
             if(results) return results; 
             if(--retriesLeft < 0) return null;

@@ -1,4 +1,4 @@
-import { formatTransaction, Logger, storeObject } from "../../../../../lib/utilities";
+import { formatTransaction, storeObject } from "../../../../../lib/utilities";
 import { setInterval } from "../../../utils/OverlapProtectedInterval";
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
@@ -89,6 +89,6 @@ const interval = setInterval(async () => {
 
         await storeObject(path.join('live', `pendingTxs-LTC`), JSON.stringify(pTransactions.map((tx: any) => formatTransaction('LTC', tx)))); 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }, 3000).start(true);

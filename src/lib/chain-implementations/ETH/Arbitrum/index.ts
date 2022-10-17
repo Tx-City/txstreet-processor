@@ -1,5 +1,4 @@
 import ChainImplementation from '../../implementation'; 
-import { Logger, decRound } from '../../../../lib/utilities';
 import redis from '../../../../databases/redis'; 
 // @ts-ignore-line
 // import abiDecoder from 'abi-decoder'; 
@@ -13,7 +12,7 @@ class Arbitrum extends ChainImplementation {
         try {
             console.log('initialized arbitrum sequencer');
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         } finally {
             return this; 
         }

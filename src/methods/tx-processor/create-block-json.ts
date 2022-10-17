@@ -1,5 +1,5 @@
 import mongodb from '../../databases/mongodb';
-import { Logger, formatTransaction, formatBlock, storeObject } from '../../lib/utilities';
+import { formatTransaction, formatBlock, storeObject } from '../../lib/utilities';
 
 import fs from 'fs';
 import path from 'path';
@@ -39,7 +39,7 @@ export default async (chain: string, block: any): Promise<any> => {
             { $set: { gasUsedDif: (differences.reduce((a: any, b: any) => a + b, 0) / differences.length) * 100 } }
         );
 
-        Logger.info(`Created block json containing ${Object.values(block.txFull).length} txFull items.`);
+        console.log(`Created block json containing ${Object.values(block.txFull).length} txFull items.`);
 
         // Encode the file content.
         const formattedBlock: any = formatBlock(chain, block);
@@ -53,7 +53,7 @@ export default async (chain: string, block: any): Promise<any> => {
         await storeObject(path.join('blocks', chain, firstPart, secondPart, block.hash), fileContents);
         return block; 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return null;
     }
 }

@@ -69,7 +69,7 @@ export default class XMRWrapper extends BlockchainWrapper {
             return this._formatTransaction(transaction); 
         } catch (error) {
             console.error(error); 
-            this.logger(error);
+            console.error(error);
             return null; 
         }
     }
@@ -89,7 +89,7 @@ export default class XMRWrapper extends BlockchainWrapper {
             return null; 
         } catch (error) {
             console.error(error);
-            this.logger(error);
+            console.error(error);
             return null;
         }
     }
@@ -105,7 +105,7 @@ export default class XMRWrapper extends BlockchainWrapper {
                 await this.resolveBlock(block.previous_block_hash, 0, depth + 1); 
             return { exists: true, block };
         } catch (error) {
-            this.logger(error);
+            console.error(error);
             return { exists: false } 
         }
     }
@@ -205,7 +205,7 @@ export default class XMRWrapper extends BlockchainWrapper {
             return null; 
         } catch (error) {
             console.error(error);
-            this.logger(error);
+            console.error(error);
             return null;
         }
     }

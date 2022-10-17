@@ -1,5 +1,4 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
-import { Logger } from '../../lib/utilities';
 import mongodb from '../../databases/mongodb';
 
 // The purpose of this method is to unlock the transactions with the provided hashes.
@@ -21,7 +20,7 @@ export default async (wrapper: BlockchainWrapper, hashes: string[]): Promise<boo
         await collection.updateMany(where, updateInstructions);
         return true;
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
     }
 }

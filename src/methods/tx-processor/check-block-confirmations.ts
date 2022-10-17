@@ -1,5 +1,4 @@
 import { BlockchainWrapper } from "../../lib/node-wrappers";
-import { Logger } from "../../lib/utilities";
 import mongodb from '../../databases/mongodb'
 import redis from '../../databases/redis'
 import createBlockJson from "./create-block-json";
@@ -53,7 +52,7 @@ export default async (wrapper: BlockchainWrapper, hashes: string[]): Promise<voi
         hashes.forEach((hash: string) => tasks.push(execute(database, wrapper.ticker, hash))); 
         await Promise.all(tasks); 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }
 

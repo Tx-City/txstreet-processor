@@ -1,9 +1,5 @@
 import mongodb from '../../databases/mongodb';
 
-// Create localized loggers
-import debug from 'debug';
-import { Logger } from '../../lib/utilities';
-
 // The purpose of this method is to find the next available unprocessed block request that
 // needs to be handled. Inside of this method we also lock the request so that other block
 // processors can not handle it. 
@@ -30,7 +26,7 @@ export default async (chain: string): Promise<string | null> => {
 
         return result; 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return null;
     } finally {
         await session.endSession();

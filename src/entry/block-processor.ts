@@ -6,15 +6,10 @@ dotenv.config();
 import minimist from 'minimist';
 Object.assign(process.env, minimist(process.argv.slice(2)));
 
-// Setup the logger for this file. 
-import debug from 'debug'; 
-const logger = debug('src/index'); 
-
 // Misc imports 
 import processBlock from '../methods/block-processor/process-block'; 
 import processBlockTxs from '../methods/block-processor/process-block-txs'; 
 import * as Wrappers from '../lib/node-wrappers';
-import { Logger } from '../lib/utilities';
 import { initHooks } from '../lib/chain-implementations';
 
 
@@ -45,13 +40,12 @@ const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
         }
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1); 
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1); 
     }   
 }
 
 const run = async () => {
-    Logger.setLogLevel(Logger.LoggingLevel.Info);
     if(nodesToInit.includes('BTC')) {
         const btcWrapper = new Wrappers.BTCWrapper(
             { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_PORT) || 8332 },

@@ -1,6 +1,6 @@
 import express, { Request, Response, Router } from 'express';
 import path from 'path'; 
-import { Logger, readNFSFile } from '../../../lib/utilities';
+import { readNFSFile } from '../../../lib/utilities';
 
 const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage'); 
 
@@ -31,7 +31,7 @@ staticRouter.get('/live/:file', async (request: Request, response: Response) => 
         try {
             let data: any = fileCache[file]; 
             if(data != null) {
-                Logger.info(`Live request served from memory cache.`);
+                console.log(`Live request served from memory cache.`);
                 return response.set('content-type', 'application/json').send(data); 
             }
             const filePath = path.join(directory, 'live', file);
@@ -52,7 +52,7 @@ staticRouter.get('/live/:file', async (request: Request, response: Response) => 
             cacheExpire[filePath] = Date.now() + 2000; 
             return response.set('content-type', 'application/json').send(data); 
         } catch (error) {
-            Logger.error(error); 
+            console.error(error); 
             response.set('Cache-Control', 'no-store, max-age=0');
             response.set('Expires', '0'); 
             return response.status(404).send(false); 
@@ -86,7 +86,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
 
         let data: any = fileCache[key];
         if(data != null) {
-            Logger.info(`Static request served from memory cache.`);
+            console.log(`Static request served from memory cache.`);
             return response.set('content-type', 'application/json').send(data); 
         }
         data = await readNFSFile(filePath); 
@@ -111,7 +111,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
 
         return response.set('content-type', 'application/json').send(parsed); 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return sendError(); 
     }
 });

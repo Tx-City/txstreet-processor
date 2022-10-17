@@ -8,8 +8,6 @@ import checkHousing from './check-housing';
 import updateAccountNonces from './update-account-nonces';
 import getReceipts from './get-receipts';
 import getContactCodes from './get-contact-codes';
-import { Logger } from '../../lib/utilities';
-import axios from 'axios';
 
 import checkSameNonce from './check-same-nonce';
 
@@ -27,7 +25,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             return true;
         }
 
-        Logger.info(`Got pending batch of ${transactionRequests.length} transactions.`);
+        console.log(`Got pending batch of ${transactionRequests.length} transactions.`);
 
         // Create an array of Promises that will be used to asynchronously fulfill obtaining transaction data
         // from the node. 
@@ -67,7 +65,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
 
                     return resolve({ request: transactionRequest, transaction });
                 } catch (error) {
-                    Logger.error(error);
+                    console.error(error);
                     return resolve({ request: transactionRequest, failed: true });
                 }
             });
@@ -92,14 +90,14 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         try {
             await unlockFailedTransactions(wrapper, failures.map((result: any) => result.request.hash));
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         }
 
         // Delete all bad transactions from the database and broadcast the hashes through redis. 
         try {
             await removeBadTransactions(wrapper, badTransactions.map((result: any) => result.request.hash));
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         }
 
         // Houses
@@ -126,7 +124,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
 
         return true;
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return false;
     }
 }

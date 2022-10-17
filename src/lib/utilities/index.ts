@@ -4,7 +4,6 @@ import median from "./functions/median";
 import formatBlock from "./functions/formatBlock";
 import formatTransaction from './functions/formatTransaction';
 import findNftOwner from './functions/findNftOwner';
-import Logger from './functions/logger'
 import FalloutCollection from "./classes/FalloutCollection";
 import storeObject from './functions/storeObject';
 import decRound from './functions/decRound';
@@ -22,7 +21,6 @@ export {
     formatBlock,
     formatTransaction,
     findNftOwner,
-    Logger,
     FalloutCollection,
     storeObject,
     decRound,

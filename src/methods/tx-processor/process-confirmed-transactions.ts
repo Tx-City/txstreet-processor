@@ -10,7 +10,6 @@ import updateAccountNonces from './update-account-nonces';
 import callChainHooks from '../../lib/chain-implementations';
 import getContactCodes from './get-contact-codes';
 import getReceipts from './get-receipts';
-import { Logger } from '../../lib/utilities';
 import axios from 'axios';
 import redis from '../../databases/redis';
 
@@ -26,7 +25,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             return true;
         }
 
-        Logger.info(`BATCH STARTED -- ${transactionRequests.length} requests`);
+        console.log(`BATCH STARTED -- ${transactionRequests.length} requests`);
 
         // Create an array of Promises that will be used to asynchronously fulfill obtaining transaction data
         // from the node. 
@@ -49,7 +48,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
 
                     return resolve(transactionRequest);
                 } catch (error) {
-                    Logger.error(error);
+                    console.error(error);
                     return resolve({ failed: true });
                 }
             });
@@ -88,17 +87,17 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         // Unlock all failed transactions, this is in it's own try/catch to not stop execution flow.
         try {
             await unlockFailedTransactions(wrapper, failures.map((result: any) => result.hash));
-            if (failures.length) Logger.info("Unlocked failed transactions");
+            if (failures.length) console.log("Unlocked failed transactions");
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         }
 
         // Delete all bad transactions from the database and broadcast the hashes through redis. 
         try {
             await removeBadTransactions(wrapper, badTransactions.map((result: any) => result.hash));
-            if (badTransactions.length) Logger.info("Removed bad transactions");
+            if (badTransactions.length) console.log("Removed bad transactions");
         } catch (error) {
-            Logger.error(error);
+            console.error(error);
         }
 
         // Houses
@@ -122,12 +121,12 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         tasks.length = 0;
         transactionRequests.length = 0;
 
-        Logger.info(`BATCH COMPLETED`);
+        console.log(`BATCH COMPLETED`);
 
         return true;
     } catch (error) {
-        Logger.warn(`BATCH ABANDONED`);
-        Logger.error(error);
+        console.warn(`BATCH ABANDONED`);
+        console.error(error);
         return false;
     }
 }

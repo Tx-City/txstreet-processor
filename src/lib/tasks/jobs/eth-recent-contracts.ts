@@ -1,4 +1,4 @@
-import { Logger, storeObject } from '../../../lib/utilities';
+import { storeObject } from '../../../lib/utilities';
 import mongodb from '../../../databases/mongodb';
 import Bottleneck from 'bottleneck';
 import axios from 'axios';
@@ -138,6 +138,6 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
         // values.forEach((v: any) => delete v.weightedTransactions); 
         await storeObject(path.join('live', `trending-contracts-${chain}-${label}`), JSON.stringify(values)); 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }

@@ -1,4 +1,3 @@
-import { Logger } from '../../../lib/utilities';
 import axios from 'axios';
 import mongodb from '../../../databases/mongodb';
 import { CoingeckoTaskResult, CoinLookupTable, WebResponse } from '../global';
@@ -58,7 +57,7 @@ const updateDatabase = async (ticker: string, updateObject: any, attempt: number
         }
             
     } catch (error) {
-        Logger.error(error);
+        console.error(error);
         return attempt > 5 ? null : updateDatabase(ticker, updateObject, attempt++); 
     }
 }
@@ -90,7 +89,7 @@ export default async(): Promise<void> => {
             }); 
             tasks.push(task); 
         } catch(error) {
-            Logger.error(error); 
+            console.error(error); 
         }
     }); 
 
@@ -102,7 +101,7 @@ export default async(): Promise<void> => {
         const { success, error, ticker, name, data  } = taskResult; 
         if(!success) {
             // Task failed, just ignore this iteration. 
-            Logger.error(error); 
+            console.error(error); 
             return; 
         }
 

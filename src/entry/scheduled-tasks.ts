@@ -13,8 +13,6 @@ import btcRemoveBadTxs from '../lib/tasks/jobs/btc-remove-bad-txs';
 import xmrRemoveBadTxs from '../lib/tasks/jobs/xmr-remove-bad-txs';
 import btcBlockBroadcast from '../lib/tasks/jobs/btc-block-broadcast';
 import xmrBlockBroadcast from '../lib/tasks/jobs/xmr-block-broadcast';
-import { Logger } from '../lib/utilities';
-Logger.setLogLevel(Logger.LoggingLevel.Info);
 import ethRecentContracts from '../lib/tasks/jobs/eth-recent-contracts';
 import { chainConfig } from '../data/chains';
 var allowed = Object.keys(chainConfig);

@@ -1,8 +1,5 @@
 import mongodb from '../../databases/mongodb';
 
-// Create localized logger
-import { Logger } from '../../lib/utilities';
-
 // The purpose of this method is to find chain-provided block information in the database. 
 export default async (chain: string, key: string, value: any): Promise<any> => {
     try {
@@ -24,7 +21,7 @@ export default async (chain: string, key: string, value: any): Promise<any> => {
 
         return block?.processed; 
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
         return null;
     }
 }

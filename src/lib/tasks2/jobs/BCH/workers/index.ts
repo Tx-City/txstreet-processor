@@ -1,4 +1,3 @@
-import { Logger } from '../../../../../lib/utilities';
 import path from 'path';
 import BCHPendingList from '../../../containers/BCHPendingList';
 import { Worker } from 'worker_threads';
@@ -17,6 +16,6 @@ export default async () => {
         new Worker(path.join(__dirname, 'mempoolInfo.js'), { workerData })
         new Worker(path.join(__dirname, 'calculatePendingTransactionsList.js'), { workerData })
     } catch (error) {
-        Logger.error(error); 
+        console.error(error); 
     }
 }
