@@ -284,9 +284,8 @@ export default class LTCWrapper extends BlockchainWrapper {
         });
 
         try {
-            let idAsNumber = Number(id)
-            if (!isNaN(idAsNumber)) {
-                id = await rpcGetHashForHeight(idAsNumber);
+            if (typeof id === "number") {
+                id = await rpcGetHashForHeight(id);
                 console.log(id);
                 if (id.length === 0) return null;
             }

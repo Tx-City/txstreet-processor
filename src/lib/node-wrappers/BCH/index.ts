@@ -244,9 +244,8 @@ export default class BCHWrapper extends BlockchainWrapper {
         });
 
         try {
-            let idAsNumber = Number(id)
-            if(!isNaN(idAsNumber)) {
-                id = await rpcGetHashForHeight(idAsNumber); 
+            if (typeof id === "number") {
+                id = await rpcGetHashForHeight(id); 
                 if(id.length === 0) return null;
             }
 
