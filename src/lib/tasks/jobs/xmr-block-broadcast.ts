@@ -5,7 +5,6 @@ import createBlockJson from '../../..//methods/tx-processor/create-block-json';
 
 export default async (chain: string): Promise<void> => {
     try {
-        console.log("checking blocks to broadcast");
         const { database } = await mongodb();
         const collection = database.collection('blocks'); 
         //first check if the transaction fetching is failing, and then update them to be picked up again to create the block json
