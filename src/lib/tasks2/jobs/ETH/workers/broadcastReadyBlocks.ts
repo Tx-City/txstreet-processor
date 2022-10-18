@@ -87,7 +87,7 @@ const storeBlock = async (database: any, block: any) => {
 
         const firstPart = block.hash[block.hash.length - 1];
         const secondPart = block.hash[block.hash.length - 2];
-        try { await fs.promises.mkdir(path.join(dataDir, 'blocks', 'ETH', firstPart, secondPart), { recursive: true }); } catch (err) { }
+        // try { await fs.promises.mkdir(path.join(dataDir, 'blocks', 'ETH', firstPart, secondPart), { recursive: true }); } catch (err) { }
         await storeObject(path.join('blocks', 'ETH', firstPart, secondPart, block.hash), fileContents);
         // await calculateBlockStats(block, transactions);
         await database.collection('blocks').updateOne({ chain: 'ETH', hash: block.hash }, { $set: { stored: true, broadcast: false } });

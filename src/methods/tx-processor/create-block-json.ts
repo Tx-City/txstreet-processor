@@ -16,7 +16,7 @@ export default async (chain: string, block: any): Promise<any> => {
         const transactions = await database.collection('transactions_' + chain || '').find({
             hash: { $in: block.transactions },
             confirmed: true,
-            dropped: { $exists: false }
+            // dropped: { $exists: false }
         }).toArray();
 
 
@@ -49,7 +49,7 @@ export default async (chain: string, block: any): Promise<any> => {
         const firstPart = block.hash[block.hash.length - 1];
         const secondPart = block.hash[block.hash.length - 2]; 
         
-        try { await fs.promises.mkdir(path.join(dataDir, 'blocks', chain, firstPart, secondPart), { recursive: true }); } catch (err) {}
+        // try { await fs.promises.mkdir(path.join(dataDir, 'blocks', chain, firstPart, secondPart), { recursive: true }); } catch (err) {}
         await storeObject(path.join('blocks', chain, firstPart, secondPart, block.hash), fileContents);
         return block; 
     } catch (error) {
