@@ -13,12 +13,12 @@ export default async (chain: string): Promise<void> => {
         if(block){
             console.log("found stuck block " + block.hash);
             if(block.transactions && block.transactions.length){
-                const buggedTxs = await database.collection('transactions_' + chain).find({ blockHash: block.hash, confirmed: true }).project({ _id: 1 }).toArray();
+                const buggedTxs = await database.collection('transactions_' + chain).find({ blockHash: block.hash, confirmed: true }).project({ hash: 1 }).toArray();
                 if(buggedTxs.length){
                     for (let i = 0; i < buggedTxs.length; i++) {
                         const rtx = buggedTxs[i];
+                        await database.collection('transactions_' + chain).updateOne({ hash: rtx.hash }, { $set: { confirmed: false, processed: true, blockHeight: block.height, locked: false, processFailures: 0 }});
                         console.log("updated failed tx " + rtx.hash);
-                        await database.collection('transactions_' + chain).updateOne({ _id: rtx._id }, { $set: { confirmed: false, processed: true, blockHeight: block.height, locked: false, processFailures: 0 }});
                     }
                     // confirmed: false, processed: true, blockHeight: { $ne: null }, locked: false, processFailures: { $lte: 5 }
                     
