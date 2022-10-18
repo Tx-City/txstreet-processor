@@ -10,6 +10,7 @@ export default async (chain: string): Promise<void> => {
         //first check if the transaction fetching is failing, and then update them to be picked up again to create the block json
         let block = await collection.find({ chain, stored: false, broadcast: false, processed: true, lastTransactionFetch: { $lt: Date.now() - 60000 } }).sort({ height: 1 }).limit(1).next();
         if(block){
+            console.log("found stuck block " + block.hash);
             if(block.transactions && block.transactions.length){
                 const remainingTransactions = await database.collection('transactions_' + chain).find({ blockHash: block.hash, confirmed: false }).project({ _id: 1 }).toArray();
                 if(remainingTransactions.length){
