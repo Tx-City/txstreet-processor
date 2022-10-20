@@ -125,7 +125,7 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 // }
                 block = { ...resolvedBlock, ...block };
 
-                const receipts = await wrapper.getTransactionReceipts(block);
+                // const receipts = await wrapper.getTransactionReceipts(block);
 
                 // Create a tmp value holding the transactions array for the block. 
                 // This is later passed into createTransactionRequests. 
@@ -143,18 +143,18 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 const transactionPromises: any = [];
                 transactions.forEach((transaction: any) => {
                     transactionPromises.push(new Promise(async (resolve) => {
-                        for (let i = 0; i < receipts.length; i++) {
-                            const receipt = receipts[i];
-                            if (receipt.transactionHash === transaction.hash) {
-                                transaction.receipt = receipt;
-                                // transaction.gasUsed = Number(receipt.gasUsed);
-                                // transaction.cumulativeGasUsed = Number(receipt.cumulativeGasUsed);
-                                // transaction.effectiveGasPrice = Number(receipt.effectiveGasPrice);
-                                if (transaction.gas > 21000) {
-                                    differences.push(Number(transaction.receipt.gasUsed) / transaction.gas);
-                                }
-                            }
-                        }
+                        // for (let i = 0; i < receipts.length; i++) {
+                        //     const receipt = receipts[i];
+                        //     if (receipt.transactionHash === transaction.hash) {
+                        //         transaction.receipt = receipt;
+                        //         // transaction.gasUsed = Number(receipt.gasUsed);
+                        //         // transaction.cumulativeGasUsed = Number(receipt.cumulativeGasUsed);
+                        //         // transaction.effectiveGasPrice = Number(receipt.effectiveGasPrice);
+                        //         if (transaction.gas > 21000) {
+                        //             differences.push(Number(transaction.receipt.gasUsed) / transaction.gas);
+                        //         }
+                        //     }
+                        // }
 
                         await callChainHooks(wrapper.ticker, transaction);
                         const formatted = formatTransaction(wrapper.ticker, transaction);
@@ -164,9 +164,9 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 });
                 await Promise.all(transactionPromises);
 
-                if (differences.length) {
-                    block.gasUsedDif = (differences.reduce((a: any, b: any) => a + b, 0) / differences.length) * 100;
-                }
+                // if (differences.length) {
+                //     block.gasUsedDif = (differences.reduce((a: any, b: any) => a + b, 0) / differences.length) * 100;
+                // }
 
 
                 // console.log(transactions);
