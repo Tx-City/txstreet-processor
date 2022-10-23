@@ -25,6 +25,7 @@
     "cors": "^2.8.5",
     "deepequal": "0.0.1",
     "dotenv": "^10.0.0",
+    "ethers": "^5.7.2",
     "eventemitter3": "^4.0.7",
     "express": "^4.17.1",
     "helmet": "^4.5.0",
@@ -37,7 +38,7 @@
     "node-html-parser": "^3.3.4",
     "redis": "^3.1.2",
     "socket.io": "^3.1.2",
-    "web3": "^1.7.5",
+    "web3": "^1.8.0",
     "yaml": "^1.10.2",
     "zeromq": "^6.0.0-beta.6"
   },

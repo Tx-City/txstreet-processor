@@ -2,14 +2,15 @@ import ChainImplementation from '../../implementation';
 import { decRound } from '../../../../lib/utilities';
 // @ts-ignore-line
 import abiDecoder from 'abi-decoder'; 
-import axios from 'axios';
+import tokenManager from "../../../../lib/utilities/tokenManager";
 
 import contract_0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f from "./0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f.json";
 
 import mongodb from '../../../../databases/mongodb'; 
 
-const getToken = (sushi: any, address: string) => {
-    return sushi.tokenList[address];
+const getToken = async (sushi: any, address: string) => {
+    const tokenInfo = await sushi.tokenManager.getToken(address);
+    return tokenInfo;
 }
 
 const tknSymbol = (token: any) => {
@@ -26,9 +27,9 @@ const swapPart = (token: any, amount: number, transaction: any) => {
     return decRound(fullAmount) + " " + tknSymbol(token);
 }
 
-const swap = (sushi: any, address1: string, amount1: number, address2: string, amount2: number, transaction: any) => {
-    const token1 = getToken(sushi, address1);
-    const token2 = getToken(sushi, address2);
+const swap = async (sushi: any, address1: string, amount1: number, address2: string, amount2: number, transaction: any) => {
+    const token1 = await getToken(sushi, address1);
+    const token2 = await getToken(sushi, address2);
 
     const inSwap = swapPart(token1, amount1, transaction);
     const outSwap = swapPart(token2, amount2, transaction);
@@ -50,7 +51,7 @@ const swap = (sushi: any, address1: string, amount1: number, address2: string, a
 }
 
 
-const getData = (sushi:any, transaction: any): string | boolean => {
+const getData = async (sushi:any, transaction: any): Promise<string | boolean> => {
     try {
         if(transaction.to.toLowerCase() != "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f" || !transaction.input) return false;
         const decoded: any = abiDecoder.decodeMethod(transaction.input); 
@@ -64,7 +65,7 @@ const getData = (sushi:any, transaction: any): string | boolean => {
             const address2 = decoded.params[2].value[decoded.params[2].value.length - 1];
             const amount2 = decoded.params[1].value;
 
-            return swap(sushi, address1, amount1, address2, amount2, transaction);
+            return await swap(sushi, address1, amount1, address2, amount2, transaction);
         } else if (decoded.name == "swapExactETHForTokens" 
             || decoded.name == "swapETHForExactTokens" 
             || decoded.name == "swapExactETHForTokensSupportingFeeOnTransferTokens") {
@@ -73,21 +74,21 @@ const getData = (sushi:any, transaction: any): string | boolean => {
             const address2 = decoded.params[1].value[decoded.params[1].value.length - 1];
             const amount2 = decoded.params[0].value;
 
-            return swap(sushi, address1, amount1, address2, amount2, transaction);
+            return await swap(sushi, address1, amount1, address2, amount2, transaction);
         } else if (decoded.name == "swapTokensForExactTokens" || decoded.name == "swapTokensForExactETH") {
             const address1 = decoded.params[2].value[0];
             const amount1 = decoded.params[1].value;
             const address2 = decoded.params[2].value[decoded.params[2].value.length - 1];
             const amount2 = decoded.params[0].value;
 
-            return swap(sushi, address1, amount1, address2, amount2, transaction);
+            return await swap(sushi, address1, amount1, address2, amount2, transaction);
         } else if (decoded.name == "addLiquidity" 
             || decoded.name == "removeLiquidityWithPermit" 
             || decoded.name == "removeLiquidity") {
             const address1 = decoded.params[0].value;
             const address2 = decoded.params[1].value;
-            const token1 = getToken(sushi,address1);
-            const token2 = getToken(sushi,address2);
+            const token1 = await getToken(sushi,address1);
+            const token2 = await getToken(sushi,address2);
             const action = decoded.name == "addLiquidity" ? "Added " : "Removed ";
             const message = action + tknSymbol(token1) + "/" + tknSymbol(token2) + " liquidity";
             transaction.extras.houseContent = message;
@@ -97,7 +98,7 @@ const getData = (sushi:any, transaction: any): string | boolean => {
             || decoded.name == "removeLiquidityETHSupportingFeeOnTransferTokens" 
             || decoded.name == "removeLiquidityETHWithPermitSupportingFeeOnTransferTokens") {
             const address1 = decoded.params[0].value;
-            const token1 = getToken(sushi,address1);
+            const token1 = await getToken(sushi,address1);
             const action = decoded.name == "addLiquidityETH" ? "Added " : "Removed ";
             const message = action + tknSymbol(token1) + "/ETH liquidity";
             transaction.extras.houseContent = message;
@@ -115,7 +116,7 @@ const getData = (sushi:any, transaction: any): string | boolean => {
 
 class Sushi extends ChainImplementation {
     public addresses: string[] = []; 
-    public tokenList: any = {};
+    public tokenManager: any;
 
     async init(): Promise<ChainImplementation> {
         try {
@@ -131,16 +132,8 @@ class Sushi extends ChainImplementation {
 
             abiDecoder.addABI(contract_0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f);
 
-            // TODO: Database caching. 
-            let response = await axios.get('https://tokens.coingecko.com/uniswap/all.json')
-            let { tokens } = response.data; 
-            tokens.forEach((token: any) => this.tokenList[token.address] = token)
+            this.tokenManager = new tokenManager('ETH');
 
-            setInterval(async () => {
-                let response = await axios.get('https://tokens.coingecko.com/uniswap/all.json')
-                let { tokens } = response.data; 
-                tokens.forEach((token: any) => this.tokenList[token.address] = token)
-            }, 60 * 1000); 
             console.log('initialized sushi');
         } catch (error) {
             console.error(error);
@@ -157,7 +150,7 @@ class Sushi extends ChainImplementation {
         if(transaction.house === "sushi") return true;
         transaction.house = 'sushi'; //ALWAYS SET!
         if(!transaction.extras) transaction.extras = {};
-        if(getData(this, transaction) && !transaction?.extras?.showBubble) {
+        if(await getData(this, transaction) && !transaction?.extras?.showBubble) {
             transaction.extras.showBubble = false;
         }
         return true;

@@ -2,14 +2,15 @@ import ChainImplementation from '../../implementation';
 import { decRound } from '../../../../lib/utilities';
 // @ts-ignore-line
 import abiDecoder from 'abi-decoder';
-import axios from 'axios';
+import tokenManager from "../../../../lib/utilities/tokenManager";
 
 import contract_0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D from "./0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D.json";
 
 import mongodb from '../../../../databases/mongodb'; 
 
-const getToken = (uniswap: any, address: string) => {
-    return uniswap.tokenList[address];
+const getToken = async (uniswap: any, address: string) => {
+    const tokenInfo = await uniswap.tokenManager.getToken(address);
+    return tokenInfo;
 }
 
 const tknSymbol = (token: any) => {
@@ -26,9 +27,9 @@ const swapPart = (token: any, amount: number, transaction: any) => {
     return decRound(fullAmount) + " " + tknSymbol(token);
 }
 
-const swap = (uniswap: any, address1: string, amount1: number, address2: string, amount2: number, transaction: any) => {
-    const token1 = getToken(uniswap, address1);
-    const token2 = getToken(uniswap, address2);
+const swap = async (uniswap: any, address1: string, amount1: number, address2: string, amount2: number, transaction: any) => {
+    const token1 = await getToken(uniswap, address1);
+    const token2 = await getToken(uniswap, address2);
 
     const inSwap = swapPart(token1, amount1, transaction);
     const outSwap = swapPart(token2, amount2, transaction);
@@ -50,7 +51,7 @@ const swap = (uniswap: any, address1: string, amount1: number, address2: string,
 }
 
 
-const getData = (uniswap: any, transaction: any): string | boolean => {
+const getData = async (uniswap: any, transaction: any): Promise<string | boolean> => {
     try {
         if (transaction.to.toLowerCase() != "0x7a250d5630b4cf539739df2c5dacb4c659f2488d" || !transaction.input) return false;
         const decoded: any = abiDecoder.decodeMethod(transaction.input);
@@ -64,7 +65,7 @@ const getData = (uniswap: any, transaction: any): string | boolean => {
             const address2 = decoded.params[2].value[decoded.params[2].value.length - 1];
             const amount2 = decoded.params[1].value;
 
-            return swap(uniswap, address1, amount1, address2, amount2, transaction);
+            return await swap(uniswap, address1, amount1, address2, amount2, transaction);
         } else if (decoded.name == "swapExactETHForTokens"
             || decoded.name == "swapETHForExactTokens"
             || decoded.name == "swapExactETHForTokensSupportingFeeOnTransferTokens") {
@@ -73,21 +74,21 @@ const getData = (uniswap: any, transaction: any): string | boolean => {
             const address2 = decoded.params[1].value[decoded.params[1].value.length - 1];
             const amount2 = decoded.params[0].value;
 
-            return swap(uniswap, address1, amount1, address2, amount2, transaction);
+            return await swap(uniswap, address1, amount1, address2, amount2, transaction);
         } else if (decoded.name == "swapTokensForExactTokens" || decoded.name == "swapTokensForExactETH") {
             const address1 = decoded.params[2].value[0];
             const amount1 = decoded.params[1].value;
             const address2 = decoded.params[2].value[decoded.params[2].value.length - 1];
             const amount2 = decoded.params[0].value;
 
-            return swap(uniswap, address1, amount1, address2, amount2, transaction);
+            return await swap(uniswap, address1, amount1, address2, amount2, transaction);
         } else if (decoded.name == "addLiquidity"
             || decoded.name == "removeLiquidityWithPermit"
             || decoded.name == "removeLiquidity") {
             const address1 = decoded.params[0].value;
             const address2 = decoded.params[1].value;
-            const token1 = getToken(uniswap, address1);
-            const token2 = getToken(uniswap, address2);
+            const token1 = await getToken(uniswap, address1);
+            const token2 = await getToken(uniswap, address2);
             const action = decoded.name == "addLiquidity" ? "Added " : "Removed ";
             const message = action + tknSymbol(token1) + "/" + tknSymbol(token2) + " liquidity";
             transaction.extras.houseContent = message;
@@ -97,7 +98,7 @@ const getData = (uniswap: any, transaction: any): string | boolean => {
             || decoded.name == "removeLiquidityETHSupportingFeeOnTransferTokens"
             || decoded.name == "removeLiquidityETHWithPermitSupportingFeeOnTransferTokens") {
             const address1 = decoded.params[0].value;
-            const token1 = getToken(uniswap, address1);
+            const token1 = await getToken(uniswap, address1);
             const action = decoded.name == "addLiquidityETH" ? "Added " : "Removed ";
             const message = action + tknSymbol(token1) + "/ETH liquidity";
             transaction.extras.houseContent = message;
@@ -115,7 +116,7 @@ const getData = (uniswap: any, transaction: any): string | boolean => {
 
 class Uniswap extends ChainImplementation {
     public addresses: string[] = [];
-    public tokenList: any = {};
+    public tokenManager: any;
 
     async init(): Promise<ChainImplementation> {
         try {
@@ -131,16 +132,8 @@ class Uniswap extends ChainImplementation {
 
             abiDecoder.addABI(contract_0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
 
-            // TODO: Database caching. 
-            let response = await axios.get('https://tokens.coingecko.com/uniswap/all.json')
-            let { tokens } = response.data;
-            tokens.forEach((token: any) => this.tokenList[token.address] = token)
+            this.tokenManager = new tokenManager('ETH');
 
-            setInterval(async () => {
-                let response = await axios.get('https://tokens.coingecko.com/uniswap/all.json')
-                let { tokens } = response.data;
-                tokens.forEach((token: any) => this.tokenList[token.address] = token)
-            }, 60 * 1000);
             console.log('initialized uniswap');
         } catch (error) {
             console.error(error);
@@ -157,7 +150,8 @@ class Uniswap extends ChainImplementation {
         if (transaction.house === "uniswap") return true;
         transaction.house = 'uniswap'; //ALWAYS SET!
         if (!transaction.extras) transaction.extras = {};
-        if (getData(this, transaction) && !transaction?.extras?.showBubble) {
+        const data = await getData(this, transaction);
+        if (data && !transaction?.extras?.showBubble) {
             transaction.extras.showBubble = false;
         }
         return true;
