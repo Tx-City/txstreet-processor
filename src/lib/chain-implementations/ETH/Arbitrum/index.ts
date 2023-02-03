@@ -19,7 +19,7 @@ class Arbitrum extends ChainImplementation {
     }
 
     async validate(transaction: any): Promise<boolean> {
-        return transaction.from.toLowerCase() === "0xa4b1e63cb4901e327597bc35d36fe8a23e4c253f" && transaction.to.toLowerCase() === "0x1c479675ad559dc151f6ec7ed3fbf8cee79582b6";
+        return transaction.from.toLowerCase() === "0xc1b634853cb333d3ad8663715b08f41a3aec47cc" && transaction.to.toLowerCase() === "0x1c479675ad559dc151f6ec7ed3fbf8cee79582b6";
     }
 
     async execute(transaction: any): Promise<boolean> {
