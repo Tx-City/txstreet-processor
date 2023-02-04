@@ -101,7 +101,14 @@ export default class RINKEBYWrapper extends BlockchainWrapper {
 
     public async getBlock(id: string | number, verbosity: number): Promise<any> {
         try {
-            const block: any = await this.web3.eth.getBlock(id, verbosity > 0 ? true : false); 
+            const returnTransactionObjects = verbosity > 0 ? true : false;
+            let block: any;
+            if(returnTransactionObjects){
+                block = await this.web3.eth.getBlock(id, true);
+            }
+            else{
+                block = await this.web3.eth.getBlock(id, false);
+            }
             block.height = block.number; 
             block.baseFeePerGas = Number(block.baseFeePerGas);
             block.timestamp = Math.floor(block.timestamp); 
