@@ -7,7 +7,7 @@ import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
 import gasUsedDif from '../../ETH/gasUsedDif';
 import medianFeeGasPrice from '../../ETH/medianFee-gasPrice';
-import medianFeeUsd from '../../ETH/medianFee-usd';
+import medianFeeUsd from '../medianFee-usd';
 import medianFeeUsdTransfer from '../../ETH/medianFee-usdTransfer';
 // import tps from '../../common/tps';
 import ctps from '../../common/ctps';
