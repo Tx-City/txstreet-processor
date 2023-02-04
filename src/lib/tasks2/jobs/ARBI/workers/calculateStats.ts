@@ -39,7 +39,7 @@ let lastExecutionResults = {
     'medianFee-gasPrice': 0,
     'medianFee-usd': 0,
     'medianFee-usdTransfer': 0,
-    'gasUsedDif': 0,
+    'gasUsedDif': 100,
 }; 
 
 let lastKnownBlock: ProjectedEthereumBlock = null;
@@ -151,7 +151,8 @@ const interval = setInterval(async () => {
         try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
         // try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
-        try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
+        try { lastExecutionResults['gasUsedDif'] = 100; } catch (error) { console.error(error) }
         // try { lastExecutionResults['tipPrice'] = await tipPrice(lastKnownBlock); } catch (error) { console.error(error) }
         // try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { console.error(error) }
         try { lastExecutionResults['gasTarget'] = await gasTarget(lastKnownBlock); } catch (error) { console.error(error) }
@@ -160,7 +161,7 @@ const interval = setInterval(async () => {
         try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { console.error(error) }
         try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { console.error(error) }
         try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
-    } catch (error) {  
+        } catch (error) {  
         console.error(error); 
     } finally {
         // Wrapping a try/catch inside of a finally looks a little messy, but it's required to prevent a critical failure in the event
