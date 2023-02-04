@@ -12,7 +12,7 @@ export default async (transactions: ProjectedEthereumTransaction[], pricePerIncr
         // Morph the transactions array into an array of universal gas prices, so a median can be obtained.
         const _median = median(filtered.map((transaction: ProjectedEthereumTransaction) => {
             let paid = pricePerIncrement * (transaction.gasPrice || transaction.maxFeePerGas) * transaction.gas;
-            if(transaction.gas > 42000) paid *= gasUsedDif / 100; 
+            // if(transaction.gas > 42000) paid *= gasUsedDif / 100; 
             return paid;
         }), true);  
         
