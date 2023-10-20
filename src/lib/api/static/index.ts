@@ -25,6 +25,7 @@ setInterval(() => {
 }, 100);
 
 staticRouter.get('/live/:file', async (request: Request, response: Response) => {
+    
     let file = request.params.file; 
     if(!file) 
         return response.status(400).send(`file||data missing`); 

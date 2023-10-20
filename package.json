@@ -28,6 +28,7 @@
     "ethers": "^5.7.2",
     "eventemitter3": "^4.0.7",
     "express": "^4.17.1",
+    "fs.promises": "^0.1.2",
     "helmet": "^4.5.0",
     "http-status-codes": "^2.1.4",
     "marked": "^2.0.7",

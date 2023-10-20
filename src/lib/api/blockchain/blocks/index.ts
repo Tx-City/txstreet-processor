@@ -30,7 +30,7 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
 
     const id = isHeight ? Number(request.params.id) : request.params.id; 
     if(!id) return response.json({ success: false, code: -1, message: 'Block id not provided in request.' });
-    if(isHeight && id <= 0) return response.json({ success: false, code: -1, message: 'Block id (height) is invalid' });
+    if(isHeight && Number(id) <= 0) return response.json({ success: false, code: -1, message: 'Block id (height) is invalid' });
 
     // Rather or not this request returns the data or a link to the data. 
     // const verbose = request.query.verbose === "true" ? true : false; 

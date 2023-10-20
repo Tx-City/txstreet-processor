@@ -1,0 +1,5 @@
+{
+    "title": "Lightning Network",
+    "source": "https://www.gemini.com/cryptopedia/bitcoin-lightning-network-scaling-solution",
+    "html": "The Lightning Network is a Layer-2 scaling technology that operates on top of blockchains like Bitcoin. It creates a private, two-way channel between users that enables multiple transactions to take place off the main blockchain. These transactions are subsequently recorded as one single transaction on the main blockchain. This process extrapolated over many transactions reduces network congestion and increases scalability."
+}
