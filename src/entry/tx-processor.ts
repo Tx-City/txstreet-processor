@@ -28,7 +28,7 @@ Object.keys(process.env).forEach(key => {
 
 // Non event-blocking infinite loop for processPending
 const processPending = async (wrapper: Wrappers.BlockchainWrapper) => {
-    console.log('processPending');
+    
     try {
         await processPendingTransactions(wrapper);
     } catch (error) {

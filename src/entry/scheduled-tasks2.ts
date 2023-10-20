@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config({});
-
+console.log('starting scheduledtasks2')
 import minimist from 'minimist';
 Object.assign(process.env, minimist(process.argv.slice(2)));
 

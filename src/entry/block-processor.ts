@@ -1,6 +1,7 @@
 // Load environment variables from .env
 import dotenv from 'dotenv';
 dotenv.config();
+console.log('starting block-processor')
 
 // Merge command line args into environment variables, overwriting values specified in .env
 import minimist from 'minimist';
@@ -32,7 +33,7 @@ var running = true;
 
 // A simple infinite execution loop that doesn't block the event loop. 
 const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
-    
+
     try {
         if (wrapper.ticker === "ARBI") {
             await processBlockTxs(wrapper);
