@@ -32,6 +32,7 @@ if (chainsToSubscribe.length == 0)
     chainsToSubscribe = JSON.parse(process.env.CHAINS).map((ticker: string) => ticker.toUpperCase());
 
 const getLatestBlockLoop = async (wrapper: any) => {
+
     if (process.env.USE_DATABASE !== "true") return;
     const { database } = await mongodb();
     try {
@@ -78,12 +79,16 @@ const init = async () => {
         Hooks.initHooks('BTC');
 
         btcWrapper.initEventSystem();
+        console.log('initializing BTC listener');
+
 
         btcWrapper.on('mempool-tx', (transaction: any) => {
+            console.log('initializing mempool-tx');
             processTransaction(btcWrapper, { ...transaction, processed: true });
         });
 
         btcWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log('initializing confirmed-block');
             processBlock(btcWrapper, blockHash);
         });
 

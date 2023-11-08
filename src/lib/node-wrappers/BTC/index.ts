@@ -41,8 +41,13 @@ export default class BTCWrapper extends BlockchainWrapper {
     }
 
     public initEventSystem() {
-        if (!this.configZmq)
+        console.log("initEventSystem!");
+
+        if (!this.configZmq) {
+            console.log("there is not this.configZmq!");
             throw 'ZMQ Configuration was not supplied when initializing BTCWrapper.'
+        }
+        console.log("starting init events btc");
 
         this.sock = zmq.socket('sub');
         this.sock.connect(`tcp://${this.configZmq.host}:${this.configZmq.port}`);
@@ -50,12 +55,15 @@ export default class BTCWrapper extends BlockchainWrapper {
         this.sock.subscribe('hashblock');
         this.sock.on('message', (topicBuffer: Buffer, messageBuffer: Buffer) => {
             const topic = topicBuffer.toString('ascii');
+            console.log("topic", topic);
             switch (topic) {
                 case 'rawtx':
                     const hex = messageBuffer.toString('hex');
                     const bitcoreTx: any = new bitcore.Transaction(messageBuffer);
                     const bitcoinjsTx = bitcoinjs.Transaction.fromHex(hex);
                     const transaction = bitcoreTx.toJSON();
+                    console.log("bitcoreTx.toJSON()", transaction);
+
                     if (memcache.get(`btc-${transaction.hash}`)) return;
                     memcache.put(`btc-${transaction.hash}`, 1);
 
@@ -240,8 +248,15 @@ export default class BTCWrapper extends BlockchainWrapper {
 
         const rpcGetBlock = async (id: string, verbosity: number) => new Promise((resolve) => {
             this.rpc.getBlock(id, Math.max(Math.min(verbosity, 2), 0), (err: string, resp: any) => {
-                if (err) return resolve(null);
-                if (!resp) return resolve(null);
+                if (err) {
+                    console.log('err:', err);
+                    return resolve(null);
+                }
+                if (!resp) {
+                    console.log('not response');
+                    return resolve(null);
+
+                }
                 return resolve(resp.result);
             })
         });
@@ -253,6 +268,9 @@ export default class BTCWrapper extends BlockchainWrapper {
             }
 
             const block: any = await rpcGetBlock(id as string, verbosity);
+
+            console.log("block: ", block);
+
             block.transactions = block.tx.map((transaction: any) => {
                 transaction.timestamp = transaction.time * 1000;
                 transaction.to = [];
@@ -344,6 +362,8 @@ export default class BTCWrapper extends BlockchainWrapper {
     }
 
     public async getPendingExtras(transaction: any): Promise<any> {
+        console.log('calling getPendingExtras');
+
         if (transaction.fee || transaction.fees)
             return { fee: transaction.fee, fees: transaction.fees };
 
@@ -351,11 +371,13 @@ export default class BTCWrapper extends BlockchainWrapper {
             this.rpc.getMemPoolEntry(id, (error: string, resp: any) => {
                 if (error) return resolve({ fee: false, fees: false });
                 if (!resp) return resolve({ fee: false, fees: false });
-                return resolve({ fee: resp.result.fee * 100000000, fees: resp.result.fees });
+                return resolve({ fee: resp.result.fees.base * 100000000, fees: resp.result.fees });
             });
         });
+        const calcFees = await getFees(transaction.hash);
+        console.log('getFees', calcFees);
 
-        return await getFees(transaction.hash);
+        return calcFees
     }
 
     public isTransaction(data: any): boolean {

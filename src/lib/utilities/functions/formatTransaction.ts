@@ -3,6 +3,7 @@ import { findNftOwner } from "..";
 import txStreetIds from "@txstreet/txstreet-token-ids";
 import zoomersJson from '../../../lib/json/zoomers.json';
 import zoomerIdsJson from '../../../lib/json/zoomerIds.json';
+//import { chainConfig } from "src/data/chains";
 
 const zoomerIds: any = zoomerIdsJson;
 const zoomers: any = zoomersJson;
@@ -63,10 +64,16 @@ export default (chain: string, data: any) => {
         }
     } else if (chain === "BTC" || chain === "LTC" || chain === "BCH") {
         obj.tx = data.hash;
+        console.log(`data ${chain}`, data)
         if (Object.keys(data.extras || {}).length > 0) obj.e = data.extras;
         if (data.house && data.house != "0" && data.house != "0.0") obj.h = data.house;
-        if (data.fee && data.size)
-            obj[chain === "LTC" ? "lpb" : "spb"] = parseFloat((data.fee / data.size).toFixed(2));
+        if (data.fees && data.size) {
+            obj[chain === "LTC" ? "lpb" : "spb"] = parseFloat(((data.fees.base * 1000000) / data.size).toFixed(2));
+            console.log("obj['spb']",obj["spb"])
+        } else {
+            console.log("data------------------>",data)
+            console.log('There is not fee or size')
+        }
         obj.s = Number(data.size);
         obj.rs = Number(data.rsize);
         obj.tot = (data.total > 0 ? Number(data.total.toFixed(5)) : 0);
