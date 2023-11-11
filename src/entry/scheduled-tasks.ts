@@ -24,7 +24,7 @@ Object.keys(process.env).forEach(key => {
         chains.push(key.toUpperCase()); 
     }
 })
-
+ 
  
 // Utility for seconds->milliseconds.
 const seconds = (amount: number) => amount * 1000; 
