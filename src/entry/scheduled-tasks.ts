@@ -25,7 +25,7 @@ Object.keys(process.env).forEach(key => {
     }
 })
 
-
+ 
 // Utility for seconds->milliseconds.
 const seconds = (amount: number) => amount * 1000; 
 
