@@ -57,7 +57,7 @@ const interval = setInterval(async () => {
         Object.keys(cache).forEach((key: string) => {
             if (!hashes.includes(key))
                 delete cache[key];
-        })        
+        })
 
         await storeObject(path.join('live', `pendingTxs-BTC`), JSON.stringify(pTransactions.map((tx: any) => formatTransaction('BTC', tx))));
     } catch (error) {

@@ -3,7 +3,7 @@ import { readNFSFile } from '../../../lib/utilities';
 import { ProjectedBTCTransaction } from '../types';
 import mongodb from '../../../databases/mongodb';
 import redis from '../../../databases/redisEvents';
-import path from 'path'; 
+import path from 'path';
 import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
 import { BTCTransactionsSchema } from '../../../data/schemas';
@@ -12,20 +12,20 @@ export default class BTCPendingList {
     // The maximum allowed size of the collection. 
     public capacity: number = 3000;
     // Index -> Value 
-    public array: ProjectedBTCTransaction[] = []; 
+    public array: ProjectedBTCTransaction[] = [];
     // Key -> Index 
-    _mapByKey: { [key: string]: any } = {}; 
+    _mapByKey: { [key: string]: any } = {};
     // The internal task used to write the pending list to disk.
-    _writeTaskInstance: OverlapProtectedInterval 
+    _writeTaskInstance: OverlapProtectedInterval
     // The path at which the file is to be written at. 
     _filePath: string;
     // A flag that states rather or not the array has been updated since the last write.
-    _dirtyFlag: boolean = false; 
+    _dirtyFlag: boolean = false;
     // A glaf that states rather or not the list has been initialized.
-    _initialized: boolean = false; 
-    
-    _remove: string[] = []; 
-    
+    _initialized: boolean = false;
+
+    _remove: string[] = [];
+
     constructor() {
         this.add = this.add.bind(this);
         this.remove = this.remove.bind(this);
@@ -38,9 +38,8 @@ export default class BTCPendingList {
         redis.subscribe('pendingTx');
 
         redis.events.on('pendingTx', async (data) => {
-            const { chain } = data; 
-            if(chain !== "BTC") return; 
-
+            const { chain } = data;
+            if (chain !== "BTC") return;
             // Format the socket-format back into the ETHTransactionSchema Format.
             const transaction: ProjectedBTCTransaction = {
                 chain: 'BTC',
@@ -58,25 +57,25 @@ export default class BTCPendingList {
             this._onPendingTransactions([transaction])
 
             // Remove all transactions included in deletedHashes (dh)
-            if(data.dh)
-                this.remove(data.dh); 
+            if (data.dh)
+                this.remove(data.dh);
         });
 
         // Whenever a new block comes in.
         redis.subscribe('block');
         redis.events.on('block', (data) => {
             const { chain, hash } = data;
-            if(chain !== 'BTC') return; 
-            this._onConfirmedBlock(hash); 
+            if (chain !== 'BTC') return;
+            this._onConfirmedBlock(hash);
         });
-        
+
         // Whenever transactions are removed(dropped).
-        redis.subscribe('removeTx'); 
+        redis.subscribe('removeTx');
         redis.events.on('removeTx', (data) => {
-            
+
             const { chain, hashes } = data;
-            if(chain !== 'BTC') return;
-            this._onDroppedTransactions(hashes); 
+            if (chain !== 'BTC') return;
+            this._onDroppedTransactions(hashes);
         })
 
         // Initiate the _writeTask to create a new pending list every second. 
@@ -85,11 +84,11 @@ export default class BTCPendingList {
 
         setInterval(async () => {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_BTC'); 
-            const hashes = this.array.map((a: any) => a.hash); 
-            const result = await collection.find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ _id: 0, hash: 1 }).toArray(); 
-            const toDelete = result.map((result: any) => result.hash); 
-            this.remove(toDelete); 
+            const collection = database.collection('transactions_BTC');
+            const hashes = this.array.map((a: any) => a.hash);
+            const result = await collection.find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ _id: 0, hash: 1 }).toArray();
+            const toDelete = result.map((result: any) => result.hash);
+            this.remove(toDelete);
         }, 10000).start(false);
     }
 
@@ -100,10 +99,10 @@ export default class BTCPendingList {
      * @param transactions An array of transactions that we want to add. 
      */
     add(transactions: ProjectedBTCTransaction[]) {
-        this.array = this.array.concat(transactions); 
-        this.array = this.array.sort((a: ProjectedBTCTransaction, b: ProjectedBTCTransaction) => this._getSortValue(a) - this._getSortValue(b)); 
-        if(this.array.length > this.capacity)
-            this.array.splice(0, this.array.length - this.capacity); 
+        this.array = this.array.concat(transactions);
+        this.array = this.array.sort((a: ProjectedBTCTransaction, b: ProjectedBTCTransaction) => this._getSortValue(a) - this._getSortValue(b));
+        if (this.array.length > this.capacity)
+            this.array.splice(0, this.array.length - this.capacity);
         this._rebuildKeyMap();
     }
 
@@ -113,27 +112,27 @@ export default class BTCPendingList {
      * @param hashes The hashes
      */
     remove(hashes: string[]) {
-        if(!this._initialized) {
-            this._remove = this._remove.concat(hashes); 
+        if (!this._initialized) {
+            this._remove = this._remove.concat(hashes);
             return;
         }
 
-        let indexesToDelete: number[] = []; 
-        for(let i = 0; i < hashes.length; i++) {
+        let indexesToDelete: number[] = [];
+        for (let i = 0; i < hashes.length; i++) {
             let hash = hashes[i];
-            let index = this._mapByKey[hash]; 
-            if(index == null) continue;
+            let index = this._mapByKey[hash];
+            if (index == null) continue;
             indexesToDelete.push(index);
         }
 
-        if(indexesToDelete.length > 0) {
-            for(let i = 0; i < indexesToDelete.length; i++) 
-                delete this.array[indexesToDelete[i]]; 
-            this.array = this.array.filter((value) => value); 
+        if (indexesToDelete.length > 0) {
+            for (let i = 0; i < indexesToDelete.length; i++)
+                delete this.array[indexesToDelete[i]];
+            this.array = this.array.filter((value) => value);
             this._rebuildKeyMap();
-        } 
+        }
     }
-    
+
     /**
      * Called whenever transaction(s) are broadcast on the network.
      * 
@@ -150,40 +149,40 @@ export default class BTCPendingList {
      */
     _onConfirmedBlock = async (hash: string) => {
         try {
-            if(!hash) return; 
+            if (!hash) return;
 
-            let attempts = 0; 
+            let attempts = 0;
             const obtainBlock = async (): Promise<any> => {
                 try {
-                    if(attempts >= 5) return null; 
+                    if (attempts >= 5) return null;
                     const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
                     const firstPart = hash[hash.length - 1];
-                    const secondPart = hash[hash.length - 2]; 
-                    const filePath = path.join(directory, 'blocks', 'BTC', firstPart, secondPart, hash); 
-                    const data = await readNFSFile(filePath); 
-                    const block = JSON.parse(data as string); 
-                    if(block) return block;
-                    return null; 
+                    const secondPart = hash[hash.length - 2];
+                    const filePath = path.join(directory, 'blocks', 'BTC', firstPart, secondPart, hash);
+                    const data = await readNFSFile(filePath);
+                    const block = JSON.parse(data as string);
+                    if (block) return block;
+                    return null;
                 } catch (error) {
-                    attempts++; 
-                    console.error(error); 
+                    attempts++;
+                    console.error(error);
                     return obtainBlock();
                 }
             }
 
-            const block = await obtainBlock(); 
-            if(!block) {
+            const block = await obtainBlock();
+            if (!block) {
                 console.log(`BTCPendingList Failed to get data for block: ${hash}`);
-                return; 
+                return;
             }
-            if(block.insertedAt) block.insertedAt = new Date(block.insertedAt).getTime();
+            if (block.insertedAt) block.insertedAt = new Date(block.insertedAt).getTime();
 
             const transactions = block.tx || [];
 
             // We have no use for confirmed transactions in the pending list. 
-            this.remove(transactions); 
+            this.remove(transactions);
         } catch (error) {
-            console.error(error); 
+            console.error(error);
         }
     }
 
@@ -193,8 +192,8 @@ export default class BTCPendingList {
      * @param hashes The hashes.
      */
     _onDroppedTransactions = async (hashes: string[]) => {
-        if(!hashes.length) return; 
-        this.remove(hashes); 
+        if (!hashes.length) return;
+        this.remove(hashes);
     }
 
     /**
@@ -214,18 +213,18 @@ export default class BTCPendingList {
         this._mapByKey = {};
 
         // Sort the array
-        this.array = this.array.sort((a: any, b: any) => this._getSortValue(a) - this._getSortValue(b)); 
+        this.array = this.array.sort((a: any, b: any) => this._getSortValue(a) - this._getSortValue(b));
 
         // Iterate over all elements and assign the value. 
-        for(let i = 0; i < this.array.length; i++) {
+        for (let i = 0; i < this.array.length; i++) {
             let entry = this.array[i];
-            if(!entry) continue; 
-            let key = entry['hash']; 
+            if (!entry) continue;
+            let key = entry['hash'];
             this._mapByKey[key] = i;
         }
 
         // Update the dirty flag
-        this._dirtyFlag = true; 
+        this._dirtyFlag = true;
     }
 
     /**
@@ -234,19 +233,19 @@ export default class BTCPendingList {
     async init() {
         try {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_BTC'); 
+            const collection = database.collection('transactions_BTC');
             const where: any = { confirmed: false, processed: true, blockHash: { $eq: null }, dropped: { $exists: false } };
             const project = { _id: 0, hash: 1, processed: 1, fee: 1, size: 1, dropped: 1, timestamp: 1, insertedAt: 1, rsize: 1 };
-            const results = await collection.find(where).project(project).sort({ fee: -1 }).limit(this.capacity).toArray(); 
-            for(let i = 0; i < results.length; i++) 
-                results[i].insertedAt = new Date(results[i].insertedAt).getTime(); 
-            this.add(results); 
+            const results = await collection.find(where).project(project).sort({ fee: -1 }).limit(this.capacity).toArray();
+            for (let i = 0; i < results.length; i++)
+                results[i].insertedAt = new Date(results[i].insertedAt).getTime();
+            this.add(results);
             console.log(`Added ${results.length} results from the database, initialization completed`);
             this._initialized = true;
             console.log('Removing', this._remove.length);
-            this.remove(this._remove); 
+            this.remove(this._remove);
         } catch (error) {
-            console.error(error); 
+            console.error(error);
         }
     }
 
@@ -255,8 +254,8 @@ export default class BTCPendingList {
      */
     _writeTask = async (): Promise<void> => {
         try {
-            if(!this._initialized) return;
-            if(!this._dirtyFlag) return;
+            if (!this._initialized) return;
+            if (!this._dirtyFlag) return;
             this._dirtyFlag = false;
 
             for (let i = 0; i < this.array.length; i++) {
@@ -273,9 +272,9 @@ export default class BTCPendingList {
             const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');
             fs.writeFileSync(writingFilePath, contents);
             fs.rename(writingFilePath, this._filePath, (err) => {
-                this._dirtyFlag = false; 
+                this._dirtyFlag = false;
                 if (err) throw err
             });
-        } catch (error) {}
+        } catch (error) { }
     }
 }
