@@ -69,7 +69,7 @@ export default (chain: string, data: any) => {
         if (data.fees && data.size) {
             obj[chain === "LTC" ? "lpb" : "spb"] = parseFloat(((data.fees.base * 100000000) / data.size).toFixed(2));
         } else if (data.fee && data.size) {
-            obj[chain === "LTC" ? "lpb" : "spb"] = parseFloat(((data.fee * 100000000) / data.size).toFixed(2));
+            obj[chain === "LTC" ? "lpb" : "spb"] = parseFloat((data.fee / data.size).toFixed(2));
         } else {
             console.log('There is not fee or size')
         }
