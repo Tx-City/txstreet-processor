@@ -42,14 +42,16 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<Boo
                 $setOnInsert: { ...transaction }
             }, { upsert: true });
 
-            console.log('transaction from store transaction',transaction);
-            
+            console.log('transaction from store transaction', transaction);
+
 
             const formatted = formatTransaction(wrapper.ticker, transaction);
 
             // Inform the front-end that this transaction has been detected.
             if (updateResults.upsertedId != null)
-                redis.publish('pendingTx', JSON.stringify({ chain: wrapper.ticker, node: true, ...formatted }));
+                console.log('publishing to redis ------>', formatted);
+
+            redis.publish('pendingTx', JSON.stringify({ chain: wrapper.ticker, node: true, ...formatted }));
         }
     } catch (error) {
         console.error(error);
