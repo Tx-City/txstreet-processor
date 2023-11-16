@@ -46,12 +46,12 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<Boo
 
 
             const formatted = formatTransaction(wrapper.ticker, transaction);
-
+            console.log('REDIS FORMATTED TX ------>', formatted);
             // Inform the front-end that this transaction has been detected.
-            if (updateResults.upsertedId != null)
-                console.log('publishing to redis ------>', formatted);
-
-            redis.publish('pendingTx', JSON.stringify({ chain: wrapper.ticker, node: true, ...formatted }));
+            if (updateResults.upsertedId != null) {
+                console.log('PUBLISHING TO REDIS ------>')
+                redis.publish('pendingTx', JSON.stringify({ chain: wrapper.ticker, node: true, ...formatted }));
+            }
         }
     } catch (error) {
         console.error(error);
