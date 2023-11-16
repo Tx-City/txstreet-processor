@@ -40,10 +40,7 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<Boo
                 $set: { lastInsert: new Date(), note: '[node-sub]: store-tx' },
                 $unset: { dropped: "" },
                 $setOnInsert: { ...transaction }
-            }, { upsert: true });
-
-            console.log('transaction from store transaction', transaction);
-
+            }, { upsert: true });  
 
             const formatted = formatTransaction(wrapper.ticker, transaction);
             console.log('REDIS FORMATTED TX ------>', formatted);
