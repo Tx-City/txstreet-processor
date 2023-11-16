@@ -5,7 +5,7 @@ export interface ProjectedEthereumTransaction {
     timestamp: number;
     gas: number;
     value: number;
-    gasPrice: number | undefined; 
+    gasPrice: number | undefined;
     maxFeePerGas: number | undefined;
     maxPriorityFeePerGas: number | undefined;
     gasUsed?: number | undefined;
@@ -18,10 +18,10 @@ export interface ProjectedEthereumTransaction {
 export interface ProjectedEthereumBlock {
     chain: string;
     hash: string;
-    baseFeePerGas: number | undefined; 
-    gasUsed: number | undefined; 
+    baseFeePerGas: number | undefined;
+    gasUsed: number | undefined;
     gasLimit: number | undefined;
-    difficulty: string; 
+    difficulty: string;
     size: number;
     height: number;
     timestamp: number;
@@ -45,7 +45,7 @@ export interface ProjectedXMRBlock {
     chain: string;
     hash: string;
     timestamp: number;
-    height: number; 
+    height: number;
     difficulty: number;
     transactions: number;
     size: number;
@@ -55,12 +55,12 @@ export interface ProjectedBTCTransaction {
     chain: string;
     hash: string;
     insertedAt: number;
-    timestamp: number; 
+    timestamp: number;
     dropped: boolean | undefined;
-    processed: boolean; 
+    processed: boolean;
     fee: number;
-    size: number; 
-    rsize: number; 
+    size: number;
+    rsize: number;
     extras?: any;
     pExtras?: any;
 }
@@ -72,5 +72,5 @@ export interface ProjectedBTCBlock {
     height: number;
     difficulty: number;
     transactions: number;
-    size: number; 
+    size: number;
 }

@@ -5,30 +5,30 @@ export const ETHTransactionsSchema = avro.Type.forSchema({
     type: 'record',
     fields: [
         { name: 'timestamp', type: 'long', default: 0 },
-        { 
-            name: 'collection', 
+        {
+            name: 'collection',
             type: {
-                type: 'array', 
-                items: { 
-                    name: "ETHTransaction", 
-                    type: "record", 
+                type: 'array',
+                items: {
+                    name: "ETHTransaction",
+                    type: "record",
                     fields: [
-                        { name: 'hash', type: ['string', 'null'], default: "" }, 
+                        { name: 'hash', type: ['string', 'null'], default: "" },
                         { name: 'from', type: ['string', 'null'], default: "" },
-                        { name: 'insertedAt', type: ['long', 'null'], default: 0 }, 
-                        { name: 'timestamp', type: ['long', 'null'], default: -1 }, 
-                        { name: 'gas', type: ['long', 'null'], default: 0  }, 
-                        { name: 'value', type: ['double', 'null'], default: 0  }, 
-                        { name: 'gasPrice', type: ['long', 'null'], default: 0  }, 
+                        { name: 'insertedAt', type: ['long', 'null'], default: 0 },
+                        { name: 'timestamp', type: ['long', 'null'], default: -1 },
+                        { name: 'gas', type: ['long', 'null'], default: 0 },
+                        { name: 'value', type: ['double', 'null'], default: 0 },
+                        { name: 'gasPrice', type: ['long', 'null'], default: 0 },
                         { name: 'maxFeePerGas', type: ['long', 'null'], default: 0 },
                         { name: 'maxPriorityFeePerGas', type: ['long', 'null'], default: 0 },
                         { name: 'dropped', type: ['boolean', 'null'], default: false },
                         { name: 'processed', type: ['boolean', 'null'], default: false },
                         { name: 'extras', type: ['string', 'null'], default: "{}" },
-                        { name: 'pExtras', type: ['string', 'null'], default: "{}" } 
+                        { name: 'pExtras', type: ['string', 'null'], default: "{}" }
                     ]
-                } 
-            } 
+                }
+            }
         }
     ]
 })
@@ -39,27 +39,27 @@ export const ETHBlocksSchema = avro.Type.forSchema({
     type: 'record',
     fields: [
         { name: 'timestamp', type: 'long', default: 0 },
-        { 
-            name: 'collection', 
+        {
+            name: 'collection',
             type: {
-                type: 'array', 
-                items: { 
-                    name: "ETHBlock", 
-                    type: "record", 
+                type: 'array',
+                items: {
+                    name: "ETHBlock",
+                    type: "record",
                     fields: [
                         { name: 'hash', type: 'string' },
                         { name: 'height', type: 'long' },
                         { name: 'timestamp', type: 'long', default: 0 },
-                        { name: 'gasUsedDif', type: ['double', 'null'], default: 0.0  },
-                        { name: 'size', type: 'long', default: 0  },
+                        { name: 'gasUsedDif', type: ['double', 'null'], default: 0.0 },
+                        { name: 'size', type: 'long', default: 0 },
                         { name: 'gasLimit', type: 'long', default: 0 },
                         { name: 'gasUsed', type: 'long', default: 0 },
                         { name: 'baseFeePerGas', type: ['long', 'null'], default: 0 },
                         { name: 'difficulty', type: 'string' },
                         { name: 'transactions', type: 'long', default: 0 }
                     ]
-                } 
-            } 
+                }
+            }
         }
     ]
 })
@@ -69,24 +69,24 @@ export const XMRTransactionsSchema = avro.Type.forSchema({
     type: 'record',
     fields: [
         { name: 'timestamp', type: 'long', default: 0 },
-        { 
-            name: 'collection', 
+        {
+            name: 'collection',
             type: {
-                type: 'array', 
-                items: { 
-                    name: "XMRTransaction", 
-                    type: "record", 
+                type: 'array',
+                items: {
+                    name: "XMRTransaction",
+                    type: "record",
                     fields: [
-                        { name: 'hash', type: ['string', 'null'], default: "" }, 
-                        { name: 'insertedAt', type: ['long', 'null'], default: 0 }, 
-                        { name: 'fee', type: ['double', 'null'], default: 0 }, 
-                        { name: 'size', type: ['double', 'null'], default: 0 }, 
-                        { name: 'timestamp', type: ['double', 'null'], default: -1 }, 
+                        { name: 'hash', type: ['string', 'null'], default: "" },
+                        { name: 'insertedAt', type: ['long', 'null'], default: 0 },
+                        { name: 'fee', type: ['double', 'null'], default: 0 },
+                        { name: 'size', type: ['double', 'null'], default: 0 },
+                        { name: 'timestamp', type: ['double', 'null'], default: -1 },
                         { name: 'dropped', type: ['boolean', 'null'], default: false },
-                        { name: 'processed', type: ['boolean', 'null'], default: false } 
+                        { name: 'processed', type: ['boolean', 'null'], default: false }
                     ]
-                } 
-            } 
+                }
+            }
         }
     ]
 })
@@ -96,23 +96,23 @@ export const XMRBlocksSchema = avro.Type.forSchema({
     type: 'record',
     fields: [
         { name: 'timestamp', type: 'long', default: 0 },
-        { 
-            name: 'collection', 
+        {
+            name: 'collection',
             type: {
-                type: 'array', 
-                items: { 
-                    name: "XMRBlock", 
-                    type: "record", 
+                type: 'array',
+                items: {
+                    name: "XMRBlock",
+                    type: "record",
                     fields: [
                         { name: 'hash', type: 'string' },
                         { name: 'height', type: 'long' },
                         { name: 'timestamp', type: 'long', default: 0 },
-                        { name: 'size', type: 'long', default: 0  },
+                        { name: 'size', type: 'long', default: 0 },
                         { name: 'difficulty', type: 'double' },
                         { name: 'transactions', type: 'long', default: 0 }
                     ]
-                } 
-            } 
+                }
+            }
         }
     ]
 })
@@ -122,25 +122,25 @@ export const BTCTransactionsSchema = avro.Type.forSchema({
     type: 'record',
     fields: [
         { name: 'timestamp', type: 'long', default: 0 },
-        { 
-            name: 'collection', 
+        {
+            name: 'collection',
             type: {
-                type: 'array', 
-                items: { 
-                    name: "BTCTransaction", 
-                    type: "record", 
+                type: 'array',
+                items: {
+                    name: "BTCTransaction",
+                    type: "record",
                     fields: [
-                        { name: 'hash', type: ['string', 'null'], default: "" }, 
-                        { name: 'insertedAt', type: ['long', 'null'], default: 0 }, 
-                        { name: 'fee', type: ['double', 'boolean', 'null'], default: 0 }, 
-                        { name: 'size', type: ['double', 'null'], default: 0 }, 
-                        { name: 'rsize', type: ['double', 'null'], default: 0 }, 
-                        { name: 'timestamp', type: ['long', 'null'], default: -1 }, 
+                        { name: 'hash', type: ['string', 'null'], default: "" },
+                        { name: 'insertedAt', type: ['long', 'null'], default: 0 },
+                        { name: 'fee', type: ['double', 'boolean', 'null'], default: 0 },
+                        { name: 'size', type: ['double', 'null'], default: 0 },
+                        { name: 'rsize', type: ['double', 'null'], default: 0 },
+                        { name: 'timestamp', type: ['long', 'null'], default: -1 },
                         { name: 'dropped', type: ['boolean', 'null'], default: false },
-                        { name: 'processed', type: ['boolean', 'null'], default: false } 
+                        { name: 'processed', type: ['boolean', 'null'], default: false }
                     ]
-                } 
-            } 
+                }
+            }
         }
     ]
 })
@@ -150,23 +150,23 @@ export const BTCBlocksSchema = avro.Type.forSchema({
     type: 'record',
     fields: [
         { name: 'timestamp', type: 'long', default: 0 },
-        { 
-            name: 'collection', 
+        {
+            name: 'collection',
             type: {
-                type: 'array', 
-                items: { 
-                    name: "BTCBlock", 
-                    type: "record", 
+                type: 'array',
+                items: {
+                    name: "BTCBlock",
+                    type: "record",
                     fields: [
                         { name: 'hash', type: 'string' },
                         { name: 'height', type: 'long' },
                         { name: 'timestamp', type: 'long', default: 0 },
-                        { name: 'size', type: 'long', default: 0  },
+                        { name: 'size', type: 'long', default: 0 },
                         { name: 'difficulty', type: 'double' },
                         { name: 'transactions', type: 'long', default: 0 }
                     ]
-                } 
-            } 
+                }
+            }
         }
     ]
 })
