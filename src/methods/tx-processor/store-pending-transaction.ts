@@ -7,17 +7,19 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
     try {
         // Initialize the database.
         const { database } = await mongodb();
-        const collection = database.collection('transactions_' + wrapper.ticker || ''); 
-        
+        console.log("mongo connect good" + database)
+        const collection = database.collection('transactions_' + wrapper.ticker || '');
+
         // Create an array of instructions for the database. 
         const instructions: any[] = [];
 
         // Iterate over the transactions to create the bulkWrite instructions. 
         transactions.forEach((transaction: any) => {
             redis.publish('pendingTx', JSON.stringify({ chain: wrapper.ticker, ...formatTransaction(wrapper.ticker, transaction) }));
+            console.log("redis publishing")
             instructions.push({
                 updateOne: {
-                    filter: { hash: transaction.hash }, 
+                    filter: { hash: transaction.hash },
                     update: {
                         $set: { ...transaction, locked: false, processed: true, processFailures: 0, lastProcessed: Date.now(), insertedAt: new Date(), lastInsert: new Date(), note: '[txp]: store-pending-tx' },
                     }
@@ -26,7 +28,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
         });
 
         // Wait for the query to complete.
-        if(instructions.length > 0)
+        if (instructions.length > 0)
             await collection.bulkWrite(instructions, { ordered: false });
 
         return true;

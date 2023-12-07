@@ -18,7 +18,7 @@ let hack = true;
 // Works with all blockchains based on their BlockchainNode implementation. 
 export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any> => {
 
-    console.log('processing transaction');
+    console.log('processing transaction----->', transaction);
 
     try {
         // If we are unable to claim this transaction, do not continue. 
@@ -56,14 +56,22 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
         }
         await callChainHooks(wrapper.ticker, transaction);
 
+        console.log('Should get fees --------------------------');
+
         if ((wrapper as any).getPendingExtras) {
+            console.log('GET PENDING');
             if (["BTC", "LTC", "BCH"].includes(wrapper.ticker)) {
                 let extras: any = await limiter.schedule(() => (wrapper as any).getPendingExtras(transaction));
+                console.log('extras', extras);
+
                 transaction = { ...transaction, ...extras };
             } else {
+                console.log('GET PENDING');
                 let extras = await (wrapper as any).getPendingExtras(transaction);
                 transaction = { ...transaction, ...extras };
             }
+        } else {
+            console.log('if ((wrapper as any).getPendingExtras) is not');
         }
         // Store the transaction
         await storeTransaction(wrapper, transaction);

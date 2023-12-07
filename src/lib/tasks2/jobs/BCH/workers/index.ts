@@ -4,11 +4,11 @@ import { Worker } from 'worker_threads';
 
 export default async () => {
     const keys = Object.keys(process.env);
-    const workerData: any = {}; 
-    keys.forEach((key: string) => workerData[key] = process.env[key]); 
+    const workerData: any = {};
+    keys.forEach((key: string) => workerData[key] = process.env[key]);
 
     try {
-        const pendingTxList = new BCHPendingList(); 
+        const pendingTxList = new BCHPendingList();
         await pendingTxList.init();
 
         new Worker(path.join(__dirname, 'calculateStats.js'), { workerData })
@@ -16,6 +16,6 @@ export default async () => {
         new Worker(path.join(__dirname, 'mempoolInfo.js'), { workerData })
         new Worker(path.join(__dirname, 'calculatePendingTransactionsList.js'), { workerData })
     } catch (error) {
-        console.error(error); 
+        console.error(error);
     }
 }

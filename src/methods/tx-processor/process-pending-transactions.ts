@@ -17,10 +17,11 @@ import checkSameNonce from './check-same-nonce';
 export default async (wrapper: BlockchainWrapper): Promise<any> => {
     try {
         const transactionRequests = await getPendingBatch(wrapper);
-
+        console.log("trying to get pending batch")
         // If there were no transactions, provide a small delay to allow for more inserts.
         // Since pending transactions come directly from the mempool, this delay can be relatively small.
         if (transactionRequests.length < 1) {
+            console.log("waitng")
             await waitForTime(30 + Math.floor(Math.random() * 70));
             return true;
         }

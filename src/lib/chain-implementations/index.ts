@@ -1,12 +1,14 @@
 import { _implementations } from "./implementation";
 
 export const enabledHooks: any = {
+    //add house name manually here
+
     ARBI: [
         "DefaultHousing",
     ],
     ETH: [
         "Arbitrum",
-        "DefaultHousing",
+        "DefaultHousing", //getting house from DB without extra logic
         "Uniswap",
         "Opensea",
         "Sushi"

@@ -48,6 +48,7 @@ export default class BTCWrapper extends BlockchainWrapper {
             throw 'ZMQ Configuration was not supplied when initializing BTCWrapper.'
         }
         console.log("starting init events btc");
+	console.log('running btc node: ', process.env.BTC_NODE)
 
         this.sock = zmq.socket('sub');
         this.sock.connect(`tcp://${this.configZmq.host}:${this.configZmq.port}`);
@@ -62,7 +63,6 @@ export default class BTCWrapper extends BlockchainWrapper {
                     const bitcoreTx: any = new bitcore.Transaction(messageBuffer);
                     const bitcoinjsTx = bitcoinjs.Transaction.fromHex(hex);
                     const transaction = bitcoreTx.toJSON();
-                    console.log("bitcoreTx.toJSON()", transaction);
 
                     if (memcache.get(`btc-${transaction.hash}`)) return;
                     memcache.put(`btc-${transaction.hash}`, 1);
@@ -369,6 +369,7 @@ export default class BTCWrapper extends BlockchainWrapper {
 
         const getFees = async (id: string) => new Promise((resolve) => {
             this.rpc.getMemPoolEntry(id, (error: string, resp: any) => {
+		console.log('resp------->', resp);
                 if (error) return resolve({ fee: false, fees: false });
                 if (!resp) return resolve({ fee: false, fees: false });
                 return resolve({ fee: resp.result.fees.base * 100000000, fees: resp.result.fees });

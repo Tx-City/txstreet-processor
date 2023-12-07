@@ -8,10 +8,13 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
     const batchSize = Number(process.env.PENDING_BATCH_SIZE || 25);
     try {
         const { connection, database } = await mongodb();
-        const collection = database.collection('transactions_' + wrapper.ticker || ''); 
-        
+        console.log("Get pending batch")
+        const collection = database.collection('transactions_' + wrapper.ticker || '');
+        console.log("collection" + wrapper.ticker)
         // Create a database session to atomically execute multiple queries. 
-        const session = connection.startSession(); 
+        const session = connection.startSession();
+
+        console.log("session ===== " + session)
 
         // Scopes declaration of the results to return after the transaction is finished.
         var results: any[] = [];
@@ -22,40 +25,40 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
             // The query to find documents to return as results. 
 
             // if node and isnertAt < 300 seconds or not node 
-            let where: any = { 
-                processed: false, 
+            let where: any = {
+                processed: false,
                 locked: false,
                 processFailures: { $lte: 5 },
                 dropped: { $exists: false }
-            }; 
+            };
 
             let project: any = {
                 _id: 0, processed: 1, locked: 1, processFailures: 1, hash: 1, from: 1, value: 1, to: 1
             }
 
             // Execute the query. 
-            results = await collection.find(where).limit(batchSize).toArray(); 
+            results = await collection.find(where).limit(batchSize).toArray();
 
             // If there are results available, we need to lock them. 
-            if(results.length > 0) {
+            if (results.length > 0) {
                 // Consolodite the results into an array of _id's (MongoDB unique identifiers)
-                const ids = results.map((result: any) => result._id); 
-                
+                const ids = results.map((result: any) => result._id);
+
                 // Query to update the specified documents. 
                 where = { _id: { $in: ids } };
 
                 // The instructions to perform updates on the document. 
-                let updateInstructions = { $set: { locked: true, lockedAt: Date.now() } }; 
+                let updateInstructions = { $set: { locked: true, lockedAt: Date.now() } };
 
                 // Here we will lock the transactions so that other application instances can't process them. 
-                await collection.updateMany(where, updateInstructions); 
+                await collection.updateMany(where, updateInstructions);
             }
-        }); 
-        
-        session.endSession(); 
+        });
+
+        session.endSession();
         return results;
     } catch (error) {
-        console.error(error); 
+        console.error(error);
         return [];
     } finally {
     }

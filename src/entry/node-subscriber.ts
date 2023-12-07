@@ -6,12 +6,17 @@ dotenv.config();
 import minimist from 'minimist';
 Object.assign(process.env, minimist(process.argv.slice(2)));
 
+console.log("process.env.ETH_NODE",process.env.ETH_NODE)
+
 // Misc imports 
 import processTransaction from '../methods/node-subscriber/process-transaction';
 import processBlock from '../methods/node-subscriber/process-block';
 import mongodb from '../databases/mongodb';
 import * as Hooks from '../lib/chain-implementations';
 import redis from '../databases/redis';
+
+if(process.env.BCH_NODE) console.log("working node BCH ip: ", process.env.BCH_NODE)
+
 if (process.env.USE_DATABASE === "true")
     mongodb();
 
@@ -79,16 +84,14 @@ const init = async () => {
         Hooks.initHooks('BTC');
 
         btcWrapper.initEventSystem();
-        console.log('initializing BTC listener');
-
-
+	console.log("process.env.BTC_NODE",process.env.BTC_NODE)
         btcWrapper.on('mempool-tx', (transaction: any) => {
-            console.log('initializing mempool-tx');
+	console.log("process.env.BTC_NODE",process.env.BTC_NODE)
             processTransaction(btcWrapper, { ...transaction, processed: true });
         });
 
         btcWrapper.on('confirmed-block', (blockHash: string) => {
-            console.log('initializing confirmed-block');
+	console.log("process.env.BTC_NODE",process.env.BTC_NODE)
             processBlock(btcWrapper, blockHash);
         });
 
@@ -104,8 +107,10 @@ const init = async () => {
         Hooks.initHooks('BCH');
 
         bchWrapper.initEventSystem();
+        console.log('initializing BCH listener');
 
         bchWrapper.on('mempool-tx', (transaction: any) => {
+
             processTransaction(bchWrapper, { ...transaction, processed: true });
         });
 
@@ -140,6 +145,7 @@ const init = async () => {
     }
 
     if (chainsToSubscribe.includes('ETH')) {
+	console.log('chainsToSubscribe',process.env.ETH_NODE) 
         const wrapperClass = await import("../lib/node-wrappers/ETH");
         let ethWrapper = new wrapperClass.default(process.env.ETH_NODE as string);
 
