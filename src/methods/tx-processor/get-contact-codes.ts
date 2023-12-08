@@ -35,9 +35,9 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
         });
         await Promise.all(cachedTasks);
 
-        // if (bulkApi) {
-        const url = new URL(process.env.ETH_NODE);
-        let response = await axios.post(`http://${url.hostname}/contract-codes`, { contracts: Object.keys(accounts) });
+        // if (bulkApi) {        
+        const url = process.env.BULK_API
+        let response = await axios.post(`http://${url}/contract-codes`, { contracts: Object.keys(accounts) });
         response.data.forEach((result: any) => {
             accountValues[result.contract] = result.code;
             const key = (wrapper as any).ticker + "-is-contract-" + result.contract;

@@ -121,7 +121,6 @@ const init = async () => {
         getLatestBlockLoop(bchWrapper);
     }
 
-
     if (chainsToSubscribe.includes('LTC')) {
         const wrapperClass = await import("../lib/node-wrappers/LTC");
         let ltcWrapper = new wrapperClass.default(
@@ -145,7 +144,7 @@ const init = async () => {
     }
 
     if (chainsToSubscribe.includes('ETH')) {
-	console.log('chainsToSubscribe',process.env.ETH_NODE) 
+	
         const wrapperClass = await import("../lib/node-wrappers/ETH");
         let ethWrapper = new wrapperClass.default(process.env.ETH_NODE as string);
 

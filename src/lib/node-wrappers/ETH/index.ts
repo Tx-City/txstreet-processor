@@ -1,6 +1,6 @@
 import BlockchainWrapper from "../base";
 import Web3 from 'web3';
-
+import axios from "axios";
 
 export default class ETHWrapper extends BlockchainWrapper {
     public web3: Web3;
@@ -71,17 +71,33 @@ export default class ETHWrapper extends BlockchainWrapper {
     }
 
     public async getTransactionReceipts(block: any) {
-        try {
-            let promises = [];
-            for (let i = 0; i < block.transactions.length; i++) {
-                const transaction = block.transactions[i];
-                promises.push(this.web3.eth.getTransactionReceipt(transaction.hash));
-            }
-            let receipts = await Promise.all(promises);
-            return receipts;
-        } catch (error) {
-            console.error(error);
-            return [];
+
+        const allReceipts = await axios.post(process.env.ETH_NODE_RPC, {
+            "method": "eth_getBlockReceipts",
+            "params": [
+                block
+            ],
+            "id": 1,
+            "jsonrpc": "2.0"
+        })
+            .then((res: any) => {
+                const data: any = []
+                res.data.result.map((el: any) => {
+                    data.push({
+                        "hash": el.transactionHash,
+                        "receipt": el
+                    })
+                })
+                console.log("success get all receipts from block: " + block)
+                return data
+            })
+            .catch((err: any) => {
+                console.log("getTransactionReceipts err: ", err)
+                return err
+            })
+
+        return {
+            data: allReceipts
         }
     };
 
@@ -138,10 +154,10 @@ export default class ETHWrapper extends BlockchainWrapper {
         try {
             const returnTransactionObjects = verbosity > 0 ? true : false;
             let block: any;
-            if(returnTransactionObjects){
+            if (returnTransactionObjects) {
                 block = await this.web3.eth.getBlock(id, true);
             }
-            else{
+            else {
                 block = await this.web3.eth.getBlock(id, false);
             }
             if (!block) return null;
