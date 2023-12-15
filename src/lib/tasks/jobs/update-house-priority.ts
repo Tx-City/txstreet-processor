@@ -27,7 +27,10 @@ export default async (chain: string): Promise<void> => {
                         side: house.side || 0,
                         priority: house.priority || priority,
                         tracked: house.tracked || false,
-                        type: house.type || "house"
+                        type: house.type || "house",
+                        html: house.html || null,
+                        link: house.link || null,
+                        services: house.services || null
                     }
 
                     houseData.push(object);
