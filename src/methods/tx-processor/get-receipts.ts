@@ -7,7 +7,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
 
         if (bulkApi) {
             const url = new URL(process.env.ETH_NODE);
-            let response = await axios.post(`http://${url.hostname}/transaction-receipts`, { hashes });
+            let response = await axios.post(`http://${url.hostname}:81/transaction-receipts`, { hashes });
             response.data.forEach((result: any) => {
                 for (let i = 0; i < transactions.length; i++) {
                     const transaction = transactions[i];

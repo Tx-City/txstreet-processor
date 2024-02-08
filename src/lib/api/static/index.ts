@@ -36,7 +36,8 @@ staticRouter.get('/live/:file', async (request: Request, response: Response) => 
             return response.set('content-type', 'application/json').send(data);
         }
         const filePath = path.join(directory, 'live', file);
-        console.log("filePath", filePath);
+
+        console.log("filePath-------------------------------------> &&&&&&&&&&&&&&&&", filePath);
         data = await readNFSFile(filePath);
 
         // Sanity

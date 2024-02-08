@@ -10,7 +10,7 @@ import staticRouter from '../lib/api/static';
 // Configure credd-origin-resource-sharing.
 const whitelist: string[] = ['localhost', 'txstreet.com'];
 const CORSConfig: CorsOptions = {
-    origin: '*' 
+    origin: '*'
 };
 
 /* =====================
@@ -26,17 +26,17 @@ const app: express.Application = express();
 app.use(helmet());
 app.use(express.json());
 app.use(compression());
-app.use(cors({ origin: '*'}));
+app.use(cors({ origin: '*' }));
 
 app.get('/healthcheck', (request: any, response: any) => {
-    response.status(200).send('OK'); 
+    response.status(200).send('OK');
 });
 
 // Create & assign the default router.
 const router: express.Router = express.Router();
 router.use('/', apiRouter);
 app.use('/api/v2', router);
-app.use('/static', staticRouter); 
+app.use('/static', staticRouter);
 
 // Begin listening.
 console.log('Start listening');

@@ -58,8 +58,8 @@ const run = async () => {
 
     if (nodesToInit.includes('BCH')) {
         const bchWrapper = new Wrappers.BCHWrapper(
-            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) || 8332 },
-            { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) || 28332 });
+            { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) },
+            { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) });
 
         nonBlockingInfiniteLoop(bchWrapper);
     }
@@ -73,8 +73,8 @@ const run = async () => {
 
     if (nodesToInit.includes('LTC')) {
         const ltcWrapper = new Wrappers.LTCWrapper(
-            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_PORT) || 9332 },
-            { host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_ZMQPORT) || 28332 });
+            { username: 'user', password: 'pass', host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_PORT) },
+            { host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_ZMQPORT) });
 
         nonBlockingInfiniteLoop(ltcWrapper);
     }

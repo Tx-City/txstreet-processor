@@ -43,7 +43,8 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
 
         if (bulkApi) {
             const url = new URL(process.env.ETH_NODE);
-            let response = await axios.post(`http://${url.hostname}/nonces`, { accounts: Object.keys(accounts) });
+            console.log(`http://${url.hostname}/nonces`);
+            let response = await axios.post(`http://${url.hostname}:81/nonces`, { accounts: Object.keys(accounts) });
             response.data.forEach((result: any) => {
                 setAccountValue(accountValues, result.account, result.count);
             });

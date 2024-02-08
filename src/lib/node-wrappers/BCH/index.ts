@@ -49,7 +49,7 @@ export default class BCHWrapper extends BlockchainWrapper {
         this.sock.subscribe('raw');
         this.sock.subscribe('hashblock');
 
-
+        console.log(`tcp://${this.configZmq.host}:${this.configZmq.port}`)
         this.sock.on('message', (topicBuffer: Buffer, messageBuffer: Buffer) => {
             console.log("listening from BCH node")
             const topic = topicBuffer.toString('ascii');
