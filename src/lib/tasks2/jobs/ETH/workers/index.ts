@@ -1,6 +1,6 @@
 import path from 'path';
 import { Worker } from 'worker_threads';
-import LUKSOPendingList from '../../../containers/LUKSOPendingList';
+import ETHPendingList from '../../../containers/ETHPendingList';
 
 export default async () => {
     const keys = Object.keys(process.env);
@@ -9,7 +9,7 @@ export default async () => {
 
     try {
         console.log('Starting...');
-        const pendingTxList = new LUKSOPendingList(); 
+        const pendingTxList = new ETHPendingList(); 
         await pendingTxList.init();
 
         new Worker(path.join(__dirname, 'createPendingTransactionList.js'), { workerData }); 
