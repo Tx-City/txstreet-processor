@@ -16,7 +16,7 @@ import processConfirmedTransactions from '../methods/tx-processor/process-confir
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // Iterate over blockchain implementations and initialize them if they're
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY']
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'LUKSO']
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -59,7 +59,6 @@ const run = async () => {
         const btcWrapper = new Wrappers.BTCWrapper(
             { username: 'user', password: 'pass', host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_PORT) || 8332 },
             { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 })
-        console.log("connection to Bitcoin is working =====" + JSON.stringify(btcWrapper, null, 4));
         if (process.env.PROCESS_PENDING == "true")
             processPending(btcWrapper);
         if (process.env.PROCESS_CONFIRMED == "true")
@@ -70,13 +69,10 @@ const run = async () => {
         const bchWrapper = new Wrappers.BCHWrapper(
             { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) },
             { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) })
-        console.log("connection to BCH is working =====" + JSON.stringify(bchWrapper, null, 4));
         if (process.env.PROCESS_PENDING == "true")
-            console.log("--------pending")
         processPending(bchWrapper);
         if (process.env.PROCESS_CONFIRMED == "true")
             processConfirmed(bchWrapper);
-        console.log("--------confirmed")
     }
 
 
@@ -105,6 +101,14 @@ const run = async () => {
             processPending(ethWrapper);
         if (process.env.PROCESS_CONFIRMED == "true")
             processConfirmed(ethWrapper);
+    }
+
+    if (nodesToInit.includes('LUKSO')) {
+        const luksoWrapper = new Wrappers.LUKSOWrapper(process.env.LUKSO_NODE as string);
+        if (process.env.PROCESS_PENDING == "true")
+            processPending(luksoWrapper);
+        if (process.env.PROCESS_CONFIRMED == "true")
+            processConfirmed(luksoWrapper);
     }
 
     if (nodesToInit.includes('RINKEBY')) {

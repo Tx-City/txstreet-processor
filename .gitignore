@@ -6,3 +6,4 @@ package-lock.json
 deploy
 src/test/
 .env.example
+.vscode

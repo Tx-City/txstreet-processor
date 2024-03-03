@@ -6,7 +6,8 @@ dotenv.config();
 import minimist from 'minimist';
 Object.assign(process.env, minimist(process.argv.slice(2)));
 
-console.log("process.env.ETH_NODE", process.env.ETH_NODE)
+// console.log("process.env.ETH_NODE", process.env.ETH_NODE)
+console.log("process.env.LUKSO_NODE", process.env.LUKSO_NODE)
 
 // Misc imports 
 import processTransaction from '../methods/node-subscriber/process-transaction';
@@ -15,7 +16,7 @@ import mongodb from '../databases/mongodb';
 import * as Hooks from '../lib/chain-implementations';
 import redis from '../databases/redis';
 
-if (process.env.BCH_NODE) console.log("working uktnode BCH ip: ", process.env.BCH_NODE)
+if (process.env.BCH_NODE) console.log("working node BCH ip: ", process.env.BCH_NODE)
 
 if (process.env.USE_DATABASE === "true")
     mongodb();
@@ -24,7 +25,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI']
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO']
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -86,12 +87,10 @@ const init = async () => {
         btcWrapper.initEventSystem();
 
         btcWrapper.on('mempool-tx', (transaction: any) => {
-            console.log("process.env.BTC_NODE333333", process.env.BTC_NODE)
             processTransaction(btcWrapper, { ...transaction, processed: true });
         });
 
         btcWrapper.on('confirmed-block', (blockHash: string) => {
-            console.log("process.env.BTC_NODE55555555", process.env.BTC_NODE)
             processBlock(btcWrapper, blockHash);
         });
 
@@ -103,15 +102,12 @@ const init = async () => {
         let bchWrapper = new wrapperClass.default(
             { username: 'user', password: 'pass', host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_PORT) },
             { host: process.env.BCH_NODE as string, port: Number(process.env.BCH_NODE_ZMQPORT) });
-        console.log("Pppppooooorrrrrttttt", process.env.BCH_NODE_PORT)
-        console.log("zzzzmmmmqqqqqqqqqqq", process.env.BCH_NODE_ZMQPORT)
         Hooks.initHooks('BCH');
 
         bchWrapper.initEventSystem();
         console.log('initializing BCH listener');
 
         bchWrapper.on('mempool-tx', (transaction: any) => {
-
             processTransaction(bchWrapper, { ...transaction, processed: true });
         });
 
@@ -139,7 +135,7 @@ const init = async () => {
         });
 
         ltcWrapper.on('confirmed-block', (blockHash: string) => {
-            console.log(`Got block from event: ${blockHash}`);
+            
             processBlock(ltcWrapper, blockHash);
         });
 
@@ -147,13 +143,13 @@ const init = async () => {
     }
 
     if (chainsToSubscribe.includes('ETH')) {
-        console.log('chainsToSubscribe', process.env.ETH_NODE)
+        console.log('chainsToSubscribe for ETH', process.env.ETH_NODE)
         const wrapperClass = await import("../lib/node-wrappers/ETH");
         let ethWrapper = new wrapperClass.default(process.env.ETH_NODE as string);
 
         Hooks.initHooks('ETH');
 
-        console.log("Imported chain implementations");
+        // console.log("Imported chain implementations");
 
         ethWrapper.on('mempool-tx', (transaction: any) => {
             if (!transaction.blockHeight && transaction.blockNumber) {
@@ -176,13 +172,42 @@ const init = async () => {
 
     }
 
+    if (chainsToSubscribe.includes('LUKSO')) {
+        console.log('chainsToSubscribe for LUKSO', process.env.LUKSO_NODE)
+        const wrapperClass = await import("../lib/node-wrappers/LUKSO");
+        let luksoWrapper = new wrapperClass.default(process.env.LUKSO_NODE as string);
+
+        // Hooks.initHooks('LUKSO');
+        console.log("luksowrapper", luksoWrapper) ;
+        luksoWrapper.on('mempool-tx', (transaction: any) => {
+            if (!transaction.blockHeight && transaction.blockNumber) {
+                transaction.blockHeight = transaction.blockNumber;
+                delete transaction.blockNumber;
+            }
+            console.log("starting LUKSO transaction processor-------------------")
+            processTransaction(luksoWrapper, { ...transaction, processed: true });
+        });
+
+        luksoWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(luksoWrapper, blockHash);
+        });
+
+        getLatestBlockLoop(luksoWrapper);
+
+        luksoWrapper.initEventSystem();
+
+        console.log("Setup all event processors for chain for LUKSO.");
+
+    }
+
     if (chainsToSubscribe.includes('ARBI')) {
         const wrapperClass = await import("../lib/node-wrappers/ARBI");
         let arbiWrapper = new wrapperClass.default();
 
         // Hooks.initHooks('ETH', mongodb, redis);
 
-        console.log("Imported chain implementations");
+        // console.log("Imported chain implementations");
 
         arbiWrapper.on('confirmed-block', (blockHash: string) => {
             console.log(`Got block from event: ${blockHash}`);

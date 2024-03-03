@@ -5,6 +5,12 @@ export const chainConfig: any = {
         deleteBlocksOlderThanSeconds: 90000,
         txsCollection: true
     },
+    LUKSO: {
+        wikiname: 'lukso',
+        storeBlockFile: true,
+        deleteBlocksOlderThanSeconds: 90000,
+        txsCollection: true
+    },
     BTC: {
         wikiname: 'bitcoin',
         storeBlockFile: true,

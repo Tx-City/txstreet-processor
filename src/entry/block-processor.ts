@@ -18,7 +18,7 @@ import { initHooks } from '../lib/chain-implementations';
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // A hardcoded array of implemented blockchains.
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI']
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO']
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -83,6 +83,14 @@ const run = async () => {
         const ethWrapper = new Wrappers.ETHWrapper(process.env.ETH_NODE as string);
 
         nonBlockingInfiniteLoop(ethWrapper);
+        console.log('running block processor for ETH', nonBlockingInfiniteLoop(ethWrapper));
+    }
+
+    if (nodesToInit.includes('LUKSO')) {
+        const luksoWrapper = new Wrappers.LUKSOWrapper(process.env.LUKSO_NODE as string);
+        
+        nonBlockingInfiniteLoop(luksoWrapper);
+        console.log('running block processor for lukso', nonBlockingInfiniteLoop(luksoWrapper));
     }
 
     if (nodesToInit.includes('ARBI')) {

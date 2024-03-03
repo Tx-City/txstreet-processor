@@ -17,17 +17,12 @@ let hack = true;
 // Generic workflow for processing a transaction to submit a processing request. 
 // Works with all blockchains based on their BlockchainNode implementation. 
 export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any> => {
-
-    console.log('processing transaction----->', transaction);
-
     try {
         // If we are unable to claim this transaction, do not continue. 
         if (!(await claimTransaction(wrapper.ticker, transaction.hash))) {
             console.log('its not claim!');
             return;
         }
-
-        console.log('its claim');
         // Short delay to allow time for the transaction to be dropped.
         await waitForTime(100);
 
@@ -39,9 +34,6 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
             if (!nodeTransaction) return;
             transaction = { ...transaction, ...nodeTransaction, processed: true };
         }
-
-        console.log('its processed');
-
         // Check the database to make sure that the transaction isn't inlcuded in a block anywhere.
         if (await checkBlocksForTx(wrapper, transaction)) {
             console.log('its checkBlocksForTx return ');
@@ -56,17 +48,12 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
         }
         await callChainHooks(wrapper.ticker, transaction);
 
-        console.log('Should get fees --------------------------');
-
         if ((wrapper as any).getPendingExtras) {
             console.log('GET PENDING');
             if (["BTC", "LTC", "BCH"].includes(wrapper.ticker)) {
                 let extras: any = await limiter.schedule(() => (wrapper as any).getPendingExtras(transaction));
-                console.log('extras', extras);
-
                 transaction = { ...transaction, ...extras };
             } else {
-                console.log('GET PENDING');
                 let extras = await (wrapper as any).getPendingExtras(transaction);
                 transaction = { ...transaction, ...extras };
             }

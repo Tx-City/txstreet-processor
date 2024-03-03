@@ -1,14 +1,15 @@
+import { error } from "console";
 import BlockchainWrapper from "../base";
 import Web3 from 'web3';
 
 
-export default class ETHWrapper extends BlockchainWrapper {
+export default class LUKSOWrapper extends BlockchainWrapper {
     public web3: Web3;
     public options: { [key: string]: any };
     // public blockSubscription: 
 
     constructor(host: string) {
-        super('ETH');
+        super('LUKSO');
 
         // Initialize web3
         this.options = {
@@ -28,8 +29,8 @@ export default class ETHWrapper extends BlockchainWrapper {
 
         const provider = new Web3.providers.WebsocketProvider(host, this.options);
         this.web3 = new Web3(provider);
-        console.log("ETH Web3", this.web3);
-        console.log("ETH Provider", provider);
+        // console.log("lukso provider", provider);    
+        // console.log("lukso web3", this.web3);
         // Add admin peers, nodeInfo, and removePeer functions. 
         this.web3.eth.extend({
             property: 'admin',
@@ -52,8 +53,8 @@ export default class ETHWrapper extends BlockchainWrapper {
     }
 
     public initEventSystem() {
-        console.log("current provider ----------------------", this.web3.eth.currentProvider);
-
+        console.log("Initializing LUKSO event system");
+        // console.log("current provider ----------------------", this.web3.eth.currentProvider);
         var subscription = this.web3.eth.subscribe('pendingTransactions', function(error, result){
             console.log("0000000");
             if (!error){
@@ -64,8 +65,10 @@ export default class ETHWrapper extends BlockchainWrapper {
             console.log(transaction);
             console.log(222222)
         });
-        console.log("eth-subscription", subscription);
+        console.log("Subscription", subscription);
         this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => { }).on('data', async (hash: string) => {
+            console.log("-----------this.web3.eth.subscribe()--------------");
+            
             try {
                 const transaction = await this.getTransaction(hash, 2);
                 this.emit('mempool-tx', transaction);

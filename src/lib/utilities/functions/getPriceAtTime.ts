@@ -19,6 +19,9 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
         case 'ETH':
             name = 'ethereum'; 
             break;
+        case 'LUKSO':
+            name = 'lukso'; 
+            break;
         case 'XMR':
             name = 'monero'; 
             break;
