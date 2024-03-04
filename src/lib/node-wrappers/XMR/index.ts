@@ -9,7 +9,7 @@ export default class XMRWrapper extends BlockchainWrapper {
     public zmqPort: number;
     public sock: any;
 
-    constructor(host: string, rpcPort: number = 18081, zmqPort: number = 18083) {
+    constructor(host: string, rpcPort: number = 18089, zmqPort: number = 18083) {
         super('XMR');
         this.host = host;
         this.rpcPort = rpcPort;
