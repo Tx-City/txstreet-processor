@@ -44,14 +44,14 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
             redis.setAsync(key, result.code, 'EX', 3600 * 12);
         });
 
-        const lukso_url = new URL(process.env.LUKSO_NODE);
+        // const lukso_url = new URL(process.env.LUKSO_NODE);
 
-        let lukso_response = await axios.post(`http://${lukso_url.hostname}:81/contract-codes`, { contracts: Object.keys(accounts) });
-        lukso_response.data.forEach((result: any) => {
-            accountValues[result.contract] = result.code;
-            const key = (wrapper as any).ticker + "-is-contract-" + result.contract;
-            redis.setAsync(key, result.code, 'EX', 3600 * 12);
-        });
+        // let lukso_response = await axios.post(`http://${lukso_url.hostname}:81/contract-codes`, { contracts: Object.keys(accounts) });
+        // lukso_response.data.forEach((result: any) => {
+        //     accountValues[result.contract] = result.code;
+        //     const key = (wrapper as any).ticker + "-is-contract-" + result.contract;
+        //     redis.setAsync(key, result.code, 'EX', 3600 * 12);
+        // });
         // } else {
 
         //     //create requests for accounts that aren't cached

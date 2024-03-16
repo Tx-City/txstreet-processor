@@ -28,8 +28,6 @@ export default class ETHWrapper extends BlockchainWrapper {
 
         const provider = new Web3.providers.WebsocketProvider(host, this.options);
         this.web3 = new Web3(provider);
-        console.log("ETH Web3", this.web3);
-        console.log("ETH Provider", provider);
         // Add admin peers, nodeInfo, and removePeer functions. 
         this.web3.eth.extend({
             property: 'admin',
@@ -52,19 +50,14 @@ export default class ETHWrapper extends BlockchainWrapper {
     }
 
     public initEventSystem() {
-        console.log("current provider ----------------------", this.web3.eth.currentProvider);
-
+        
         var subscription = this.web3.eth.subscribe('pendingTransactions', function(error, result){
-            console.log("0000000");
             if (!error){
                 console.log(result);
-                console.log(11111);
             }
         }).on("data", function(transaction){
             console.log(transaction);
-            console.log(222222)
         });
-        console.log("eth-subscription", subscription);
         this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => { }).on('data', async (hash: string) => {
             try {
                 const transaction = await this.getTransaction(hash, 2);

@@ -126,8 +126,6 @@ const init = async () => {
             { host: process.env.LTC_NODE as string, port: Number(process.env.LTC_NODE_ZMQPORT) })
 
         Hooks.initHooks('LTC');
-        console.log("process.env.LLLTTTCCCC_NODE222222", process.env.LTC_NODE_PORT)
-        console.log("process.env.LLLTTTCCCC_NODEZZZZZZZZMMMMMMMMMQQQQQQQ_PORT", process.env.LTC_NODE_ZMQPORT)
         ltcWrapper.initEventSystem();
 
         ltcWrapper.on('mempool-tx', (transaction: any) => {

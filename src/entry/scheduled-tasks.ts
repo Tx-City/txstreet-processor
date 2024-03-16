@@ -8,7 +8,6 @@ import updateHouseData from '../lib/tasks/jobs/update-house-data';
 import updateHousePriority from '../lib/tasks/jobs/update-house-priority';
 import updatePricing from '../lib/tasks/jobs/update-pricing';
 import ethRemoveBadTxs from '../lib/tasks/jobs/eth-remove-bad-txs'; 
-import luksoRemoveBadTxs from '../lib/tasks/jobs/lukso-remove-bad-txs';
 import unlockLockedTxs from '../lib/tasks/jobs/unlock-locked-txs';
 import btcRemoveBadTxs from '../lib/tasks/jobs/btc-remove-bad-txs';
 import xmrRemoveBadTxs from '../lib/tasks/jobs/xmr-remove-bad-txs';
@@ -131,11 +130,11 @@ const run = async () => {
         executeJob(() => ethRecentContracts('ETH',  '1day', Date.now() - days(1)), days(1)); 
     }
 
-    if(chains.includes('LUKSO')) {
-        executeJob(() => ethRecentContracts('LUKSO', '5min', Date.now() - minutes(5)), seconds(5)); 
-        executeJob(() => ethRecentContracts('LUKSO',  '1hour', Date.now() - hours(1)), hours(1)); 
-        executeJob(() => ethRecentContracts('LUKSO',  '1day', Date.now() - days(1)), days(1)); 
-    }
+    // if(chains.includes('LUKSO')) {
+    //     executeJob(() => ethRecentContracts('LUKSO', '5min', Date.now() - minutes(5)), seconds(5)); 
+    //     executeJob(() => ethRecentContracts('LUKSO',  '1hour', Date.now() - hours(1)), hours(1)); 
+    //     executeJob(() => ethRecentContracts('LUKSO',  '1day', Date.now() - days(1)), days(1)); 
+    // }
 
     setTimeout(() => {
         process.exit(1); 
