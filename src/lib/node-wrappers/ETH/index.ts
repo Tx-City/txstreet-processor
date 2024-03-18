@@ -51,13 +51,6 @@ export default class ETHWrapper extends BlockchainWrapper {
 
     public initEventSystem() {
         
-        var subscription = this.web3.eth.subscribe('pendingTransactions', function(error, result){
-            if (!error){
-                console.log(result);
-            }
-        }).on("data", function(transaction){
-            console.log(transaction);
-        });
         this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => { }).on('data', async (hash: string) => {
             try {
                 const transaction = await this.getTransaction(hash, 2);

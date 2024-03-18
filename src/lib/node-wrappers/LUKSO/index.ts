@@ -53,15 +53,7 @@ export default class LUKSOWrapper extends BlockchainWrapper {
     }
 
     public initEventSystem() {
-        // console.log("current provider ----------------------", this.web3.eth.currentProvider);
-        var subscription = this.web3.eth.subscribe('pendingTransactions', function(error, result){
-            if (!error){
-                console.log(result);
-            }
-        }).on("data", function(transaction){
-            console.log(transaction);
-        });
-        console.log("Subscription", subscription);
+       
         this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => { }).on('data', async (hash: string) => {
             console.log("-----------this.web3.eth.subscribe()--------------");
             
