@@ -48,6 +48,13 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
             response.data.forEach((result: any) => {
                 setAccountValue(accountValues, result.account, result.count);
             });
+
+            // const lukso_url = new URL(process.env.LUKSO_NODE);
+            // console.log(`http://${lukso_url.hostname}/nonces`);
+            // let lukso_response = await axios.post(`http://${lukso_url.hostname}:81/nonces`, { accounts: Object.keys(accounts) });
+            // lukso_response.data.forEach((result: any) => {
+            //     setAccountValue(accountValues, result.account, result.count);
+            // });
         } else {
 
             //create requests for accounts that aren't cached

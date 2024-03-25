@@ -13,9 +13,6 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
         console.log("collection" + wrapper.ticker)
         // Create a database session to atomically execute multiple queries. 
         const session = connection.startSession();
-
-        console.log("session ===== " + session)
-
         // Scopes declaration of the results to return after the transaction is finished.
         var results: any[] = [];
 

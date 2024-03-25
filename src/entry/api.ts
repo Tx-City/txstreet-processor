@@ -8,7 +8,7 @@ import apiRouter from '../lib/api';
 import staticRouter from '../lib/api/static';
 
 // Configure credd-origin-resource-sharing.
-const whitelist: string[] = ['localhost', 'txstreet.com'];
+const whitelist: string[] = ['localhost', 'cryptostreets.io', 'txcity.io'];
 const CORSConfig: CorsOptions = {
     origin: '*'
 };

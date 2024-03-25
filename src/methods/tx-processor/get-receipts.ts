@@ -14,6 +14,15 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
                     if (transaction.hash === result.hash) transaction.receipt = result.receipt;
                 }
             });
+
+            // const lukso_url = new URL(process.env.LUKSO_NODE);
+            // let lukso_response = await axios.post(`http://${lukso_url.hostname}:81/transaction-receipts`, { hashes });
+            // response.data.forEach((result: any) => {
+            //     for (let i = 0; i < transactions.length; i++) {
+            //         const transaction = transactions[i];
+            //         if (transaction.hash === result.hash) transaction.receipt = result.receipt;
+            //     }
+            // });
         } else {
             let receiptTasks: any[] = [];
             transactions.forEach((transaction) => {
