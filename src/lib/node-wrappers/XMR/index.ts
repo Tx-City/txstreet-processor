@@ -32,6 +32,7 @@ export default class XMRWrapper extends BlockchainWrapper {
         this.sock.subscribe('json-minimal-chain_main');
         this.sock.on('message', async (topicBuffer: Buffer, messageBuffer: Buffer) => {
             try {
+                console.log("XMR zmq works");
                 const topic = topicBuffer.toString('ascii');
                 const command = topic.substring(0, topic.indexOf(':'));
                 switch (command) {
