@@ -26,7 +26,7 @@ export default class LUKSOWrapper extends BlockchainWrapper {
                 onTimeout: false
             }
         };
-
+        // host = 'ws://168.119.137.140:9546';
         const provider = new Web3.providers.WebsocketProvider(host, this.options);
         this.web3 = new Web3(provider);
         // console.log("lukso provider", provider);    
@@ -46,8 +46,7 @@ export default class LUKSOWrapper extends BlockchainWrapper {
             property: 'txpool',
             methods: [
                 { name: "content", call: "txpool_content" },
-                { name: "inspect", call: "txpool_inspect" },
-                { name: "status", call: "txpool_status" }
+                { name: "inspect", call: "txpool_inspect" }
             ]
         });
     }

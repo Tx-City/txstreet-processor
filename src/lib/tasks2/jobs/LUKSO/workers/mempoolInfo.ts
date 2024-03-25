@@ -10,10 +10,10 @@ let lastExecutionResults = {
 setInterval(async () => {
     try {
         const wrapper = new LUKSOWrapper(process.env.LUKSO_NODE);
-        const results = await (wrapper as any).web3.eth.txpool.status(); 
-        if(results) {
-            lastExecutionResults['mempool-size'] = parseInt(results.pending) + parseInt(results.queued);
-        }
+        // const results = await (wrapper as any).web3.eth.txpool.status(); 
+        // if(results) {
+        //     lastExecutionResults['mempool-size'] = parseInt(results.pending) + parseInt(results.queued);
+        // }
     } catch (error) {
         console.error(error); 
     } finally {
@@ -26,11 +26,11 @@ setInterval(async () => {
 
             if(process.env.UPDATE_DATABASES.toLowerCase() == "true") {
                 // TODO: Optimize to not re-insert data to lower bandwidth consumption. 
-                await collection.updateOne({ chain: 'LUKSO' }, { $set: lastExecutionResults }); 
-                redis.publish('stats', JSON.stringify({ chain: "LUKSO", ...lastExecutionResults })); 
+                // await collection.updateOne({ chain: 'LUKSO' }, { $set: lastExecutionResults }); 
+                // redis.publish('stats', JSON.stringify({ chain: "LUKSO", ...lastExecutionResults })); 
             } else {
                 console.log('=========================')
-                console.log(lastExecutionResults);
+                // console.log(lastExecutionResults);
             }
         } catch (error) {
             console.error(error); 

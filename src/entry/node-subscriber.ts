@@ -176,7 +176,7 @@ const init = async () => {
         let luksoWrapper = new wrapperClass.default(process.env.LUKSO_NODE as string);
 
         // Hooks.initHooks('LUKSO');
-        console.log("luksowrapper", luksoWrapper) ;
+        // console.log("luksowrapper", luksoWrapper) ;
         luksoWrapper.on('mempool-tx', (transaction: any) => {
             if (!transaction.blockHeight && transaction.blockNumber) {
                 transaction.blockHeight = transaction.blockNumber;
