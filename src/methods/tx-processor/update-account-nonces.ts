@@ -24,6 +24,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
                 try {
                     transaction.from = transaction.from.toLowerCase();
                     const key = (wrapper as any).ticker + "-nonce-" + transaction.from;
+                    
                     if (!bypassCache && !accounts[transaction.from] && !accountValues[transaction.from]) {
                         let cached: any = await redis.getAsync(key);
                         if (cached) {
@@ -40,8 +41,9 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
             }));
         });
         await Promise.all(cachedTasks);
-
-        if (bulkApi) {
+        const lxy = (wrapper as any).ticker;
+        console.log("lxy---------------========>>>>>>>>", lxy);
+        if (bulkApi && lxy != "LUKSO") {
             const url = new URL(process.env.ETH_NODE);
             console.log(`http://${url.hostname}/nonces`);
             let response = await axios.post(`http://${url.hostname}:81/nonces`, { accounts: Object.keys(accounts) });
@@ -56,7 +58,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
             //     setAccountValue(accountValues, result.account, result.count);
             // });
         } else {
-
+            console.log("BULK API IS NOT ENABLED FOR LUKSO")
             //create requests for accounts that aren't cached
             let requests: { [key: string]: any }[] = [];
             // let requestsArr: Promise<number>[] = [];
