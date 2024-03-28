@@ -13,6 +13,9 @@ export const enabledHooks: any = {
         "Opensea",
         "Sushi"
     ],
+    LUKSO: [
+        "DefaultHousing",
+    ],
     BTC: [
         "DefaultHousing",
     ],
