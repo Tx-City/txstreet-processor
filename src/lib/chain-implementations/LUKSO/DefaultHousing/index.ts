@@ -10,7 +10,7 @@ class DefaultHousing extends ChainImplementation {
                 return this;
             const { database } = await mongodb(); 
             const collection = database.collection('houses');
-            const results = await collection.find({ chain: this.chain, name: { $nin: ["lukso"] } }).toArray();  
+            const results = await collection.find({ chain: this.chain, name: { $nin: ["up"] } }).toArray();  
             for(let i = 0; i < results.length; i++) {
                 let doc = results[i]; 
                 if(!doc.contracts) continue;
