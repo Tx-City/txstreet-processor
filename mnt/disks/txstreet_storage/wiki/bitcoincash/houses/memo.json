@@ -1,6 +1,28 @@
+// {
+//   "name": "memo",
+//   "title": "Memo",
+//   "tracked": true,
+//   "html": "Memo is an open-source social media protocol built on Bitcoin Cash that describes how actions, like 'posting', are encoded. A software named member makes those actions easily accessible and understandable for social media sites based on the protocol. These include memo.cash (closed source) and member.cash (open source).",
+//   "link": "https://jasonc.me/blog/what-is-memo",
+//   "colors": ["547236", "lighten"]
+// }
+
 {
   "name": "memo",
   "title": "Memo",
+  "dataSources": [
+      "wiki"
+  ],
+  "popupLength": 75,
+  "colors": [
+      "547236",
+      "lighten"
+  ],
+  "side": 0,
+  "priority": 0,
   "tracked": true,
-  "colors": ["547236", "lighten"]
+  "type": "house",
+  "html": "Memo is an open-source social media protocol built on Bitcoin Cash that describes how actions, like 'posting', are encoded. A software named member makes those actions easily accessible and understandable for social media sites based on the protocol. These include memo.cash (closed source) and member.cash (open source).",
+  "link": "https://jasonc.me/blog/what-is-memo",
+  "services": null
 }

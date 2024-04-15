@@ -27,7 +27,7 @@ export const enabledHooks: any = {
     ],
     BCH: [
         "CashFusion",
-        "EatBCH",
+        // "EatBCH",
         "Memo",
         "SLP"
     ]
