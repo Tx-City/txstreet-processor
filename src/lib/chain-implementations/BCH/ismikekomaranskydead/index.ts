@@ -3,7 +3,7 @@ import bchaddr from 'bchaddrjs-slp';
 import redis from '../../../../databases/redis'; 
 import mongodb from "../../../../databases/mongodb";
 
-class EatBCH extends ChainImplementation {
+class ismikekomaranskydead extends ChainImplementation {
     public addresses: string[] = []; 
     public _what: any = {}; 
 
@@ -14,8 +14,8 @@ class EatBCH extends ChainImplementation {
                 return this; 
             const { database } = await mongodb();
             const collection = database.collection('houses'); 
-            const house = await collection.findOne({ name: 'eatbch', chain: 'BCH' }); 
-            this.addresses = house.eatbchAddresses.map((obj: any) => obj.address);
+            const house = await collection.findOne({ name: 'ismikekomaranskydead', chain: 'BCH' }); 
+            this.addresses = house.ismikekomaranskydeadAddresses.map((obj: any) => obj.address);
             // addToCommonAddresses(addresses)
         } catch (error) {
             console.error(error);
@@ -53,8 +53,8 @@ class EatBCH extends ChainImplementation {
         if(!found || total <= 0) return false;
         if(!transaction.extras)
             transaction.extras = {};
-        transaction.extras.houseContent = `I donated $${total.toFixed(2)} to EatBCH!`;
-        transaction.house = 'eatbch';
+        transaction.extras.houseContent = `Is Mikekomaransky dead?`;
+        transaction.house = 'ismikekomaranskydead';
         return true;  
     }
 
@@ -106,4 +106,4 @@ class EatBCH extends ChainImplementation {
 
 }
 
-export default new EatBCH('BCH'); 
+export default new ismikekomaranskydead('BCH'); 

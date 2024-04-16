@@ -1,6 +1,25 @@
+// {
+//   "name": "slp",
+//   "title": "Simple Ledger Protocol (SLP)",
+//   "tracked": true,
+//   "colors": ["195670", "5bb478"]
+// }
 {
   "name": "slp",
   "title": "Simple Ledger Protocol (SLP)",
+  "dataSources": [
+      "wiki"
+  ],
+  "popupLength": 75,
+  "colors": [
+      "195670",
+      "5bb478"
+  ],
+  "side": 0,
+  "priority": 0,
   "tracked": true,
-  "colors": ["195670", "5bb478"]
-}
+  "type": "house",
+  "html": "Storing and managing tokens on a blockchain provides greater transparency and integrity than traditional forms of asset accounting and trading. Virtual gaming assets, licenses, digital media rights, gift cards, and company stock shares can all be tokenized. Tokens can also be sent peer-to-peer without any middleman, allowing for a new kind of decentralized digital marketplace.<br/>Simple Ledger Protocol makes this vision a reality by providing the simplest, fastest, and most liberating token system in existence. SLP tokens can easily be created, transferred, and managed on the Bitcoin Cash blockchain within seconds; costing the user only fractions of a penny for each transaction.",
+  "link": "https://simpleledger.cash/",
+  "services": null
+  }

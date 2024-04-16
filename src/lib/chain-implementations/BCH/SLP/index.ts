@@ -82,7 +82,7 @@ class SLP extends ChainImplementation {
                     transaction.extras.houseContent = houseContent
                     transaction.extras.showBubble = true;
                     transaction.house = "slp"; 
-                    links.push({l:"https://simpleledger.info/#tx/" + transaction.hash});
+                    links.push({l:"https://simpleledger.at/#tx/" + transaction.hash});
                     transaction.extras.l = links;
                     console.log("SLP Found a transaction:", transaction.hash);
         
