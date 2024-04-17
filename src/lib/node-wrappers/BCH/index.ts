@@ -359,7 +359,7 @@ export default class BCHWrapper extends BlockchainWrapper {
             this.rpc.getMemPoolEntry(id, (error: string, resp: any) => {
                 if (error) return resolve({ fee: false, fees: false });
                 if (!resp) return resolve({ fee: false, fees: false });
-                return resolve({ fee: resp.result.fee * 100000000, fees: resp.result.fees });
+                return resolve({ fee: resp.result.fees.base * 100000000, fees: resp.result.fees });
             });
         });
 
