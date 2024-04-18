@@ -14,8 +14,9 @@ class CashTokens extends ChainImplementation {
                 return this; 
             const { database } = await mongodb();
             const collection = database.collection('houses'); 
-            const house = await collection.findOne({ name: 'CashTokens', chain: 'BCH' }); 
-            this.addresses = house.CashTokensAddresses.map((obj: any) => obj.address);
+            const house = await collection.findOne({ name: 'cashtokens', chain: 'BCH' }); 
+            this.addresses = house.cashTokensAddresses.map((obj: any) => obj.address);
+            console.log(`Initialized Cashtokens`, this.addresses);
             // addToCommonAddresses(addresses)
         } catch (error) {
             console.error(error);
@@ -32,29 +33,30 @@ class CashTokens extends ChainImplementation {
     async execute(transaction: any): Promise<boolean> {
         let total = 0;
         let found = false;
-        for(let outputIndex = 0; outputIndex < transaction.outputs.length; outputIndex++) {
-            const output = transaction.outputs[outputIndex]; 
-            for(let addressIndex = 0; addressIndex < this.addresses.length; addressIndex++) {
-                const address = this.addresses[addressIndex];
-                const match = await this._addressCompare(output.address, address); 
-                if(match) {
-                    total += Number(await this._getUSDValue(output.value));
-                    for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
-                        const input = transaction.inputs[inputIndex]; 
-                        if(input.address && (await this._addressCompare(input.address, output.address))) 
-                            return false; 
-                    }
-                    found = true; 
-                    break;
-                }
-            }
-        }
+        // for(let outputIndex = 0; outputIndex < transaction.outputs.length; outputIndex++) {
+        //     const output = transaction.outputs[outputIndex]; 
+        //     for(let addressIndex = 0; addressIndex < this.addresses.length; addressIndex++) {
+        //         const address = this.addresses[addressIndex];
+        //         // const match = await this._addressCompare(output.address, address); 
+        //         const match = address
+        //         if(match) {
+        //             total += Number(await this._getUSDValue(output.value));
+        //             for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
+        //                 const input = transaction.inputs[inputIndex]; 
+        //                 // if(input.address && (await this._addressCompare(input.address, output.address))) 
+        //                 //     return false; 
+        //             }
+        //             found = true; 
+        //             break;
+        //         }
+        //     }
+        // }
         
-        if(!found || total <= 0) return false;
-        if(!transaction.extras)
-            transaction.extras = {};
-        transaction.extras.houseContent = `Is Mikekomaransky dead?`;
-        transaction.house = 'CashTokens';
+        // if(!found || total <= 0) return false;
+        // if(!transaction.extras)
+        //     transaction.extras = {};
+        // transaction.extras.houseContent = `Is Mikekomaranskasdadasdasdy dead?`;
+        // transaction.house = 'ismikekomaranskydead';
         return true;  
     }
 
@@ -68,41 +70,41 @@ class CashTokens extends ChainImplementation {
         return usdPaid;
     }
 
-    _addressCompare = async (a: string, b: string) => {
-        if(!a || !b || a.length < 10 || b.length < 10) return false; 
-        let ayes: string[] = [];
-        let bees: string[] = []; 
-        ayes.push(a, await this._toCashAddress(a), await this._toLegacyAddress(a));
-        bees.push(b, await this._toCashAddress(b), await this._toLegacyAddress(b));
-        for(let i = 0; i < ayes.length; i++) 
-            if(bees.includes(ayes[i])) 
-                return true; 
-        return false; 
-    }
+    // _addressCompare = async (a: string, b: string) => {
+    //     if(!a || !b || a.length < 10 || b.length < 10) return false; 
+    //     let ayes: string[] = [];
+    //     let bees: string[] = []; 
+    //     ayes.push(a, await this._toCashAddress(a), await this._toLegacyAddress(a));
+    //     bees.push(b, await this._toCashAddress(b), await this._toLegacyAddress(b));
+    //     for(let i = 0; i < ayes.length; i++) 
+    //         if(bees.includes(ayes[i])) 
+    //             return true; 
+    //     return false; 
+    // }
 
-    _toCashAddress = async (address: string) => {
-        let key = `toCashAddress-${address}`
-        if(this._what[key]) return this._what[key]; 
-        let cached: any = await redis.getAsync(key);
-        if(!cached) {
-            cached = bchaddr.toCashAddress(address); 
-            redis.setAsync(key, cached, 'EX', 3600 * 72); 
-        }
-        this._what[key] = cached; 
-        return cached; 
-    }
+    // _toCashAddress = async (address: string) => {
+    //     let key = `toCashAddress-${address}`
+    //     if(this._what[key]) return this._what[key]; 
+    //     let cached: any = await redis.getAsync(key);
+    //     if(!cached) {
+    //         cached = bchaddr.toCashAddress(address); 
+    //         redis.setAsync(key, cached, 'EX', 3600 * 72); 
+    //     }
+    //     this._what[key] = cached; 
+    //     return cached; 
+    // }
 
-    _toLegacyAddress = async (address: string) => {
-        let key = `toLegacyAddress-${address}`
-        if(this._what[key]) return this._what[key]; 
-        let cached: any = await redis.getAsync(key);
-        if(!cached) {
-            cached = bchaddr.toLegacyAddress(address);
-            redis.setAsync(key, cached, 'EX', 3600 * 72); 
-        }
-        this._what[key] = cached;
-        return cached; 
-    }
+    // _toLegacyAddress = async (address: string) => {
+    //     let key = `toLegacyAddress-${address}`
+    //     if(this._what[key]) return this._what[key]; 
+    //     let cached: any = await redis.getAsync(key);
+    //     if(!cached) {
+    //         cached = bchaddr.toLegacyAddress(address);
+    //         redis.setAsync(key, cached, 'EX', 3600 * 72); 
+    //     }
+    //     this._what[key] = cached;
+    //     return cached; 
+    // }
 
 }
 
