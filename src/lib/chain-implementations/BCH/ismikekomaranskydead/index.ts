@@ -16,6 +16,7 @@ class ismikekomaranskydead extends ChainImplementation {
             const collection = database.collection('houses'); 
             const house = await collection.findOne({ name: 'ismikekomaranskydead', chain: 'BCH' }); 
             this.addresses = house.ismikekomaranskydeadAddresses.map((obj: any) => obj.address);
+            console.log(`Initialized ismikekomaranskydead`, this.addresses);
             // addToCommonAddresses(addresses)
         } catch (error) {
             console.error(error);
@@ -28,7 +29,6 @@ class ismikekomaranskydead extends ChainImplementation {
         if(this.addresses.length === 0) return false; 
         return true;
     }
-
     async execute(transaction: any): Promise<boolean> {
         let total = 0;
         let found = false;
@@ -37,6 +37,9 @@ class ismikekomaranskydead extends ChainImplementation {
             for(let addressIndex = 0; addressIndex < this.addresses.length; addressIndex++) {
                 const address = this.addresses[addressIndex];
                 const match = await this._addressCompare(output.address, address); 
+                console.log(`Address:`, address);
+                console.log(`Output Address:`, output.address);
+                console.log(`Match:`, match);
                 if(match) {
                     total += Number(await this._getUSDValue(output.value));
                     for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
@@ -53,10 +56,45 @@ class ismikekomaranskydead extends ChainImplementation {
         if(!found || total <= 0) return false;
         if(!transaction.extras)
             transaction.extras = {};
-        transaction.extras.houseContent = `Is Mikekomaransky dead?`;
-        transaction.house = 'ismikekomaranskydead';
+        transaction.extras.houseContent = `I donated $${total.toFixed(2)} to EatBCH!`;
+        transaction.house = 'eatbch';
         return true;  
     }
+
+    // async execute(transaction: any): Promise<boolean> {
+    //     let total = 0;
+    //     let found = false;
+    //     for(let outputIndex = 0; outputIndex < transaction.outputs.length; outputIndex++) {
+    //         const output = transaction.outputs[outputIndex]; 
+    //         for(let addressIndex = 0; addressIndex < this.addresses.length; addressIndex++) {
+    //             console.log("this.addresses[addressIndex]", this.addresses[addressIndex]);
+    //             const address = this.addresses[addressIndex];
+    //             // const address = "bitcoincash:qqyy3mss5vmthgnu0m5sm39pcfq8z799ku2nxernca";
+    //             console.log(`Address:`, address);
+    //             console.log(`Output Address:`, output.address);
+    //             const match = await this._addressCompare(output.address, address); 
+    //             // const match = address
+    //             if(match) {
+    //                 console.log(`Matched`);
+    //                 total += Number(await this._getUSDValue(output.value));
+    //                 for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
+    //                     const input = transaction.inputs[inputIndex]; 
+    //                     if(input.address && (await this._addressCompare(input.address, output.address))) 
+    //                         return false; 
+    //                 }
+    //                 found = true; 
+    //                 break;
+    //             }
+    //         }
+    //     }
+        
+    //     if(!found || total <= 0) return false;
+    //     if(!transaction.extras)
+    //         transaction.extras = {};
+    //     transaction.extras.houseContent = `Is Mikekomaransky dead?`;
+    //     transaction.house = 'ismikekomaranskydead';
+    //     return true;  
+    // }
 
     //todo make into global function
     _getUSDValue = async (bchPaid: number) => {
