@@ -42,6 +42,7 @@ class ismikekomaranskydead extends ChainImplementation {
                 console.log(`Match:`, match);
                 if(match) {
                     total += Number(await this._getUSDValue(output.value));
+                    console.log(`Total:`, total);
                     for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
                         const input = transaction.inputs[inputIndex]; 
                         if(input.address && (await this._addressCompare(input.address, output.address))) 
@@ -53,7 +54,10 @@ class ismikekomaranskydead extends ChainImplementation {
             }
         }
         
-        if(!found || total <= 0) return false;
+        if(!found || total <= 0) {
+            console.log('did it return false')
+            return false;
+        }
         if(!transaction.extras)
             transaction.extras = {};
         transaction.extras.houseContent = `Is Mike Komaransky Dead?`;
