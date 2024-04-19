@@ -56,8 +56,8 @@ class ismikekomaranskydead extends ChainImplementation {
         if(!found || total <= 0) return false;
         if(!transaction.extras)
             transaction.extras = {};
-        transaction.extras.houseContent = `I donated $${total.toFixed(2)} to EatBCH!`;
-        transaction.house = 'eatbch';
+        transaction.extras.houseContent = `Is Mike Komaransky Dead?`;
+        transaction.house = 'ismikekomaranskydead';
         return true;  
     }
 
