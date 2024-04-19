@@ -43,11 +43,11 @@ class ismikekomaranskydead extends ChainImplementation {
                 if(match) {
                     total += Number(await this._getUSDValue(output.value));
                     console.log(`Total:`, total);
-                    for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
-                        const input = transaction.inputs[inputIndex]; 
-                        if(input.address && (await this._addressCompare(input.address, output.address))) 
-                            return false; 
-                    }
+                    // for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
+                    //     const input = transaction.inputs[inputIndex]; 
+                    //     if(input.address && (await this._addressCompare(input.address, output.address))) 
+                    //         return false; 
+                    // }
                     found = true; 
                     break;
                 }
@@ -61,6 +61,7 @@ class ismikekomaranskydead extends ChainImplementation {
         if(!transaction.extras)
             transaction.extras = {};
         transaction.extras.houseContent = `Is Mike Komaransky Dead?`;
+        console.log(transaction.extras.houseContent + ' is the house content');
         transaction.house = 'ismikekomaranskydead';
         return true;  
     }
