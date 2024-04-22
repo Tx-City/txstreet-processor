@@ -60,7 +60,7 @@ class ismikekomaranskydead extends ChainImplementation {
         }
         if(!transaction.extras)
             transaction.extras = {};
-        // transaction.extras.houseContent = `Is Mike Komaransky Dead?`;
+        transaction.extras.houseContent = ``;
         // console.log(transaction.extras.houseContent + ' is the house content');
         transaction.house = 'ismikekomaranskydead';
         return true;  
