@@ -29,6 +29,7 @@ export const enabledHooks: any = {
         "CashFusion",
         "ismikekomaranskydead",
         // "CashTokens",
+        "EatBCH",
         "Memo",
         "SLP"
     ]
