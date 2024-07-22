@@ -11,7 +11,9 @@ class Memo extends ChainImplementation {
     }
 
     async execute(transaction: any): Promise<boolean> {
+        console.log(`Memo Transaction:`, transaction);
         for(let i = 0; i < transaction.asmArrays.length; i++) {
+            console.log(`Memo Transaction.asmArrays:`, transaction.asmArrays);
             const asmArray = transaction.asmArrays[i];
             const op_return = asmArray[0] === "OP_RETURN";
             if(!op_return) continue 
@@ -19,7 +21,7 @@ class Memo extends ChainImplementation {
             const links = []; 
 
             let handled = false; 
-
+            console.log(`Memo Code:`, code);
             switch(code) {
                 case "6d01":
                     handled = true;
