@@ -1,110 +1,134 @@
-// import ChainImplementation from '../../implementation'; 
-// import bchaddr from 'bchaddrjs-slp'; 
-// import redis from '../../../../databases/redis'; 
-// import mongodb from "../../../../databases/mongodb";
+import ChainImplementation from '../../implementation'; 
+import { decodeHex, swapEndian } from '../../../../lib/utilities';
 
-// class CashTokens extends ChainImplementation {
-//     public addresses: string[] = []; 
-//     public _what: any = {}; 
+class CashTokens extends ChainImplementation {
+    async init(): Promise<ChainImplementation> {
+        return this;
+    }
 
-//     async init(): Promise<ChainImplementation> {
-//         try {
-//             // Obtain addresses 
-//             if(process.env.USE_DATABASE !== "true")
-//                 return this; 
-//             const { database } = await mongodb();
-//             const collection = database.collection('houses'); 
-//             const house = await collection.findOne({ name: 'CashTokens', chain: 'BCH' }); 
-//             this.addresses = house.CashTokensAddresses.map((obj: any) => obj.address);
-//             console.log(`Initialized CashTokens`, this.addresses);
-//             // addToCommonAddresses(addresses)
-//         } catch (error) {
-//             console.error(error);
-//         } finally {
-//             return this; 
-//         }
-//     }
+    async validate(transaction: any): Promise<boolean> {
+        return true;
+    }
 
-//     async validate(transaction: any): Promise<boolean> {
-//         if(this.addresses.length === 0) return false; 
-//         return true;
-//     }
-//     async execute(transaction: any): Promise<boolean> {
-//         let total = 0;
-//         let found = false;
-//         for(let outputIndex = 0; outputIndex < transaction.outputs.length; outputIndex++) {
-//             const output = transaction.outputs[outputIndex]; 
-//             for(let addressIndex = 0; addressIndex < this.addresses.length; addressIndex++) {
-//                 const address = this.addresses[addressIndex];
-//                 const match = await this._addressCompare(output.address, address); 
-//                 console.log(`Address:`, address);
-//                 console.log(`Output Address:`, output.address);
-//                 console.log(`Match:`, match);
-//                 if(match) {
-//                     total += Number(await this._getUSDValue(output.value));
-//                     for(let inputIndex = 0; inputIndex < transaction.inputs.length; inputIndex++) {
-//                         const input = transaction.inputs[inputIndex]; 
-//                         if(input.address && (await this._addressCompare(input.address, output.address))) 
-//                             return false; 
-//                     }
-//                     found = true; 
-//                     break;
-//                 }
-//             }
-//         }
-        
-//         if(!found || total <= 0) return false;
-//         if(!transaction.extras)
-//             transaction.extras = {};
-//         transaction.extras.houseContent = `CashTokens`;
-//         transaction.house = 'CashTokens';
-//         return true;  
-//     }
+    async execute(transaction: any): Promise<boolean> {
+        for(let i = 0; i < transaction.asmArrays.length; i++) {
+            const asmArray = transaction.asmArrays[i];
+            const op_return = asmArray[0] === "OP_RETURN";
+            if(!op_return) continue 
+            const code = asmArray[1]; 
+            const links = []; 
 
-//     //todo make into global function
-//     _getUSDValue = async (bchPaid: number) => {
-//         if(process.env.USE_DATABASE !== "true") return "0.00";
-//         const { database } = await mongodb(); 
-//         let value = await database.collection('statistics').findOne({ chain: 'BCH' }, { 'fiatPrice-usd': 1 }); 
-//         let price = value['fiatPrice-usd'] || 0;
-//         let usdPaid = (bchPaid * price).toFixed(2);
-//         return usdPaid;
-//     }
+            let handled = false; 
 
-//     _addressCompare = async (a: string, b: string) => {
-//         if(!a || !b || a.length < 10 || b.length < 10) return false; 
-//         let ayes: string[] = [];
-//         let bees: string[] = []; 
-//         ayes.push(a, await this._toCashAddress(a), await this._toLegacyAddress(a));
-//         bees.push(b, await this._toCashAddress(b), await this._toLegacyAddress(b));
-//         for(let i = 0; i < ayes.length; i++) 
-//             if(bees.includes(ayes[i])) 
-//                 return true; 
-//         return false; 
-//     }
+            switch(code) {
+                case "6d01":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'profile_edit';
+                    transaction.extras.houseContent = '<i>Name set: ' + decodeHex(asmArray[2]) + '</i>'; //Set name
+                    break;
+                case "6d02":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'post';
+                    transaction.extras.houseContent =  decodeHex(asmArray[2]); //Post memo
+                    links.push({l:'https://memo.cash/post/' + transaction.hash});
+                    transaction.extras.showBubble = true;
+                    break;
+                case "6d03":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'post';
+                    transaction.extras.houseContent = decodeHex(asmArray[3]); //reply to memo, first 70 chars are hash
+                    links.push({l:'https://memo.cash/post/' + transaction.hash});
+                    transaction.extras.showBubble = true;
+                    break;
+                case "6d04":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'heart';
+                    links.push({l:'https://memo.cash/post/' + swapEndian(asmArray[2])});
+                    transaction.extras.houseContent = '<i>Post liked</i>';
+                    break;
+                case "6d05":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'profile_edit';
+                    transaction.extras.houseContent = '<i>Profile text set: ' + decodeHex(asmArray[2]) + '</i>';
+                    break;
+                case "6d06":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'follow';
+                    transaction.extras.houseContent = '<i>Profile Follow</i>';
+                    break;
+                case "6d07":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'unfollow';
+                    transaction.extras.houseContent = '<i>Profile Unfollow</i>';
+                    break;
+                case "6d0a":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'profile_edit';
+                    transaction.extras.houseContent = '<i>Picture set: ' + decodeHex(asmArray[2]) + '</i>'; //set profile picture
+                    // transaction.extras.link = utils.decodeHex(asmArray[2]);
+                    break;
+                case "6d0b":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'repost';
+                    transaction.extras.houseContent = '<i>Repost</i>';
+                    break;
+                case "6d0c":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'post';
+                    transaction.extras.houseContent =  decodeHex(asmArray[3]); //post topic message, seperated by 1e (maybe)
+                    links.push({l:'https://memo.cash/post/' + transaction.hash});
+                    transaction.extras.showBubble = true;
+                    break;
+                case "6d0d":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'follow';
+                    transaction.extras.houseContent = '<i>Followed Topic: ' + decodeHex(asmArray[2]) + '</i>'; //topic follow
+                    break;
+                case "6d0e":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'unfollow';
+                    transaction.extras.houseContent = '<i>Unfollowed Topic:' + decodeHex(asmArray[2]) + '</i>'; //topic unfollow
+                    break;
+                case "6d10":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'poll';
+                    transaction.extras.houseContent = '<i>New poll</i>'; //create poll
+                    break;
+                case "6d13":
+                    handled = true;
+                    transaction.extras.houseTween = 'poll';
+                    transaction.extras.houseContent = '<i>New poll option</i>'; //add poll option
+                    break;
+                case "6d14":
+                    handled = true;
+                    if(!transaction.extras) transaction.extras = {};
+                    transaction.extras.houseTween = 'poll';
+                    transaction.extras.houseContent = '<i>Poll vote</i>'; //poll vote
+                    break;
+            }
 
-//     _toCashAddress = async (address: string) => {
-//         let key = `toCashAddress-${address}`
-//         if(this._what[key]) return this._what[key]; 
-//         let cached: any = await redis.getAsync(key);
-//         if(!cached) {
-//             cached = bchaddr.toCashAddress(address); 
-//             redis.setAsync(key, cached, 'EX', 3600 * 72); 
-//         }
-//         this._what[key] = cached; 
-//         return cached; 
-//     }
+            if(handled){
+                transaction.house = "memo"; 
+                links.push({l:'https://memo.cash/profile/' + transaction.inputs[0].address, i:'profile'});
+                if(links.length) transaction.extras.l = links;
+                return true;
+            }
+        }
+        return false; 
+    }
+}
 
-//     _toLegacyAddress = async (address: string) => {
-//         let key = `toLegacyAddress-${address}`
-//         if(this._what[key]) return this._what[key]; 
-//         let cached: any = await redis.getAsync(key);
-//         if(!cached) {
-//             cached = bchaddr.toLegacyAddress(address);
-//             redis.setAsync(key, cached, 'EX', 3600 * 72); 
-//         }
-//         this._what[key] = cached;
-//         return cached; 
-//     }
-
-// }
+export default new CashTokens('BCH'); 

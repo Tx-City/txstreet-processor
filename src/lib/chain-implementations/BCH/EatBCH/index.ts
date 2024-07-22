@@ -32,6 +32,7 @@ class EatBCH extends ChainImplementation {
     async execute(transaction: any): Promise<boolean> {
         let total = 0;
         let found = false;
+        console.log("transaction.outputs======", transaction.outputs);
         for(let outputIndex = 0; outputIndex < transaction.outputs.length; outputIndex++) {
             const output = transaction.outputs[outputIndex]; 
             for(let addressIndex = 0; addressIndex < this.addresses.length; addressIndex++) {
