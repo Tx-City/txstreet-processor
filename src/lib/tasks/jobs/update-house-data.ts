@@ -38,7 +38,8 @@ export default async (chain: string, wikiname: string): Promise<void> => {
                 writeInstructions.push({
                     updateOne: {
                         filter: { name: data.name, chain },
-                        update: { $set: { popupLength: 75, priority: 0, side: 0, dataSources: ['wiki'], colors: ["eaeaea", "431e9a"], ...data } },
+                        update: { $set: { popupLength: 75, dataSources: ['wiki'], colors: ["eaeaea", "431e9a"], ...data } },
+                        //update: { $set: { popupLength: 75, priority: 0, side: 0, dataSources: ['wiki'], colors: ["eaeaea", "431e9a"], ...data } },
                         upsert: true
                     }
                 });
