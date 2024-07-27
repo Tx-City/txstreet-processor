@@ -1,9 +1,0 @@
-{
-    "name": "pudgypenguins",
-    "title": "Pudgy Penguins",
-    "tracked": true,
-    "priority": 10,
-    "side":1,
-    "colors": ["deeff5", "lighten"],
-    "contracts": [{ "address": "0xbd3531da5cf5857e7cfaa92426877b022e612cf8" }]
-}
