@@ -1,6 +1,8 @@
 {
   "name": "tether",
   "title": "Tether",
+  "priority": 1000000,
+  "side":0,
   "tracked": true,
   "colors": ["28a079", "lighten"],
   "stateOfTheDappsIds": ["tether"],
