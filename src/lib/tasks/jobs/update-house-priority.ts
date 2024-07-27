@@ -7,7 +7,7 @@ export default async (chain: string): Promise<void> => {
         const { database } = await mongodb();
         const houses = await database.collection('houses').find({ chain }).toArray();
 
-        console.log("houses", houses);
+        // console.log("houses", houses);
 
         const tasks: Promise<any>[] = [];
         const houseData: any[] = [];
@@ -24,8 +24,8 @@ export default async (chain: string): Promise<void> => {
                         dataSources: house.dataSources || ['wiki'],
                         popupLength: house.popupLength || 75,
                         colors: house.colors,
-                        // side: house.side || 0,
-                        // priority: house.priority || priority,
+                        side: house.side || 0,
+                        priority: house.priority || priority,
                         tracked: house.tracked || false,
                         type: house.type || "house",
                         html: house.html || "null",
