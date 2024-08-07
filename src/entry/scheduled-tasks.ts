@@ -70,7 +70,7 @@ const run = async () => {
         executeJob(() => {
             switch(chain) {
                 case "ETH":
-                case "LUKSO":
+                case "":
                 case "RINKEBY":
                 case "ARBI":
                     return;
