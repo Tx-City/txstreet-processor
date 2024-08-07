@@ -65,6 +65,7 @@ export interface ProjectedBTCTransaction {
     pExtras?: any;
 }
 
+
 export interface ProjectedBTCBlock {
     hash: string;
     chain: string;

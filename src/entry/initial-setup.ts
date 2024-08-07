@@ -33,6 +33,7 @@ const createIndexes = async (): Promise<boolean> => {
             database.collection('transactions_BTC'),
             database.collection('transactions_ETH'),
             database.collection('transactions_LUKSO'),
+            database.collection('transactions_ARBI'),
             database.collection('transactions_LTC'),
             database.collection('transactions_BCH'),
             database.collection('transactions_XMR')];
