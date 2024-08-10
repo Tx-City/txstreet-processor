@@ -28,7 +28,7 @@ export default class ARBIWrapper extends BlockchainWrapper {
         };
         //wss://neat-methodical-knowledge.arbitrum-mainnet.quiknode.pro/993323acec1ab44aa4384ba28f9c14b6b9abc92d
         //wss://blue-lingering-thunder.arbitrum-mainnet.quiknode.pro/0f8a3480e4e9b918ded898b1073f4c8ec4c7dfef/ OLD
-        const provider = new Web3.providers.WebsocketProvider("wss://arb-mainnet.g.alchemy.com/v2/7sane8Rpm95_NMx2USP3Vocacmut0_AB", this.options); 
+        const provider = new Web3.providers.WebsocketProvider("ws://37.27.97.175:8548", this.options); 
         this.web3 = new Web3(provider); 
 
         // this.web3 = createAlchemyWeb3("wss://arb-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_KEY);
