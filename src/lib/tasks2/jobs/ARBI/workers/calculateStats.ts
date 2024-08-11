@@ -75,15 +75,6 @@ const interval = setInterval(async () => {
                 })
                 .catch(reject); 
         }));
-
-        initTasks.push(new Promise((resolve, reject) => {
-            database.collection('statistics').findOne({ chain: 'LUKSO' }, { fiatPrice: 1 })
-                .then((document: any) => {
-                    pricePerIncrement = document['fiatPrice-usd'] / 1000000000000000000;
-                    return resolve();
-                })
-                .catch(reject); 
-        }));
         
         // Create the task to load the ethereum transactions collection from disk. 
         initTasks.push(new Promise((resolve, reject) => {

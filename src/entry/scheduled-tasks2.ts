@@ -12,7 +12,7 @@ import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchem
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 import ObtainRollupBlocksFromDatabase from '../lib/tasks2/tasks/ObtainRollupBlocksFromDatabase';
 
-const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO', 'MANTA'];
+const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO', 'MANTA', 'CELO'];
 let chainToInit: string = null;
 
 // Check the command line arguments to find one issuing a request for a supported chain. 
@@ -46,6 +46,11 @@ const initialize = async () => {
                 blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
                 break;
             case 'LUKSO':
+                transactions = new DropoutContainer<ProjectedEthereumTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
+                // Create a collection for blocks that lasts one day.
+                blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
+                break;
+            case 'CELO':
                 transactions = new DropoutContainer<ProjectedEthereumTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
                 // Create a collection for blocks that lasts one day.
                 blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);

@@ -5,28 +5,28 @@ import { ETHBlocksSchema, ETHTransactionsSchema } from '../../../../../data/sche
 import { ProjectedEthereumBlock, ProjectedEthereumTransaction } from "../../../types";
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
-import gasUsedDif from '../../ETH/gasUsedDif';
-import medianFeeGasPrice from '../../ETH/medianFee-gasPrice';
-import medianFeeUsd from '../../ETH/medianFee-usd';
+import gasUsedDif from '../gasUsedDif';
+import medianFeeGasPrice from '../medianFee-gasPrice';
+import medianFeeUsd from '../medianFee-usd';
 import medianFeeUsdTransfer from '../medianFee-usdTransfer';
-// import tps from '../../common/tps';
+import tps from '../../common/tps';
 import ctps from '../../common/ctps';
 import medianBlockSize from '../../common/medianBlockSize';
 import medianBlockTime from '../../common/medianBlockTime';
 import medianTxsPerBlock from '../../common/medianTxsPerBlock';
-// import difficulty from '../../common/difficulty';
+import difficulty from '../../common/difficulty';
 import blockHeight from '../../common/blockHeight';
-import baseFee from '../../ETH/baseFee';
+import baseFee from '../baseFee';
 // import tipPrice from '../tipPrice';
-import gasTarget from '../../ETH/gasTarget';
-import gasLimit from '../../ETH/gasLimit';
-import medianGasUsed from '../../ETH/medianGasUsed';
+import gasTarget from '../gasTarget';
+import gasLimit from '../gasLimit';
+import medianGasUsed from '../medianGasUsed';
 
 // The last value(s) calculated during the execution of this task. 
 let lastExecutionResults = {
-    // 'tps': 0,
+    'tps': 0,
     'ctps': 0,
-    // 'difficulty': '0',
+    'difficulty': '0',
     'blockHeight': 0,
     'baseFee': 0,
     // 'tipPrice': 0,
@@ -39,7 +39,7 @@ let lastExecutionResults = {
     'medianFee-gasPrice': 0,
     'medianFee-usd': 0,
     'medianFee-usdTransfer': 0,
-    'gasUsedDif': 100,
+    'gasUsedDif': 0,
 }; 
 
 let lastKnownBlock: ProjectedEthereumBlock = null;
@@ -48,7 +48,7 @@ let lastKnownBlock: ProjectedEthereumBlock = null;
 redis.subscribe('block');
 redis.events.on('block', (data) => {
     const { chain, uncle } = data;
-    if(chain !== 'MANTA') return; 
+    if(chain !== 'CELO') return; 
     if(uncle) return; 
     interval.force();
 });
@@ -66,19 +66,19 @@ const interval = setInterval(async () => {
         let blocks: ProjectedEthereumBlock[] = []; 
         let last250Blocks: ProjectedEthereumBlock[] = []; 
 
-
+        // Create the task to obtain the current ethereum price. 
         initTasks.push(new Promise((resolve, reject) => {
-            database.collection('statistics').findOne({ chain: 'ETH' }, { fiatPrice: 1 })
+            database.collection('statistics').findOne({ chain: 'CELO' }, { fiatPrice: 1 })
                 .then((document: any) => {
                     pricePerIncrement = document['fiatPrice-usd'] / 1000000000000000000;
                     return resolve();
                 })
                 .catch(reject); 
         }));
-
+        
         // Create the task to load the ethereum transactions collection from disk. 
         initTasks.push(new Promise((resolve, reject) => {
-            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'transactions-MANTA.bin'); 
+            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'transactions-CELO.bin'); 
             fs.readFile(dataPath, (err: NodeJS.ErrnoException, data: Buffer) => {
                 if(err) return reject(err); 
 
@@ -95,7 +95,6 @@ const interval = setInterval(async () => {
                     // Filter the collection to obtain the transactions within the specified range. 
                     transactions = parsed.collection.filter((transaction: ProjectedEthereumTransaction) => transaction.insertedAt >= lowerRange && transaction.insertedAt <= upperRange);
                     transactions = transactions.sort((a: ProjectedEthereumTransaction, b: ProjectedEthereumTransaction) => a.insertedAt - b.insertedAt);
-                    
                     return resolve();  
                 } catch (error) {
                     console.error(error);
@@ -109,7 +108,7 @@ const interval = setInterval(async () => {
         
         // Create the task to load the ethereum blocks collection from disk.
         initTasks.push(new Promise((resolve, reject) => {
-            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'blocks-MANTA.bin'); 
+            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'blocks-CELO.bin'); 
             fs.readFile(dataPath,  (err: NodeJS.ErrnoException, data: Buffer) => {
                 if(err) return reject(err); 
 
@@ -143,25 +142,23 @@ const interval = setInterval(async () => {
         // These tasks are all individually wrapped because their failures are not task-haulting. Even if one of these tasks fail to execute, 
         // the others can execute and if they depend on the failed task the lastExecutionResult will be available to use. 
         const startTime = Date.now(); 
-
-        // try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
+        try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
         try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { console.error(error); };
-        // try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
+        try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
-        // try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
-        // try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
-        try { lastExecutionResults['gasUsedDif'] = 100; } catch (error) { console.error(error) }
+        try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
+        try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
         // try { lastExecutionResults['tipPrice'] = await tipPrice(lastKnownBlock); } catch (error) { console.error(error) }
-        // try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { console.error(error) }
+        try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { console.error(error) }
         try { lastExecutionResults['gasTarget'] = await gasTarget(lastKnownBlock); } catch (error) { console.error(error) }
         try { lastExecutionResults['gasLimit'] = await gasLimit(lastKnownBlock); } catch (error) { console.error(error) }
         try { lastExecutionResults['medianGasUsed'] = await medianGasUsed(blocks); } catch (error) { console.error(error) }
         try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { console.error(error) }
         try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { console.error(error) }
         try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
-        } catch (error) {  
+    } catch (error) {  
         console.error(error); 
     } finally {
         // Wrapping a try/catch inside of a finally looks a little messy, but it's required to prevent a critical failure in the event
@@ -173,8 +170,8 @@ const interval = setInterval(async () => {
 
             if(process.env.UPDATE_DATABASES.toLowerCase() == "true") {
                 // TODO: Optimize to not re-insert data to lower bandwidth consumption. 
-                await collection.updateOne({ chain: 'MANTA' }, { $set: lastExecutionResults }); 
-                redis.publish('stats', JSON.stringify({ chain: "MANTA", ...lastExecutionResults })); 
+                await collection.updateOne({ chain: 'CELO' }, { $set: lastExecutionResults }); 
+                redis.publish('stats', JSON.stringify({ chain: "CELO", ...lastExecutionResults })); 
             } else {
                 console.log('=========================')
                 console.log(lastExecutionResults);

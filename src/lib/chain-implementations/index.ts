@@ -19,6 +19,9 @@ export const enabledHooks: any = {
     LUKSO: [
         "DefaultHousing",
     ],
+    CELO: [
+        // "DefaultHousing",
+    ],
     BTC: [
         "DefaultHousing",
     ],
