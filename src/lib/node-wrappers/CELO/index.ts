@@ -1,15 +1,15 @@
+import { error } from "console";
 import BlockchainWrapper from "../base";
-// import { createAlchemyWeb3, AlchemyWeb3 } from "@alch/alchemy-web3";
-import Web3 from 'web3'; 
+import Web3 from 'web3';
 
-export default class ARBIWrapper extends BlockchainWrapper {
-    // public web3: AlchemyWeb3;
+
+export default class CELOWrapper extends BlockchainWrapper {
     public web3: Web3;
     public options: { [key: string]: any };
     // public blockSubscription: 
 
-    constructor() {
-        super('ARBI');
+    constructor(host: string) {
+        super('CELO');
 
         // Initialize web3
         this.options = {
@@ -26,69 +26,56 @@ export default class ARBIWrapper extends BlockchainWrapper {
                 onTimeout: false
             }
         };
-        const provider = new Web3.providers.WebsocketProvider("ws://37.27.97.175:8548", this.options); 
-        this.web3 = new Web3(provider); 
-
-    
+        // host = 'ws://168.119.137.140:9546';
+        const provider = new Web3.providers.WebsocketProvider(host, this.options);
+        this.web3 = new Web3(provider);
+        // console.log("celo provider", provider);    
+        // console.log("celo web3", this.web3);
         // Add admin peers, nodeInfo, and removePeer functions. 
-        // this.web3.eth.extend({
-        //     property: 'admin',
-        //     methods: [
-        //         { name: 'peers', call: 'admin_peers' },
-        //         { name: 'nodeInfo', call: 'admin_nodeInfo' },
-        //         { name: 'removePeer', call: 'admin_removePeer', params: 1 }
-        //     ]
-        // });
+        this.web3.eth.extend({
+            property: 'admin',
+            methods: [
+                { name: 'peers', call: 'admin_peers' },
+                { name: 'nodeInfo', call: 'admin_nodeInfo' },
+                { name: 'removePeer', call: 'admin_removePeer', params: 1 }
+            ]
+        });
 
-        // // Add txpoorl content, inspect, and status functions. 
-        // this.web3.eth.extend({
-        //     property: 'txpool', 
-        //     methods: [
-        //         { name: "content", call: "txpool_content" },
-        // 		{ name: "inspect", call: "txpool_inspect" },
-        // 		{ name: "status", call: "txpool_status" }
-        //     ]
-        // });
+        // Add txpoorl content, inspect, and status functions. 
+        this.web3.eth.extend({
+            property: 'txpool',
+            methods: [
+                { name: "content", call: "txpool_content" },
+                { name: "inspect", call: "txpool_inspect" }
+            ]
+        });
     }
 
     public initEventSystem() {
-        this.web3.eth.subscribe("newBlockHeaders").on("data", async (data: any) => {
-            // if(data.hash){
-            // const block = await this.web3.eth.getBlock(data.hash, true);
-            this.emit('confirmed-block', data.hash);
-            // console.log(block);
+       
+        this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => { }).on('data', async (hash: string) => {
+            console.log("-----------this.web3.eth.subscribe()--------------");
+            
+            try {
+                const transaction = await this.getTransaction(hash, 2);
+                this.emit('mempool-tx', transaction);
+                console.log("Mempool TX", transaction);
+            } catch (error) {
+                console.error(error);
+            }
         });
 
-        // this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => {}).on('data', async (hash: string) => {
-        //     try {
-        //         const transaction = await this.getTransaction(hash, 2); 
-        //         this.emit('mempool-tx', transaction); 
-        //     } catch (error) {
-        //         console.error(error);
-        //     }
-        // }); 
-
-        // this.web3.eth.subscribe('newBlockHeaders', (error: any, result: any) => {}).on('data', (block: any) => {
-        //     this.emit('confirmed-block', block.hash); 
-        // });
+        this.web3.eth.subscribe('newBlockHeaders', (error: any, result: any) => { }).on('data', (block: any) => {
+            // console.log("BLOCK TEST", block);
+            this.emit('confirmed-block', block.hash);
+        });
     }
 
     public async getCurrentHeight(): Promise<null | number> {
         return await this.web3.eth.getBlockNumber();
     }
 
-    // public async getTransactionReceipts(block: any): Promise<any[]> {
-    //     try {
-    //         const receipts = await this.web3.alchemy.getTransactionReceipts(block);
-    //         if (!Array.isArray(receipts?.receipts)) return [];
-    //         return receipts.receipts;
-    //     } catch (error) {
-    //         console.error(error);
-    //         return [];
-    //     }
-    // }
-
-    public async getTransactionReceipts(block: any): Promise<any[]> {
+    public async getTransactionReceipts(block: any) {
         try {
             let promises = [];
             for (let i = 0; i < block.transactions.length; i++) {
@@ -96,15 +83,23 @@ export default class ARBIWrapper extends BlockchainWrapper {
                 promises.push(this.web3.eth.getTransactionReceipt(transaction.hash));
             }
             let receipts = await Promise.all(promises);
-           return receipts;
+            return receipts;
         } catch (error) {
             console.error(error);
             return [];
         }
-    }
+    };
 
-    public getTransactionReceipt: undefined;
-    
+    public async getTransactionReceipt(hash: string) {
+        try {
+            let receipt = await this.web3.eth.getTransactionReceipt(hash);
+            return receipt;
+        }
+        catch (error) {
+            console.log(error);
+            return null;
+        }
+    }
 
     public async getTransaction(id: string, verbosity: number, blockId?: string | number): Promise<any> {
         try {
@@ -157,7 +152,7 @@ export default class ARBIWrapper extends BlockchainWrapper {
             if (!block) return null;
 
             block.height = block.number;
-            block.baseFeePerGas = null;
+            block.baseFeePerGas = Number(block.baseFeePerGas);
             block.timestamp = Math.floor(block.timestamp);
 
             for (let i = 0; i < block.transactions?.length; i++) {
@@ -212,7 +207,7 @@ export default class ARBIWrapper extends BlockchainWrapper {
             if (!block) return null;
 
             block.height = block.number;
-            block.baseFeePerGas = null;
+            block.baseFeePerGas = Number(block.baseFeePerGas);
             block.timestamp = Math.floor(block.timestamp);
 
             if (Array.isArray(block.transactions)) {
@@ -259,9 +254,8 @@ export default class ARBIWrapper extends BlockchainWrapper {
             if (!block) return { exists: false };
             if (!block.number) return { exists: false };
 
-
             block.height = block.number;
-            block.baseFeePerGas = null;
+            block.baseFeePerGas = Number(block.baseFeePerGas);
             block.timestamp = Math.floor(block.timestamp);
 
             if (Array.isArray(block.transactions)) {

@@ -48,7 +48,7 @@ let lastKnownBlock: ProjectedEthereumBlock = null;
 redis.subscribe('block');
 redis.events.on('block', (data) => {
     const { chain, uncle } = data;
-    if(chain !== 'ARBI') return; 
+    if(chain !== 'MANTA') return; 
     if(uncle) return; 
     interval.force();
 });
@@ -75,10 +75,10 @@ const interval = setInterval(async () => {
                 })
                 .catch(reject); 
         }));
-        
+
         // Create the task to load the ethereum transactions collection from disk. 
         initTasks.push(new Promise((resolve, reject) => {
-            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'transactions-ARBI.bin'); 
+            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'transactions-MANTA.bin'); 
             fs.readFile(dataPath, (err: NodeJS.ErrnoException, data: Buffer) => {
                 if(err) return reject(err); 
 
@@ -109,7 +109,7 @@ const interval = setInterval(async () => {
         
         // Create the task to load the ethereum blocks collection from disk.
         initTasks.push(new Promise((resolve, reject) => {
-            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'blocks-ARBI.bin'); 
+            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'blocks-MANTA.bin'); 
             fs.readFile(dataPath,  (err: NodeJS.ErrnoException, data: Buffer) => {
                 if(err) return reject(err); 
 
@@ -173,8 +173,8 @@ const interval = setInterval(async () => {
 
             if(process.env.UPDATE_DATABASES.toLowerCase() == "true") {
                 // TODO: Optimize to not re-insert data to lower bandwidth consumption. 
-                await collection.updateOne({ chain: 'ARBI' }, { $set: lastExecutionResults }); 
-                redis.publish('stats', JSON.stringify({ chain: "ARBI", ...lastExecutionResults })); 
+                await collection.updateOne({ chain: 'MANTA' }, { $set: lastExecutionResults }); 
+                redis.publish('stats', JSON.stringify({ chain: "MANTA", ...lastExecutionResults })); 
             } else {
                 console.log('=========================')
                 console.log(lastExecutionResults);

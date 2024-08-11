@@ -11,6 +11,7 @@ const coins: CoinLookupTable = {
     'BTC': 'bitcoin',
     'ETH': 'ethereum',
     'LUKSO': 'lukso',
+    'CELO': 'celo',
     'LTC': 'litecoin',
     'XMR': 'monero',
     'BCH': 'bitcoin-cash'

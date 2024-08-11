@@ -4,6 +4,9 @@ export const enabledHooks: any = {
     //add house name manually here
 
     ARBI: [
+        // "DefaultHousing",
+    ],
+    MANTA: [
         "DefaultHousing",
     ],
     ETH: [
@@ -15,6 +18,9 @@ export const enabledHooks: any = {
     ],
     LUKSO: [
         "DefaultHousing",
+    ],
+    CELO: [
+        // "DefaultHousing",
     ],
     BTC: [
         "DefaultHousing",

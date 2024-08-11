@@ -16,7 +16,7 @@ import processConfirmedTransactions from '../methods/tx-processor/process-confir
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // Iterate over blockchain implementations and initialize them if they're
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'LUKSO', 'ARBI']
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'LUKSO', 'ARBI', 'MANTA' , 'CELO'];
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -109,6 +109,14 @@ const run = async () => {
             processPending(luksoWrapper);
         if (process.env.PROCESS_CONFIRMED == "true")
             processConfirmed(luksoWrapper);
+    }
+
+    if (nodesToInit.includes('CELO')) {
+        const celoWrapper = new Wrappers.CELOWrapper(process.env.CELO_NODE as string);
+        if (process.env.PROCESS_PENDING == "true")
+            processPending(celoWrapper);
+        if (process.env.PROCESS_CONFIRMED == "true")
+            processConfirmed(celoWrapper);
     }
 
     if (nodesToInit.includes('RINKEBY')) {

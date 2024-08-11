@@ -70,6 +70,10 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             transactionRequests = await getReceipts(wrapper, transactionRequests);
         }
 
+        if (wrapper.ticker === "CELO") {
+            transactionRequests = await getContactCodes(wrapper, transactionRequests);
+            transactionRequests = await getReceipts(wrapper, transactionRequests);
+        }
         // Find all requests that have failed. 
         const failures = transactionRequests.filter((result: any) => result.failed);
 

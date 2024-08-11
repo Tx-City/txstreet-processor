@@ -44,36 +44,6 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
             redis.setAsync(key, result.code, 'EX', 3600 * 12);
         });
 
-        // const lukso_url = new URL(process.env.LUKSO_NODE);
-
-        // let lukso_response = await axios.post(`http://${lukso_url.hostname}:81/contract-codes`, { contracts: Object.keys(accounts) });
-        // lukso_response.data.forEach((result: any) => {
-        //     accountValues[result.contract] = result.code;
-        //     const key = (wrapper as any).ticker + "-is-contract-" + result.contract;
-        //     redis.setAsync(key, result.code, 'EX', 3600 * 12);
-        // });
-        // } else {
-
-        //     //create requests for accounts that aren't cached
-        //     let requests: { [key: string]: any }[] = [];
-        //     // let requestsArr: Promise<number>[] = [];
-        //     for (const account in accounts) {
-        //         if (typeof accountValues[account] !== "undefined") continue;
-        //         let request = wrapper.getTransactionCount(account);
-        //         calls++;
-        //         requests.push({ account, result: request });
-        //         // requestsArr.push(request);
-        //         // await new Promise(r => setTimeout(r, 5));
-        //     }
-        //     // await Promise.all(requestsArr);
-
-        //     for (let i = 0; i < requests.length; i++) {
-        //         const request = requests[i];
-        //         setAccountValue(accountValues, request.account, request.result);
-        //     }
-        // }
-
-
         transactions.forEach(async (transaction: any) => {
             transaction.contract = Boolean(accountValues[transaction.to] || false);
         });

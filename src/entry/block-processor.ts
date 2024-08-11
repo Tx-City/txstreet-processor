@@ -18,7 +18,7 @@ import { initHooks } from '../lib/chain-implementations';
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // A hardcoded array of implemented blockchains.
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'ARBI']
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO'];   
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -37,7 +37,11 @@ const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
     try {
         if (wrapper.ticker === "ARBI") {
             await processBlockTxs(wrapper);
-        } else {
+        } 
+        else if (wrapper.ticker === "MANTA") {
+            await processBlockTxs(wrapper);
+        }
+        else {
             await processBlock(wrapper);
         }
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1);
@@ -92,13 +96,22 @@ const run = async () => {
         nonBlockingInfiniteLoop(luksoWrapper);
         console.log('running block processor for lukso', nonBlockingInfiniteLoop(luksoWrapper));
     }
+    if (nodesToInit.includes('CELO')) {
+        const celoWrapper = new Wrappers.CELOWrapper(process.env.CELO_NODE as string);
 
+        nonBlockingInfiniteLoop(celoWrapper);
+        console.log('running block processor for celo', nonBlockingInfiniteLoop(celoWrapper));
+    }
     if (nodesToInit.includes('ARBI')) {
         initHooks("ARBI");
         const arbiWrapper = new Wrappers.ARBIWrapper();
         nonBlockingInfiniteLoop(arbiWrapper);
     }
-
+    if (nodesToInit.includes('MANTA')) {
+        initHooks("MANTA");
+        const mantaWrapper = new Wrappers.MANTAWrapper();
+        nonBlockingInfiniteLoop(mantaWrapper);
+    }
     if (nodesToInit.includes('RINKEBY')) {
         const rinkebyWrapper = new Wrappers.RINKEBYWrapper(process.env.RINKEBY_NODE as string);
 

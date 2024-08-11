@@ -11,6 +11,12 @@ export const chainConfig: any = {
         deleteBlocksOlderThanSeconds: 90000,
         txsCollection: true
     },
+    CELO: {
+        wikiname: 'celo',
+        storeBlockFile: true,
+        deleteBlocksOlderThanSeconds: 90000,
+        txsCollection: true
+    },
     BTC: {
         wikiname: 'bitcoin',
         storeBlockFile: true,
@@ -37,6 +43,15 @@ export const chainConfig: any = {
     },
     ARBI: {
         wikiname: 'arbitrum',
+        rollup: true,
+        storeBlockFile: false,
+        deleteBlocksOlderThanSeconds: 3600,
+        deleteBlocksAmount: 200,
+        txsCollection: false
+    }
+    ,
+    MANTA: {
+        wikiname: 'manta-pacific',
         rollup: true,
         storeBlockFile: false,
         deleteBlocksOlderThanSeconds: 3600,

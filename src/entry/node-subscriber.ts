@@ -6,9 +6,6 @@ dotenv.config();
 import minimist from 'minimist';
 Object.assign(process.env, minimist(process.argv.slice(2)));
 
-// console.log("process.env.ETH_NODE", process.env.ETH_NODE)
-console.log("process.env.LUKSO_NODE", process.env.LUKSO_NODE)
-
 // Misc imports 
 import processTransaction from '../methods/node-subscriber/process-transaction';
 import processBlock from '../methods/node-subscriber/process-block';
@@ -25,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO']
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -171,32 +168,41 @@ const init = async () => {
     }
 
     if (chainsToSubscribe.includes('LUKSO')) {
-        console.log('chainsToSubscribe for LUKSO', process.env.LUKSO_NODE)
         const wrapperClass = await import("../lib/node-wrappers/LUKSO");
         let luksoWrapper = new wrapperClass.default(process.env.LUKSO_NODE as string);
 
-        // Hooks.initHooks('LUKSO');
-        // console.log("luksowrapper", luksoWrapper) ;
         luksoWrapper.on('mempool-tx', (transaction: any) => {
             if (!transaction.blockHeight && transaction.blockNumber) {
                 transaction.blockHeight = transaction.blockNumber;
                 delete transaction.blockNumber;
             }
-            console.log("starting LUKSO transaction processor-------------------")
             processTransaction(luksoWrapper, { ...transaction, processed: true });
         });
-
         luksoWrapper.on('confirmed-block', (blockHash: string) => {
             console.log(`Got block from event: ${blockHash}`);
             processBlock(luksoWrapper, blockHash);
         });
-
         getLatestBlockLoop(luksoWrapper);
-
         luksoWrapper.initEventSystem();
+    }
+    
+    if (chainsToSubscribe.includes('CELO')) {
+        const wrapperClass = await import("../lib/node-wrappers/CELO");
+        let celoWrapper = new wrapperClass.default(process.env.CELO_NODE as string);
 
-        console.log("Setup all event processors for chain for LUKSO.");
-
+        celoWrapper.on('mempool-tx', (transaction: any) => {
+            if (!transaction.blockHeight && transaction.blockNumber) {
+                transaction.blockHeight = transaction.blockNumber;
+                delete transaction.blockNumber;
+            }
+            processTransaction(celoWrapper, { ...transaction, processed: true });
+        });
+        celoWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(celoWrapper, blockHash);
+        });
+        getLatestBlockLoop(celoWrapper);
+        celoWrapper.initEventSystem();
     }
 
     if (chainsToSubscribe.includes('ARBI')) {
@@ -219,7 +225,26 @@ const init = async () => {
         console.log("Setup all event processors for chain.");
 
     }
+    if (chainsToSubscribe.includes('MANTA')) {
+        const wrapperClass = await import("../lib/node-wrappers/MANTA");
+        let mantaWrapper = new wrapperClass.default();
 
+        // Hooks.initHooks('ETH', mongodb, redis);
+
+        // console.log("Imported chain implementations");
+
+        mantaWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(mantaWrapper, blockHash);
+        });
+
+        // getLatestBlockLoop(ethWrapper);
+
+        mantaWrapper.initEventSystem();
+
+        console.log("Setup all event processors for chain.");
+
+    }
     if (chainsToSubscribe.includes('XMR')) {
         const wrapperClass = await import("../lib/node-wrappers/XMR");
         let xmrWrapper = new wrapperClass.default(process.env.XMR_NODE as string);

@@ -28,6 +28,9 @@ export default class ObtainRollupBlocksFromDatabase extends OverlapProtectedInte
                     case 'ARBI':
                         project = { _id: 0, value: 1, hash: 1, from: 1, gasUsed: 1, gasUsedDif: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, transactions: 1, transactionsFull: 1, lastInserted: 1, insertedAt: 1 };
                         break;
+                    case 'MANTA':
+                        project = { _id: 0, value: 1, hash: 1, from: 1, gasUsed: 1, gasUsedDif: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, transactions: 1, transactionsFull: 1, lastInserted: 1, insertedAt: 1 };
+                        break;
                 }
 
 
