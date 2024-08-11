@@ -17,7 +17,7 @@ export const enabledHooks: any = {
         "Sushi"
     ],
     LUKSO: [
-        "DefaultHousing",
+        // "DefaultHousing",
     ],
     CELO: [
         // "DefaultHousing",
