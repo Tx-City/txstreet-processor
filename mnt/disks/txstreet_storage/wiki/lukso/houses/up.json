@@ -1,0 +1,12 @@
+{
+  "name": "up",
+  "title": "Universal Profile",
+  "tracked": true,
+  "colors": ["ffd9ff", false],
+  "dappReviewIds": [3],
+  "stateOfTheDappsIds": ["up"],
+  "dappRadarIds": ["/games/up"],
+  "etherscanIds": ["up"],
+  "contracts": [
+  ]
+}
