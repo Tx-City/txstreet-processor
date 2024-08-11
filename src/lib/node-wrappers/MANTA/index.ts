@@ -2,14 +2,14 @@ import BlockchainWrapper from "../base";
 // import { createAlchemyWeb3, AlchemyWeb3 } from "@alch/alchemy-web3";
 import Web3 from 'web3'; 
 
-export default class ARBIWrapper extends BlockchainWrapper {
+export default class MANTAWrapper extends BlockchainWrapper {
     // public web3: AlchemyWeb3;
     public web3: Web3;
     public options: { [key: string]: any };
     // public blockSubscription: 
 
     constructor() {
-        super('ARBI');
+        super('MANTA');
 
         // Initialize web3
         this.options = {
@@ -26,7 +26,7 @@ export default class ARBIWrapper extends BlockchainWrapper {
                 onTimeout: false
             }
         };
-        const provider = new Web3.providers.WebsocketProvider("ws://37.27.97.175:8548", this.options); 
+        const provider = new Web3.providers.WebsocketProvider("wss://pacific-rpc.manta.network/ws", this.options); 
         this.web3 = new Web3(provider); 
 
     

@@ -1,7 +1,7 @@
 export default (chain: string, block: any): Promise<any> => {
     let obj: any = {};
     obj.coin = chain;
-    if(chain === "ETH" || chain === "LUKSO" || chain === "RINKEBY" || chain === "ARBI") {
+    if(chain === "ETH" || chain === "LUKSO" || chain === "RINKEBY" || chain === "ARBI" || chain === "MANTA") {
         obj.tx = block.transactions || [];
         obj.txs = block.transactions?.length; 
         obj.txFull = block.txFull;

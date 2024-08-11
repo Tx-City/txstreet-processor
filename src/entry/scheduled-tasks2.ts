@@ -12,7 +12,7 @@ import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchem
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 import ObtainRollupBlocksFromDatabase from '../lib/tasks2/tasks/ObtainRollupBlocksFromDatabase';
 
-const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO'];
+const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO', 'MANTA'];
 let chainToInit: string = null;
 
 // Check the command line arguments to find one issuing a request for a supported chain. 
@@ -54,6 +54,10 @@ const initialize = async () => {
                 transactions = new DropoutContainer<ProjectedEthereumTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
                 blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 2, 'timestamp', false, 250);
                 break;
+            case 'MANTA':
+                transactions = new DropoutContainer<ProjectedEthereumTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
+                blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 2, 'timestamp', false, 250);
+                break;
             case 'XMR':
                 transactions = new DropoutContainer<ProjectedXMRTransaction>(`transactions-${chainToInit}.bin`, XMRTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
                 // Create a collection for blocks that lasts one day.
@@ -69,6 +73,13 @@ const initialize = async () => {
         }
 
         if (chainToInit === 'ARBI') {
+            const obtainTask: ObtainRollupBlocksFromDatabase = new ObtainRollupBlocksFromDatabase(chainToInit, blocks, transactions).start(true) as ObtainRollupBlocksFromDatabase;
+            obtainTask.waitForFirstCompletion().then(x => {
+                blocks.setReady(true);
+                transactions.setReady(true);
+            });
+        }
+        else if (chainToInit === 'MANTA') {
             const obtainTask: ObtainRollupBlocksFromDatabase = new ObtainRollupBlocksFromDatabase(chainToInit, blocks, transactions).start(true) as ObtainRollupBlocksFromDatabase;
             obtainTask.waitForFirstCompletion().then(x => {
                 blocks.setReady(true);

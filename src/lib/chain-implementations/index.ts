@@ -4,6 +4,9 @@ export const enabledHooks: any = {
     //add house name manually here
 
     ARBI: [
+        // "DefaultHousing",
+    ],
+    MANTA: [
         "DefaultHousing",
     ],
     ETH: [

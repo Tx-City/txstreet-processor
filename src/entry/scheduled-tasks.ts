@@ -74,6 +74,8 @@ const run = async () => {
                 case "RINKEBY":
                 case "ARBI":
                     return;
+                case "MANTA":
+                    return;
                 case "LTC":
                 case "BTC":
                 case "BCH":
@@ -87,6 +89,7 @@ const run = async () => {
         let checkBadTxsInterval = 0;
         switch(chain) {
             case "ARBI":
+            case "MANTA":
             case "ETH":
             case "LUKSO":
             case "RINKEBY":
@@ -105,6 +108,8 @@ const run = async () => {
         executeJob(() => {
             switch(chain) {
                 case "ARBI":
+                    return;
+                case "MANTA":
                     return;
                 case "ETH":
                 case "LUKSO": 

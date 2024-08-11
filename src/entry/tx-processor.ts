@@ -16,7 +16,7 @@ import processConfirmedTransactions from '../methods/tx-processor/process-confir
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // Iterate over blockchain implementations and initialize them if they're
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'LUKSO', 'ARBI']
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'LUKSO', 'ARBI', 'MANTA'];
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 

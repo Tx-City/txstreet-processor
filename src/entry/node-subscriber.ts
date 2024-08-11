@@ -25,7 +25,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO']
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -219,7 +219,26 @@ const init = async () => {
         console.log("Setup all event processors for chain.");
 
     }
+    if (chainsToSubscribe.includes('MANTA')) {
+        const wrapperClass = await import("../lib/node-wrappers/MANTA");
+        let mantaWrapper = new wrapperClass.default();
 
+        // Hooks.initHooks('ETH', mongodb, redis);
+
+        // console.log("Imported chain implementations");
+
+        mantaWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(mantaWrapper, blockHash);
+        });
+
+        // getLatestBlockLoop(ethWrapper);
+
+        mantaWrapper.initEventSystem();
+
+        console.log("Setup all event processors for chain.");
+
+    }
     if (chainsToSubscribe.includes('XMR')) {
         const wrapperClass = await import("../lib/node-wrappers/XMR");
         let xmrWrapper = new wrapperClass.default(process.env.XMR_NODE as string);
