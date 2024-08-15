@@ -8,6 +8,8 @@ import updateHouseData from '../lib/tasks/jobs/update-house-data';
 import updateHousePriority from '../lib/tasks/jobs/update-house-priority';
 import updatePricing from '../lib/tasks/jobs/update-pricing';
 import ethRemoveBadTxs from '../lib/tasks/jobs/eth-remove-bad-txs'; 
+import luksoRemoveBadTxs from '../lib/tasks/jobs/lukso-remove-bad-txs';
+import celoRemoveBadTxs from '../lib/tasks/jobs/celo-remove-bad-txs';
 import unlockLockedTxs from '../lib/tasks/jobs/unlock-locked-txs';
 import btcRemoveBadTxs from '../lib/tasks/jobs/btc-remove-bad-txs';
 import xmrRemoveBadTxs from '../lib/tasks/jobs/xmr-remove-bad-txs';
@@ -70,6 +72,8 @@ const run = async () => {
         executeJob(() => {
             switch(chain) {
                 case "ETH":
+                case "LUKSO":
+                case "CELO":
                 case "":
                 case "RINKEBY":
                 case "ARBI":

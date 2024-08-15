@@ -6,9 +6,10 @@ import { ProjectedEthereumBlock, ProjectedEthereumTransaction } from "../../../t
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
 import gasUsedDif from '../gasUsedDif';
-import medianFeeGasPrice from '../medianFee-gasPrice';
-import medianFeeUsd from '../medianFee-usd';
+import medianFeeGasPrice from '../../ETH/medianFee-gasPrice';
+import medianFeeUsd from '../../ETH/medianFee-usd';
 import medianFeeUsdTransfer from '../medianFee-usdTransfer';
+
 import tps from '../../common/tps';
 import ctps from '../../common/ctps';
 import medianBlockSize from '../../common/medianBlockSize';
@@ -39,7 +40,7 @@ let lastExecutionResults = {
     'medianFee-gasPrice': 0,
     'medianFee-usd': 0,
     'medianFee-usdTransfer': 0,
-    'gasUsedDif': 0,
+    'gasUsedDif': 100,
 }; 
 
 let lastKnownBlock: ProjectedEthereumBlock = null;
@@ -149,7 +150,8 @@ const interval = setInterval(async () => {
         try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
         try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
-        try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
+        //try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
+        try { lastExecutionResults['gasUsedDif'] = 100; } catch (error) { console.error(error) }
         // try { lastExecutionResults['tipPrice'] = await tipPrice(lastKnownBlock); } catch (error) { console.error(error) }
         try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { console.error(error) }
         try { lastExecutionResults['gasTarget'] = await gasTarget(lastKnownBlock); } catch (error) { console.error(error) }
