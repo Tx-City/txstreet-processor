@@ -50,7 +50,7 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
 
         if ((wrapper as any).getPendingExtras) {
             console.log('GET PENDING');
-            if (["BTC", "LTC", "BCH"].includes(wrapper.ticker)) {
+            if (["BTC", "LTC", "BCH", "DASH"].includes(wrapper.ticker)) {
                 let extras: any = await limiter.schedule(() => (wrapper as any).getPendingExtras(transaction));
                 transaction = { ...transaction, ...extras };
             } else {

@@ -25,6 +25,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     case 'MANTA':
                     case 'XMR':
                     case 'BTC':
+                    case 'DASH':
                     case 'BCH':
                     case 'LTC':
                         divider = 1000;
@@ -60,6 +61,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         break;
                         case 'BTC':
                         case 'BCH':
+                        case 'DASH':
                         case 'LTC': 
                         project = { _id: 0, hash: 1, timestamp: 1, height: 1, difficulty: 1, transactions: 1, size: 1 }
                         break;

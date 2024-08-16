@@ -8,9 +8,9 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
     const batchSize = Number(process.env.PENDING_BATCH_SIZE || 25);
     try {
         const { connection, database } = await mongodb();
-        console.log("Get pending batch")
+        // console.log("Get pending batch")
         const collection = database.collection('transactions_' + wrapper.ticker || '');
-        console.log("collection" + wrapper.ticker)
+        // console.log("collection" + wrapper.ticker)
         // Create a database session to atomically execute multiple queries. 
         const session = connection.startSession();
         // Scopes declaration of the results to return after the transaction is finished.

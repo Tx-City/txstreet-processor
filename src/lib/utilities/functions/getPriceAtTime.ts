@@ -10,6 +10,9 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
         case 'BTC':
             name = 'bitcoin'; 
             break;
+        case 'DASH':
+            name = 'dash'; 
+            break;
         case 'BCH': 
             name = 'bitcoin-cash'; 
             break;
@@ -20,7 +23,7 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
             name = 'ethereum'; 
             break;
         case 'LUKSO':
-            name = 'lukso'; 
+            name = 'lukso'; //lukso-token-2
             break;
         case 'CELO':
             name = 'celo'; 

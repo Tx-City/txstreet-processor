@@ -23,6 +23,12 @@ export const chainConfig: any = {
         deleteBlocksOlderThanSeconds: 90000,
         txsCollection: true
     },
+    DASH: {
+        wikiname: 'dash',
+        storeBlockFile: true,
+        deleteBlocksOlderThanSeconds: 90000,
+        txsCollection: true
+    },
     LTC: {
         wikiname: 'litecoin',
         storeBlockFile: true,

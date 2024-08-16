@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -92,6 +92,27 @@ const init = async () => {
         });
 
         getLatestBlockLoop(btcWrapper);
+    }
+
+    if (chainsToSubscribe.includes('DASH')) {
+        const wrapperClass = await import("../lib/node-wrappers/DASH");
+        let dashWrapper = new wrapperClass.default(
+            { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_PORT) || 9998 },
+            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 29998 });
+
+        Hooks.initHooks('DASH');
+
+        dashWrapper.initEventSystem();
+
+        dashWrapper.on('mempool-tx', (transaction: any) => {
+            processTransaction(dashWrapper, { ...transaction, processed: true });
+        });
+
+        dashWrapper.on('confirmed-block', (blockHash: string) => {
+            processBlock(dashWrapper, blockHash);
+        });
+
+        getLatestBlockLoop(dashWrapper);
     }
 
     if (chainsToSubscribe.includes('BCH')) {

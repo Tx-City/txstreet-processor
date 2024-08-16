@@ -16,7 +16,7 @@ import processConfirmedTransactions from '../methods/tx-processor/process-confir
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // Iterate over blockchain implementations and initialize them if they're
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'LUKSO', 'ARBI', 'MANTA' , 'CELO'];
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'LUKSO', 'ARBI', 'MANTA' , 'CELO', 'DASH'];
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -41,7 +41,7 @@ const processPending = async (wrapper: Wrappers.BlockchainWrapper) => {
 
 // Non event-blocking infinite loop for processPending
 const processConfirmed = async (wrapper: Wrappers.BlockchainWrapper) => {
-    console.log('processConfirming');
+    // console.log('processConfirming');
     try {
         await processConfirmedTransactions(wrapper);
     } catch (error) {
@@ -63,6 +63,16 @@ const run = async () => {
             processPending(btcWrapper);
         if (process.env.PROCESS_CONFIRMED == "true")
             processConfirmed(btcWrapper);
+    }
+
+    if (nodesToInit.includes('DASH')) {
+        const dashWrapper = new Wrappers.DASHWrapper(
+            { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE) || 9999 },
+            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 28332 })
+        if (process.env.PROCESS_PENDING == "true")
+            processPending(dashWrapper);
+        if (process.env.PROCESS_CONFIRMED == "true")
+            processConfirmed(dashWrapper);
     }
 
     if (nodesToInit.includes('BCH')) {

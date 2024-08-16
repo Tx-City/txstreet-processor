@@ -82,6 +82,7 @@ const run = async () => {
                     return;
                 case "LTC":
                 case "BTC":
+                case "DASH":
                 case "BCH":
                     return btcBlockBroadcast(chain);
                 case "XMR":
