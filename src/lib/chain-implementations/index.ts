@@ -26,7 +26,7 @@ export const enabledHooks: any = {
         // "DefaultHousing",
     ],
     DASH: [
-        "DefaultHousing",
+        // "DefaultHousing",
     ],
     LTC: [
         "DefaultHousing",
