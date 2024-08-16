@@ -1,4 +1,5 @@
 import BTCWrapper from "./BTC";
+import DASHWrapper from "./DASH";
 import BCHWrapper from "./BCH";
 import LTCWrapper from "./LTC";
 import ETHWrapper from "./ETH";
@@ -10,4 +11,4 @@ import XMRWrapper from './XMR';
 import RINKEBYWrapper from "./RINKEBY";
 import BlockchainWrapper from "./base";
 
-export { BlockchainWrapper, XMRWrapper, BTCWrapper, BCHWrapper, LTCWrapper, ETHWrapper, LUKSOWrapper, RINKEBYWrapper, ARBIWrapper, MANTAWrapper, CELOWrapper }; 
+export { BlockchainWrapper, XMRWrapper, BTCWrapper, DASHWrapper, BCHWrapper, LTCWrapper, ETHWrapper, LUKSOWrapper, RINKEBYWrapper, ARBIWrapper, MANTAWrapper, CELOWrapper }; 

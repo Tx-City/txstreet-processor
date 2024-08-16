@@ -8,7 +8,7 @@ import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
 import { BTCTransactionsSchema } from '../../../data/schemas';
 
-export default class BCHPendingList {
+export default class DASHPendingList {
     // The maximum allowed size of the collection. 
     public capacity: number = 3000;
     // Index -> Value 
@@ -33,17 +33,17 @@ export default class BCHPendingList {
         this._onDroppedTransactions = this._onDroppedTransactions.bind(this);
         this._onPendingTransactions = this._onPendingTransactions.bind(this);
 
-        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'BCH-pendingTransactions.bin');
+        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'DASH-pendingTransactions.bin');
         // Whenever a new transaction is broadcast.
         redis.subscribe('pendingTx');
 
         redis.events.on('pendingTx', async (data) => {
             const { chain } = data;
-            if (chain !== "BCH") return;
+            if (chain !== "DASH") return;
 
             // Format the socket-format back into the ETHTransactionSchema Format.
             const transaction: ProjectedBTCTransaction = {
-                chain: 'BCH',
+                chain: 'DASH',
                 hash: data.tx,
                 fee: parseFloat(data.s) * parseFloat(data.spb),
                 size: data.s,
@@ -53,7 +53,7 @@ export default class BCHPendingList {
                 dropped: false,
                 processed: true
             }
-            // console.log("transaction BCH===" + transaction)
+            // console.log("transaction DASH===" + transaction)
             // Add the transaction to this list.
             this._onPendingTransactions([transaction])
 
@@ -66,7 +66,7 @@ export default class BCHPendingList {
         redis.subscribe('block');
         redis.events.on('block', (data) => {
             const { chain, hash } = data;
-            if (chain !== 'BCH') return;
+            if (chain !== 'DASH') return;
             this._onConfirmedBlock(hash);
         });
 
@@ -75,7 +75,7 @@ export default class BCHPendingList {
         redis.events.on('removeTx', (data) => {
 
             const { chain, hashes } = data;
-            if (chain !== 'BCH') return;
+            if (chain !== 'DASH') return;
             this._onDroppedTransactions(hashes);
         })
 
@@ -85,7 +85,7 @@ export default class BCHPendingList {
 
         setInterval(async () => {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_BCH');
+            const collection = database.collection('transactions_DASH');
             const hashes = this.array.map((a: any) => a.hash);
             const result = await collection.find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ _id: 0, hash: 1 }).toArray();
             const toDelete = result.map((result: any) => result.hash);
@@ -159,7 +159,7 @@ export default class BCHPendingList {
                     const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
                     const firstPart = hash[hash.length - 1];
                     const secondPart = hash[hash.length - 2];
-                    const filePath = path.join(directory, 'blocks', 'BCH', firstPart, secondPart, hash);
+                    const filePath = path.join(directory, 'blocks', 'DASH', firstPart, secondPart, hash);
                     const data = await readNFSFile(filePath);
                     const block = JSON.parse(data as string);
                     if (block) return block;
@@ -173,7 +173,7 @@ export default class BCHPendingList {
 
             const block = await obtainBlock();
             if (!block) {
-                console.log(`BCHPendingList Failed to get data for block: ${hash}`);
+                console.log(`DASHPendingList Failed to get data for block: ${hash}`);
                 return;
             }
             if (block.insertedAt) block.insertedAt = new Date(block.insertedAt).getTime();
@@ -234,7 +234,7 @@ export default class BCHPendingList {
     async init() {
         try {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_BCH');
+            const collection = database.collection('transactions_DASH');
             const where: any = { confirmed: false, processed: true, blockHash: { $eq: null }, dropped: { $exists: false } };
             const project = { _id: 0, hash: 1, processed: 1, fee: 1, size: 1, dropped: 1, timestamp: 1, insertedAt: 1, rsize: 1 };
             const results = await collection.find(where).project(project).sort({ fee: -1 }).limit(this.capacity).toArray();

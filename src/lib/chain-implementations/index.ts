@@ -23,6 +23,9 @@ export const enabledHooks: any = {
         // "DefaultHousing",
     ],
     BTC: [
+        // "DefaultHousing",
+    ],
+    DASH: [
         "DefaultHousing",
     ],
     LTC: [
@@ -34,7 +37,7 @@ export const enabledHooks: any = {
     BCH: [
         "CashFusion",
         "ismikekomaranskydead",
-        // "CashTokens",
+        "CashTokens",
         "EatBCH",
         "Memo",
         "SLP"

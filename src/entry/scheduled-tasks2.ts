@@ -12,7 +12,7 @@ import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchem
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 import ObtainRollupBlocksFromDatabase from '../lib/tasks2/tasks/ObtainRollupBlocksFromDatabase';
 
-const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO', 'MANTA', 'CELO'];
+const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH'];
 let chainToInit: string = null;
 
 // Check the command line arguments to find one issuing a request for a supported chain. 
@@ -69,6 +69,7 @@ const initialize = async () => {
                 blocks = new DropoutContainer<ProjectedXMRBlock>(`blocks-${chainToInit}.bin`, XMRBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
                 break;
             case 'BTC':
+            case 'DASH':
             case 'LTC':
             case 'BCH':
                 transactions = new DropoutContainer<ProjectedBTCTransaction>(`transactions-${chainToInit}.bin`, BTCTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);

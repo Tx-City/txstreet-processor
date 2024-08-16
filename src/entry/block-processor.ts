@@ -18,7 +18,7 @@ import { initHooks } from '../lib/chain-implementations';
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // A hardcoded array of implemented blockchains.
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO'];   
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH'];   
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -58,6 +58,14 @@ const run = async () => {
             { host: process.env.BTC_NODE as string, port: Number(process.env.BTC_NODE_ZMQPORT) || 28332 });
 
         nonBlockingInfiniteLoop(btcWrapper);
+    }
+
+    if (nodesToInit.includes('DASH')) {
+        const dashWrapper = new Wrappers.DASHWrapper(
+            { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE) || 9999 },
+            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 28332 });
+
+        nonBlockingInfiniteLoop(dashWrapper);
     }
 
     if (nodesToInit.includes('BCH')) {

@@ -34,6 +34,8 @@ export default class ObtainTransactionsFromDatabase extends OverlapProtectedInte
                         project = { _id: 0, hash: 1, processed: 1, fee: 1, size: 1, dropped: 1, timestamp: 1, insertedAt: 1 }
                         break;
                     case 'BTC': 
+                    case 'DASH':
+                        project = { _id: 0, hash: 1, processed: 1, fee: 1, size: 1, dropped: 1, timestamp: 1, insertedAt: 1, rsize: 1 }
                     case 'LTC': 
                     case 'BCH': 
                         project = { _id: 0, hash: 1, processed: 1, fee: 1, size: 1, dropped: 1, timestamp: 1, insertedAt: 1, rsize: 1 }

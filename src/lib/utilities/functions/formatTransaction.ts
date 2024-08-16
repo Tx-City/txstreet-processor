@@ -62,7 +62,7 @@ export default (chain: string, data: any) => {
             delete obj.char;
             delete obj.nftChar;
         }
-    } else if (chain === "BTC" || chain === "LTC" || chain === "BCH") {
+    } else if (chain === "BTC" || chain === "LTC" || chain === "BCH" || chain === "DASH") {
         obj.tx = data.hash;
         if (Object.keys(data.extras || {}).length > 0) obj.e = data.extras;
         if (data.house && data.house != "0" && data.house != "0.0") obj.h = data.house;

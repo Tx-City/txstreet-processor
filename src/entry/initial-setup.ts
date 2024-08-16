@@ -31,6 +31,7 @@ const createIndexes = async (): Promise<boolean> => {
 
         const txCollections: any[] = [
             database.collection('transactions_BTC'),
+            database.collection('transactions_DASH'),
             database.collection('transactions_ETH'),
             database.collection('transactions_LUKSO'),
             database.collection('transactions_CELO'),
@@ -64,6 +65,7 @@ const createIndexes = async (): Promise<boolean> => {
         try { await database.collection('statistics').updateOne({ "chain": "LUKSO-nohistory" }, { $setOnInsert: { "chain": "LUKSO-nohistory" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "CELO-nohistory" }, { $setOnInsert: { "chain": "CELO-nohistory" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "BTC" }, { $setOnInsert: { "chain": "BTC" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "DASH" }, { $setOnInsert: { "chain": "DASH" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "BCH" }, { $setOnInsert: { "chain": "BCH" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "XMR" }, { $setOnInsert: { "chain": "XMR" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "LTC" }, { $setOnInsert: { "chain": "LTC" } }, { upsert: true }) } catch (e) { console.log(e) }
@@ -74,6 +76,7 @@ const createIndexes = async (): Promise<boolean> => {
         try { await database.collection('statistics_history_snapshots').createIndex({ chain: 1, interval: 1 }, { name: 'chain_interval' }); } catch (e) { console.log(e) }
 
         try { await database.collection('transactions_BTC').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, dropped: 1, fee: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }
+        try { await database.collection('transactions_DASH').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, dropped: 1, fee: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }
         try { await database.collection('transactions_LTC').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, dropped: 1, fee: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }
         try { await database.collection('transactions_BCH').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, dropped: 1, fee: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }
         try { await database.collection('transactions_ETH').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, lastProcessed: -1, dropped: 1, pendingSortPrice: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }

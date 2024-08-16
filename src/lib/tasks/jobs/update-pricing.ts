@@ -9,6 +9,7 @@ const url = (coin: string): string =>
 
 const coins: CoinLookupTable = {
     'BTC': 'bitcoin',
+    'DASH': 'dash', 
     'ETH': 'ethereum',
     'LUKSO': 'lukso-token-2',
     'CELO': 'celo',

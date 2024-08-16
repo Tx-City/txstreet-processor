@@ -22,7 +22,7 @@ export default (chain: string, block: any): Promise<any> => {
         if(block.burned) obj.burned = block.burned; 
     }
 
-    if(chain === "LTC" || chain === "BTC" || chain === "BCH") {
+    if(chain === "LTC" || chain === "BTC" || chain === "BCH" || chain === "DASH") {
         obj.tx = block.transactions || [];
         obj.txFull = block.txFull;
         obj.txs = block.nTx || block.transactions?.length || 0;

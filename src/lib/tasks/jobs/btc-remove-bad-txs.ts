@@ -1,9 +1,9 @@
 import redis from '../../../databases/redis';
-import { BTCWrapper, LTCWrapper, BCHWrapper } from '../../../lib/node-wrappers';
+import { BTCWrapper, LTCWrapper, BCHWrapper, DASHWrapper } from '../../../lib/node-wrappers';
 import mongodb from '../../../databases/mongodb';
 
 const wrappers: any = {
-    BTCWrapper, LTCWrapper, BCHWrapper
+    BTCWrapper, LTCWrapper, BCHWrapper, DASHWrapper
 }
 
 export default async (chain: string): Promise<void> => {
