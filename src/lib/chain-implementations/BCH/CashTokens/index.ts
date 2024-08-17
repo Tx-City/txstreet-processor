@@ -37,6 +37,7 @@ class CashTokens extends ChainImplementation {
         const hash = transaction.hash;
 
         try {
+            const links: any[] = []; 
             const transactionData = await this.getRawTransaction(hash);
             console.log("Raw transaction data:", transactionData);
             // Process the transaction data as needed
@@ -48,8 +49,11 @@ class CashTokens extends ChainImplementation {
                             transaction.extras = {};
                         // transaction.extras.houseContent = `there is a cashtoken`;
                         // console.log(transaction.extras.houseContent + ' is the house content');
+                        
                         transaction.house = 'cashtokens';
-                
+                        links.push({l:"https://explorer.salemkode.com/tx/" + transaction.hash});
+                        transaction.extras.l = links;
+                        console.log("LINKS===",links)
                         return true;
                         break;  // We found a cashtoken, no need to continue checking
                     } else  {
