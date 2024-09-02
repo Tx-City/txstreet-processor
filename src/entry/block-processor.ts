@@ -62,8 +62,8 @@ const run = async () => {
 
     if (nodesToInit.includes('DASH')) {
         const dashWrapper = new Wrappers.DASHWrapper(
-            { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE) || 9999 },
-            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 28332 });
+            { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE) || 9998 },
+            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 20009 });
 
         nonBlockingInfiniteLoop(dashWrapper);
     }
