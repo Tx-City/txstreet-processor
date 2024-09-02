@@ -98,7 +98,7 @@ const init = async () => {
         const wrapperClass = await import("../lib/node-wrappers/DASH");
         let dashWrapper = new wrapperClass.default(
             { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_PORT) || 9998 },
-            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 29998 });
+            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 20009 });
 
         Hooks.initHooks('DASH');
 
