@@ -10,7 +10,7 @@ let lastExecutionResults = {
 setInterval(async () => {
     try {
         const wrapper = new DASHWrapper(
-            { username: 'user', password: 'pass', host: process.env.DASH_NOD as string, port: Number(process.env.DASH_NODE_PORT) },
+            { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_PORT) },
             { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 20009 });
         const promise = () => new Promise((resolve) => {
             wrapper.rpc.getBlockchainInfo((err: any, resp: any) => {

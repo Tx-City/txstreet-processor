@@ -42,7 +42,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
         });
         await Promise.all(cachedTasks);
         const lxy = (wrapper as any).ticker;
-        console.log("lxy---------------========>>>>>>>>", lxy);
+        
         // switch (lxy) {
         //     case "ETH":
         //         const url = new URL(process.env.ETH_NODE);
