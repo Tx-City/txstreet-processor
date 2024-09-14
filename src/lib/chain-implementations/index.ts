@@ -27,6 +27,8 @@ export const enabledHooks: any = {
     ],
     DASH: [
         // "DefaultHousing",
+        "CoinJoin",
+        "PrivateSend",
     ],
     LTC: [
         "DefaultHousing",
