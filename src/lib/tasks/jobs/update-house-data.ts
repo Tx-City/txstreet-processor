@@ -32,8 +32,6 @@ export default async (chain: string, wikiname: string): Promise<void> => {
             console.log("filename", filename);
             const data = readJsonFile(filename);
             if (data) {
-                console.log("data", data);
-
                 if (data.contracts) data.contracts = data.contracts.map((item: any) => item.address);
                 writeInstructions.push({
                     updateOne: {
