@@ -8,3 +8,4 @@ src/test/
 .env.example
 .vscode
 .DS_Store
+/data

@@ -15,6 +15,27 @@ export interface ProjectedEthereumTransaction {
     pExtras?: any;
 }
 
+export interface ProjectedSolanaTransaction {
+    hash: string;
+    from: string;
+    insertedAt: number;
+    timestamp: number;
+    fee: number;
+    value: number;
+    dropped: boolean | undefined;
+    processed: boolean;
+    extras?: any;
+    pExtras?: any;
+}
+
+export interface ProjectedSolanaBlock {
+    hash: string;
+    timestamp: number;
+    height: number;
+    transactions: number;
+    size: number;
+}
+
 export interface ProjectedEthereumBlock {
     chain: string;
     hash: string;

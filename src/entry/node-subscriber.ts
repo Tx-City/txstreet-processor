@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'SOLANA', 'MANTA', 'CELO', 'DASH'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -205,6 +205,25 @@ const init = async () => {
         });
         getLatestBlockLoop(luksoWrapper);
         luksoWrapper.initEventSystem();
+    }
+
+    if (chainsToSubscribe.includes('SOLANA')) {
+        const wrapperClass = await import("../lib/node-wrappers/SOLANA");
+        let solanaWrapper = new wrapperClass.default(process.env.SOLANA_NODE as string);
+
+        solanaWrapper.on('mempool-tx', (transaction: any) => {
+            if (!transaction.blockHeight && transaction.blockNumber) {
+                transaction.blockHeight = transaction.blockNumber;
+                delete transaction.blockNumber;
+            }
+            processTransaction(solanaWrapper, { ...transaction, processed: true });
+        });
+        solanaWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(solanaWrapper, blockHash);
+        });
+        getLatestBlockLoop(solanaWrapper);
+        solanaWrapper.initEventSystem();
     }
     
     if (chainsToSubscribe.includes('CELO')) {

@@ -12,6 +12,7 @@ const coins: CoinLookupTable = {
     'DASH': 'dash', 
     'ETH': 'ethereum',
     'LUKSO': 'lukso-token-2',
+    'SOLANA': 'solana',
     'CELO': 'celo',
     'LTC': 'litecoin',
     'XMR': 'monero',

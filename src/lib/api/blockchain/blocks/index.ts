@@ -18,7 +18,7 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
     if (!chain) return response.json({ success: false, code: -1, message: 'Chain not provided in request.' });
     chain = chain.toUpperCase();
 
-    if (!['ETH', 'RINKEBY', 'BTC', 'LTC', 'BCH', 'XMR', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH'].includes(chain))
+    if (!['ETH', 'RINKEBY', 'BTC', 'LTC', 'BCH', 'XMR', 'ARBI', 'LUKSO', 'SOLANA', 'MANTA', 'CELO', 'DASH'].includes(chain))
         return response.json({ success: false, code: -1, message: 'Invalid chain specified' });
 
     // It is assumed that if a number is passed for the `id` parameter then a height is being requests. 

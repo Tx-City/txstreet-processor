@@ -73,6 +73,7 @@ const run = async () => {
             switch(chain) {
                 case "ETH":
                 case "LUKSO":
+                case "SOLANA":
                 case "CELO":
                 case "":
                 case "RINKEBY":
@@ -97,6 +98,7 @@ const run = async () => {
             case "MANTA":
             case "ETH":
             case "LUKSO":
+            case "SOLANA":
             case "CELO":
             case "RINKEBY":
                 checkBadTxsInterval = 10;
@@ -119,6 +121,7 @@ const run = async () => {
                     return;
                 case "ETH":
                 case "LUKSO": 
+                case "SOLANA":
                 case "CELO":
                 case "RINKEBY":
                     return ethRemoveBadTxs(chain);
@@ -140,6 +143,12 @@ const run = async () => {
         executeJob(() => ethRecentContracts('ETH', '5min', Date.now() - minutes(5)), seconds(5)); 
         executeJob(() => ethRecentContracts('ETH',  '1hour', Date.now() - hours(1)), hours(1)); 
         executeJob(() => ethRecentContracts('ETH',  '1day', Date.now() - days(1)), days(1)); 
+    }
+
+    if(chains.includes('SOALNA')) {
+        executeJob(() => ethRecentContracts('SOLANA', '5min', Date.now() - minutes(5)), seconds(5)); 
+        executeJob(() => ethRecentContracts('SOLANA',  '1hour', Date.now() - hours(1)), hours(1)); 
+        executeJob(() => ethRecentContracts('SOLANA',  '1day', Date.now() - days(1)), days(1));
     }
 
     // if(chains.includes('LUKSO')) {
