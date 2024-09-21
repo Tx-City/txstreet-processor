@@ -16,6 +16,7 @@ class SLP extends ChainImplementation {
     }
 
     async execute(transaction: any): Promise<boolean> {
+        console.log(`Initialized SLPPPPPP`);
         for(let i = 0; i < transaction.asmArrays.length; i++) {
             const asmArray = transaction.asmArrays[i];
             const op_return = asmArray[0] === "OP_RETURN";

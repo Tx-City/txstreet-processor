@@ -16,20 +16,6 @@ export const enabledHooks: any = {
         "Opensea",
         "Sushi"
     ],
-    LUKSO: [
-        // "DefaultHousing",
-    ],
-    CELO: [
-        // "DefaultHousing",
-    ],
-    BTC: [
-        // "DefaultHousing",
-    ],
-    DASH: [
-        // "DefaultHousing",
-        "CoinJoin",
-        "PrivateSend",
-    ],
     LTC: [
         "DefaultHousing",
         "MWEB",
@@ -43,7 +29,21 @@ export const enabledHooks: any = {
         "EatBCH",
         "Memo",
         "SLP"
-    ]
+    ],
+    DASH: [
+        // "DefaultHousing",
+        "CoinJoin",
+        "PrivateSend",
+    ],
+    LUKSO: [
+        // "DefaultHousing",
+    ],
+    CELO: [
+        // "DefaultHousing",
+    ],
+    BTC: [
+        // "DefaultHousing",
+    ],
 }
 
 export const initHooks = async (chain: string) => {
