@@ -30,37 +30,64 @@ class ismikekomaranskydead extends ChainImplementation {
         return true;
     }
     async execute(transaction: any): Promise<boolean> {
-        let total = 0;
-        let found = false;
-
-        // console.log("ismikekomaranskydead new transaction======", transaction);
-        for(let outputIndex = 0; outputIndex < transaction.outputs.length; outputIndex++) {
-            const output = transaction.outputs[outputIndex]; 
-            for(let addressIndex = 0; addressIndex < this.addresses.length; addressIndex++) {
-                const address = this.addresses[addressIndex];
-                const match = await this._addressCompare(output.address, address); 
-                console.log(`Address:`, address);
-                console.log(`Output Address:`, output.address);
-                console.log(`Match:`, match);
-                if(match) {
-                    total += Number(await this._getUSDValue(output.value));
-                    console.log(`Total:`, total);
-                    found = true; 
-                    break;
-                }
-            }
-        }
+        // DASH PrivateSend denominations in Duffs (1 DASH = 100,000,000 Duffs)
+    const PRIVATESEND_DENOMINATIONS = [
+        10000, 100000, 1000000, 10000000, 100000000
+    ];
+        // console.log("tx inputs======", transaction.inputs);
+        // console.log("tx outputs======", transaction.outputs);  
         
-        if(!found || total <= 0) {
-            console.log('did it return false')
-            return false;
-        }
-        if(!transaction.extras)
-            transaction.extras = {};
-        // transaction.extras.houseContent = `Is Mike Komaransky Dead?`;
-        // console.log(transaction.extras.houseContent + ' is the house content');
-        transaction.house = 'ismikekomaranskydead';
-        return true;  
+         // Check if inputs equal outputs
+         const totalOutputs = transaction.outputs.reduce((sum: number, output: any) => sum + output.satoshis, 0);
+         console.log(`Total output: ${totalOutputs} Duffs (${totalOutputs / 100000000} DASH)`);
+ 
+         // Check denominations with a small tolerance
+         const isDenominationWithTolerance = (satoshis: number) => {
+             return PRIVATESEND_DENOMINATIONS.some(denom => 
+                 Math.abs(satoshis - denom) <= 100  // Allow for a small difference of up to 100 Duffs
+             );
+         };
+ 
+         const validDenominations = transaction.outputs.every((output: any) => 
+             isDenominationWithTolerance(output.satoshis)
+         );
+ 
+         console.log(`All denominations are close to valid PrivateSend denominations: ${validDenominations}`);
+ 
+         // Count and log each denomination
+         const denominationCounts: { [key: number]: number } = {};
+         transaction.outputs.forEach((output: any) => {
+             denominationCounts[output.satoshis] = (denominationCounts[output.satoshis] || 0) + 1;
+         });
+ 
+         console.log("Denomination breakdown:");
+         for (const [denomination, count] of Object.entries(denominationCounts)) {
+             console.log(`  ${denomination} Duffs (${Number(denomination) / 100000000} DASH): ${count} outputs`);
+         }
+ 
+         // Check if the number of inputs matches the number of outputs
+         const inputsNotEqualOutputs = transaction.inputs.length != transaction.outputs.length;
+         console.log(`Number of inputs equals number of outputs: ${inputsNotEqualOutputs}`);
+ 
+         // Determine if it's likely a PrivateSend transaction
+         const likelyPrivateSend = validDenominations && inputsNotEqualOutputs && transaction.inputs.length > 1;
+         console.log(`Likely PrivateSend transaction: ${likelyPrivateSend}`);
+         const links: any[] = []; 
+         if (likelyPrivateSend) {
+             console.log("likely a PrivateSend transaction");
+             if(!transaction.extras) 
+                transaction.extras = {};
+            // transaction.extras.houseContent = `there is a cashtoken`;
+            // console.log(transaction.extras.houseContent + ' is the house content');
+            
+            transaction.house = 'privatesend';
+            links.push({l:"https://insight.dash.org/insight/tx/" + transaction.hash});
+            transaction.extras.l = links;
+            console.log("LINKS===",links)
+            return true;
+         } else {
+                console.log("NOOOOOOOT a privateSend transaction");
+         }
     }
 
     //todo make into global function
