@@ -54,7 +54,6 @@ export default class DASHWrapper extends BlockchainWrapper {
         console.log(`tcp://${this.configZmq.host}:${this.configZmq.port}`)
         this.sock.on('message', (topicBuffer: Buffer, messageBuffer: Buffer) => {
             const topic = topicBuffer.toString('ascii');
-            console.log("topic", topic);
             switch (topic) {
                 case 'rawtx':
                     const hex = messageBuffer.toString('hex');
@@ -267,7 +266,7 @@ export default class DASHWrapper extends BlockchainWrapper {
 
             const block: any = await rpcGetBlock(id as string, verbosity);
 
-            console.log("block: ", block);
+            // console.log("block: ", block);
 
             block.transactions = block.tx.map((transaction: any) => {
                 transaction.timestamp = transaction.time * 1000;

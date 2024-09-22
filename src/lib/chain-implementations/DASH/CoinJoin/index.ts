@@ -30,12 +30,12 @@ class CoinJoin extends ChainImplementation {
     const PRIVATESEND_DENOMINATIONS = [
         10000, 100000, 1000000, 10000000, 100000000
     ];
-        // console.log("tx inputs======", transaction.inputs);
-        // console.log("tx outputs======", transaction.outputs);  
-        
+        // console.log("tx inputs for COINJOIN======", transaction.inputs);
+        // console.log("tx outputs for COINJOIN======", transaction.outputs);  
+        console.log("tx for COINJOIN======");  
          // Check if inputs equal outputs
          const totalOutputs = transaction.outputs.reduce((sum: number, output: any) => sum + output.satoshis, 0);
-         console.log(`Total output: ${totalOutputs} Duffs (${totalOutputs / 100000000} DASH)`);
+        //  console.log(`Total output: ${totalOutputs} Duffs (${totalOutputs / 100000000} DASH)`);
  
          // Check denominations with a small tolerance
          const isDenominationWithTolerance = (satoshis: number) => {
@@ -48,7 +48,7 @@ class CoinJoin extends ChainImplementation {
              isDenominationWithTolerance(output.satoshis)
          );
  
-         console.log(`All denominations are close to valid PrivateSend denominations: ${validDenominations}`);
+        //  console.log(`All denominations are close to valid PrivateSend denominations: ${validDenominations}`);
  
          // Count and log each denomination
          const denominationCounts: { [key: number]: number } = {};
@@ -56,21 +56,21 @@ class CoinJoin extends ChainImplementation {
              denominationCounts[output.satoshis] = (denominationCounts[output.satoshis] || 0) + 1;
          });
  
-         console.log("Denomination breakdown:");
+        //  console.log("Denomination breakdown:");
          for (const [denomination, count] of Object.entries(denominationCounts)) {
-             console.log(`  ${denomination} Duffs (${Number(denomination) / 100000000} DASH): ${count} outputs`);
+            //  console.log(`  ${denomination} Duffs (${Number(denomination) / 100000000} DASH): ${count} outputs`);
          }
  
          // Check if the number of inputs matches the number of outputs
          const inputsEqualOutputs = transaction.inputs.length === transaction.outputs.length;
-         console.log(`Number of inputs equals number of outputs: ${inputsEqualOutputs}`);
+        //  console.log(`Number of inputs equals number of outputs: ${inputsEqualOutputs}`);
  
          // Determine if it's likely a PrivateSend transaction
          const likelyPrivateSend = validDenominations && inputsEqualOutputs && transaction.inputs.length > 1;
-         console.log(`Likely PrivateSend transaction: ${likelyPrivateSend}`);
+        //  console.log(`Likely PrivateSend transaction: ${likelyPrivateSend}`);
          const links: any[] = []; 
          if (likelyPrivateSend) {
-             console.log("likely a coinjoin transaction");
+            //  console.log("likely a coinjoin transaction");
              if(!transaction.extras) 
                 transaction.extras = {};
             // transaction.extras.houseContent = `there is a cashtoken`;
@@ -79,10 +79,10 @@ class CoinJoin extends ChainImplementation {
             transaction.house = 'coinjoin';
             links.push({l:"https://insight.dash.org/insight/tx/" + transaction.hash});
             transaction.extras.l = links;
-            console.log("LINKS===",links)
+            // console.log("LINKS===",links)
             return true;
          } else {
-                console.log("NOOOOOOOT a coinjoin transaction");
+                // console.log("NOOOOOOOT a coinjoin transaction");
          }
     }
 
