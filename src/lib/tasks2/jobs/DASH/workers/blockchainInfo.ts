@@ -22,7 +22,10 @@ setInterval(async () => {
         });
         const results: any = await promise();
         if (results) {
-            lastExecutionResults['blockchainSize'] = results.size;
+            const blockchainSizeMB: number = Math.round(results.size);
+
+            
+            lastExecutionResults['blockchainSize'] = blockchainSizeMB;
         }
     } catch (error) {
         console.error(error);

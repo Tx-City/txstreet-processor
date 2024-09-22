@@ -1,23 +1,37 @@
-import ChainImplementation from '../../implementation'; 
-import bchaddr from 'bchaddrjs-slp'; 
-import redis from '../../../../databases/redis'; 
+import ChainImplementation from '../../implementation';
 import mongodb from "../../../../databases/mongodb";
+import fetch from 'node-fetch';
 
-class ismikekomaranskydead extends ChainImplementation {
-    public addresses: string[] = []; 
-    public _what: any = {}; 
+interface Input {
+    prevTxId: string;
+    // Add other properties of the input object if needed
+}
+
+interface Output {
+    satoshis: number;
+    // Add other properties of the output object if needed
+}
+
+class PrivateSend extends ChainImplementation {
+    public addresses: string[] = [];
+    public _what: any = {};
+    private rpcUrl: string = 'http://65.109.115.131:9998';
+    private rpcUser: string = 'user';
+    private rpcPass: string = 'pass';
+    private PRIVATESEND_DENOMINATIONS = [
+        10000, 100000, 1000000, 10000000, 100000000
+    ];
 
     async init(): Promise<ChainImplementation> {
         try {
             // Obtain addresses 
+            
             if(process.env.USE_DATABASE !== "true")
                 return this; 
             const { database } = await mongodb();
             const collection = database.collection('houses'); 
             const house = await collection.findOne({ name: 'privatesend', chain: 'DASH' }); 
-            this.addresses = house.ismikekomaranskydeadAddresses.map((obj: any) => obj.address);
-            console.log(`Initialized Private Send`, this.addresses);
-            // addToCommonAddresses(addresses)
+            console.log('DASH PRIVATE SEND HOUSE')
         } catch (error) {
             console.error(error);
         } finally {
@@ -26,116 +40,155 @@ class ismikekomaranskydead extends ChainImplementation {
     }
 
     async validate(transaction: any): Promise<boolean> {
-        if(this.addresses.length === 0) return false; 
         return true;
     }
+
     async execute(transaction: any): Promise<boolean> {
-        // DASH PrivateSend denominations in Duffs (1 DASH = 100,000,000 Duffs)
-    const PRIVATESEND_DENOMINATIONS = [
-        10000, 100000, 1000000, 10000000, 100000000
-    ];
-        // console.log("tx inputs======", transaction.inputs);
-        // console.log("tx outputs======", transaction.outputs);  
+        // console.log("tx inputs for PRIVATE SEND======", transaction.inputs);
+        // console.log("tx outputs for PRIVATE SEND======", transaction.outputs); 
+        console.log("tx for PRIVATE SEND======", transaction.hash); 
+
+        let privateSendInputCount = 0;
+
+        // Check each input's previous transaction
+        for (const input of transaction.inputs) {
+            try {
+                const rawTx = await this.getRawTransaction(input.prevTxId);
+                console.log(`Raw transaction for prevTxId ${input.prevTxId}:`, rawTx);
+                
+                // Parse the raw transaction
+                const parsedTx = await this.decodeRawTransaction(rawTx);
+                
+                // Check if the previous transaction's outputs are PrivateSend denominations
+                if (this.isPrivateSendTransaction(parsedTx)) {
+                    privateSendInputCount++;
+                    console.log(`Previous transaction ${input.prevTxId} is likely a PrivateSend transaction.`);
+                } else {
+                    console.log(`Previous transaction ${input.prevTxId} is not a PrivateSend transaction.`);
+                }
+            } catch (error) {
+                console.error(`Failed to process previous transaction for prevTxId ${input.prevTxId}:`, error);
+            }
+        }
+
+        console.log(`Number of PrivateSend inputs: ${privateSendInputCount}`);
+
+        const totalOutputs = transaction.outputs.reduce((sum: number, output: Output) => sum + output.satoshis, 0);
+        console.log(`Total outputs: ${totalOutputs} Duffs (${totalOutputs / 100000000} DASH)`);
+
+        const inputsNotEqualOutputs = transaction.inputs.length != transaction.outputs.length;
+        const likelyPrivateSend = inputsNotEqualOutputs && privateSendInputCount > 0;
+        console.log(`Likely PrivateSend transaction: ${likelyPrivateSend}`);
         
-         // Check if inputs equal outputs
-         const totalOutputs = transaction.outputs.reduce((sum: number, output: any) => sum + output.satoshis, 0);
-         console.log(`Total output: ${totalOutputs} Duffs (${totalOutputs / 100000000} DASH)`);
- 
-         // Check denominations with a small tolerance
-         const isDenominationWithTolerance = (satoshis: number) => {
-             return PRIVATESEND_DENOMINATIONS.some(denom => 
-                 Math.abs(satoshis - denom) <= 100  // Allow for a small difference of up to 100 Duffs
-             );
-         };
- 
-         const validDenominations = transaction.outputs.every((output: any) => 
-             isDenominationWithTolerance(output.satoshis)
-         );
- 
-         console.log(`All denominations are close to valid PrivateSend denominations: ${validDenominations}`);
- 
-         // Count and log each denomination
-         const denominationCounts: { [key: number]: number } = {};
-         transaction.outputs.forEach((output: any) => {
-             denominationCounts[output.satoshis] = (denominationCounts[output.satoshis] || 0) + 1;
-         });
- 
-         console.log("Denomination breakdown:");
-         for (const [denomination, count] of Object.entries(denominationCounts)) {
-             console.log(`  ${denomination} Duffs (${Number(denomination) / 100000000} DASH): ${count} outputs`);
-         }
- 
-         // Check if the number of inputs matches the number of outputs
-         const inputsNotEqualOutputs = transaction.inputs.length != transaction.outputs.length;
-         console.log(`Number of inputs equals number of outputs: ${inputsNotEqualOutputs}`);
- 
-         // Determine if it's likely a PrivateSend transaction
-         const likelyPrivateSend = validDenominations && inputsNotEqualOutputs && transaction.inputs.length > 1;
-         console.log(`Likely PrivateSend transaction: ${likelyPrivateSend}`);
-         const links: any[] = []; 
-         if (likelyPrivateSend) {
-             console.log("likely a PrivateSend transaction");
-             if(!transaction.extras) 
+        if (likelyPrivateSend) {
+            console.log("For sure a PrivateSend transaction");
+            if(!transaction.extras) 
                 transaction.extras = {};
-            // transaction.extras.houseContent = `there is a cashtoken`;
-            // console.log(transaction.extras.houseContent + ' is the house content');
-            
             transaction.house = 'privatesend';
-            links.push({l:"https://insight.dash.org/insight/tx/" + transaction.hash});
+            const links = [{l: `https://insight.dash.org/insight/tx/${transaction.hash}`}];
             transaction.extras.l = links;
-            console.log("LINKS===",links)
+            console.log("LINKS===", links);
             return true;
-         } else {
-                console.log("NOOOOOOOT a privateSend transaction");
-         }
-    }
-
-    //todo make into global function
-    _getUSDValue = async (bchPaid: number) => {
-        if(process.env.USE_DATABASE !== "true") return "0.00";
-        const { database } = await mongodb(); 
-        let value = await database.collection('statistics').findOne({ chain: 'BCH' }, { 'fiatPrice-usd': 1 }); 
-        let price = value['fiatPrice-usd'] || 0;
-        let usdPaid = (bchPaid * price).toFixed(2);
-        return usdPaid;
-    }
-
-    _addressCompare = async (a: string, b: string) => {
-        if(!a || !b || a.length < 10 || b.length < 10) return false; 
-        let ayes: string[] = [];
-        let bees: string[] = []; 
-        ayes.push(a, await this._toCashAddress(a), await this._toLegacyAddress(a));
-        bees.push(b, await this._toCashAddress(b), await this._toLegacyAddress(b));
-        for(let i = 0; i < ayes.length; i++) 
-            if(bees.includes(ayes[i])) 
-                return true; 
-        return false; 
-    }
-
-    _toCashAddress = async (address: string) => {
-        let key = `toCashAddress-${address}`
-        if(this._what[key]) return this._what[key]; 
-        let cached: any = await redis.getAsync(key);
-        if(!cached) {
-            cached = bchaddr.toCashAddress(address); 
-            redis.setAsync(key, cached, 'EX', 3600 * 72); 
+        } else {
+            console.log("NOOOOOOOT a privateSend transaction");
+            return false;
         }
-        this._what[key] = cached; 
-        return cached; 
     }
 
-    _toLegacyAddress = async (address: string) => {
-        let key = `toLegacyAddress-${address}`
-        if(this._what[key]) return this._what[key]; 
-        let cached: any = await redis.getAsync(key);
-        if(!cached) {
-            cached = bchaddr.toLegacyAddress(address);
-            redis.setAsync(key, cached, 'EX', 3600 * 72); 
+    private isPrivateSendTransaction(transaction: any): boolean {
+        // if (!transaction || !Array.isArray(transaction.vout)) {
+        //     console.log("Transaction structure is not as expected:", transaction);
+        //     return false;
+        // }
+        return transaction.vout.every((output: any) => {
+            if (!output || typeof output.value !== 'number') {
+                console.log("Output structure is not as expected:", output);
+                return false;
+            }
+            const satoshis = Math.round(output.value * 100000000); // Convert DASH to satoshis
+            return this.isDenominationWithTolerance(satoshis);
+        });
+    }
+
+    private isDenominationWithTolerance(satoshis: number): boolean {
+        return this.PRIVATESEND_DENOMINATIONS.some(denom => 
+            Math.abs(satoshis - denom) <= 100
+        );
+    }
+
+    private async getRawTransaction(txid: string): Promise<string> {
+        const headers = {
+            'Authorization': 'Basic ' + Buffer.from(this.rpcUser + ":" + this.rpcPass).toString('base64'),
+            'Content-Type': 'application/json'
+        };
+
+        const body = JSON.stringify({
+            jsonrpc: "1.0",
+            id: "curltest",
+            method: "getrawtransaction",
+            params: [txid, false]
+        });
+
+        try {
+            const response = await fetch(this.rpcUrl, {
+                method: 'POST',
+                headers: headers,
+                body: body
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+    
+            if (data.error) {
+                throw new Error(`RPC error: ${data.error.message}`);
+            }
+
+            return data.result;
+        } catch (error) {
+            console.error('There was an error fetching the raw transaction!', error);
+            throw error;
         }
-        this._what[key] = cached;
-        return cached; 
     }
 
+    private async decodeRawTransaction(rawTx: string): Promise<any> {
+        const headers = {
+            'Authorization': 'Basic ' + Buffer.from(this.rpcUser + ":" + this.rpcPass).toString('base64'),
+            'Content-Type': 'application/json'
+        };
+
+        const body = JSON.stringify({
+            jsonrpc: "1.0",
+            id: "curltest",
+            method: "decoderawtransaction",
+            params: [rawTx]
+        });
+
+        try {
+            const response = await fetch(this.rpcUrl, {
+                method: 'POST',
+                headers: headers,
+                body: body
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+    
+            if (data.error) {
+                throw new Error(`RPC error: ${data.error.message}`);
+            }
+
+            return data.result;
+        } catch (error) {
+            console.error('There was an error decoding the raw transaction!', error);
+            throw error;
+        }
+    }
 }
 
-export default new ismikekomaranskydead('BCH'); 
+export default new PrivateSend('DASH');
