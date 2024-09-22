@@ -21,6 +21,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     case 'ETH':
                     case 'LUKSO':
                     case 'CELO':
+                    case 'SOLANA':
                     case 'ARBI':
                     case 'MANTA':
                     case 'XMR':
@@ -47,6 +48,9 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     case 'LUKSO':
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
                         break;  
+                    // case 'SOLANA':
+                    //     project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
+                    //     break;
                     case 'CELO':
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
                         break;  
@@ -62,6 +66,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         case 'BTC':
                         case 'BCH':
                         case 'DASH':
+                        case 'SOLANA':
                         case 'LTC': 
                         project = { _id: 0, hash: 1, timestamp: 1, height: 1, difficulty: 1, transactions: 1, size: 1 }
                         break;
@@ -69,12 +74,16 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
 
 
                 let results = await collection.find(where).project(project).toArray();
+                console.log({
+                    results
+                });
                 // Make sure we atleast have 250 blocks. 
                 if(results.length < 250 && this._firstExecution) {
                     // Find earliest known height. 
                     let earliest = results.sort((a: any, b: any) => b.height - a.height)[results.length - 1]; 
                     if(!earliest) 
                         earliest = (await collection.find({ chain, hash: { $ne: null }, height: { $ne: null } },  project).sort({ height: -1 }).limit(1).toArray())[0];
+                    console.log({earliest});
                     let earliestHeight: number = earliest.height;
                     const remainder = 250 - results.length;
                     let _results = await collection.find({ chain, height: { $lt: earliestHeight } }).project(project).sort({ height: -1 }).limit(remainder).toArray();

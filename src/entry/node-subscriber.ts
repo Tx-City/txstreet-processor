@@ -50,7 +50,7 @@ const getLatestBlockLoop = async (wrapper: any) => {
 
 
                     await database.collection('blocks').updateOne(
-                        { chain: wrapper.ticker, hash: block.hash },
+                        { chain: wrapper.ticker, hash: block.hash, height: block.height },
                         { $setOnInsert: { processed: false, locked: false, timestamp: Date.now(), insertedAt: new Date(), processFailures: 0 } },
                         { upsert: true });
                 }
