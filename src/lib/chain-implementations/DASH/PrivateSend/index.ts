@@ -76,7 +76,8 @@ class PrivateSend extends ChainImplementation {
         const totalOutputs = transaction.outputs.reduce((sum: number, output: Output) => sum + output.satoshis, 0);
         console.log(`Total outputs: ${totalOutputs} Duffs (${totalOutputs / 100000000} DASH)`);
 
-        const inputsNotEqualOutputs = transaction.inputs.length != transaction.outputs.length;
+        const inputsNotEqualOutputs = transaction.inputs.length !== transaction.outputs.length;
+        console.log(`Inputs equal outputs: ${inputsNotEqualOutputs}`);
         const likelyPrivateSend = inputsNotEqualOutputs && privateSendInputCount > 0;
         console.log(`Likely PrivateSend transaction: ${likelyPrivateSend}`);
         
