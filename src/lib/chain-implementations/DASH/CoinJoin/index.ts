@@ -27,8 +27,9 @@ class CoinJoin extends ChainImplementation {
     }
     async execute(transaction: any): Promise<boolean> {
         // DASH PrivateSend denominations in Duffs (1 DASH = 100,000,000 Duffs)
-    const PRIVATESEND_DENOMINATIONS = [
-        10000, 100000, 1000000, 10000000, 100000000
+    
+        const PRIVATESEND_DENOMINATIONS = [
+        10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000
     ];
         // console.log("tx inputs for COINJOIN======", transaction.inputs);
         // console.log("tx outputs for COINJOIN======", transaction.outputs);  
@@ -79,6 +80,8 @@ class CoinJoin extends ChainImplementation {
             transaction.house = 'coinjoin';
             links.push({l:"https://insight.dash.org/insight/tx/" + transaction.hash});
             transaction.extras.l = links;
+            // transaction.char = 'flash';
+            transaction.extras.flash = true;
             // console.log("LINKS===",links)
             return true;
          } else {
