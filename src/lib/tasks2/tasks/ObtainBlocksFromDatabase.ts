@@ -74,9 +74,6 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
 
 
                 let results = await collection.find(where).project(project).toArray();
-                console.log({
-                    results
-                });
                 // Make sure we atleast have 250 blocks. 
                 if(results.length < 250 && this._firstExecution) {
                     // Find earliest known height. 
@@ -109,6 +106,11 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                 this._done = true; 
                 if(this._firstExecution)
                     this._firstExecution = false; 
+
+                console.log({
+                    results,
+                    firstExecution: this._firstExecution,
+                });
             } catch (error) {
                 console.error(error); 
                 console.error(error);

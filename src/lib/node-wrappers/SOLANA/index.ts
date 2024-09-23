@@ -43,7 +43,11 @@ export default class SolanaWrapper extends BlockchainWrapper {
       if (slotInfo.type === "completed") {
         const hash = await this.getBlockHashBySlot(slotInfo.slot);
         console.log("Confirmed Block", hash);
-        this.emit("confirmed-block", hash);
+        const event = {
+          hash,
+          height: slotInfo.slot,
+        };
+        this.emit("confirmed-block", event);
       }
     });
   }

@@ -218,9 +218,8 @@ const init = async () => {
             }
             processTransaction(solanaWrapper, { ...transaction, processed: true });
         });
-        solanaWrapper.on('confirmed-block', (blockHash: string) => {
-            console.log(`Got block from event: ${blockHash}`);
-            processBlock(solanaWrapper, blockHash);
+        solanaWrapper.on('confirmed-block', (event: any) => {
+            processBlock(solanaWrapper, event.hash, event.height);
         });
         getLatestBlockLoop(solanaWrapper);
         solanaWrapper.initEventSystem();

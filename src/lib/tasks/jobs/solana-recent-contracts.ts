@@ -10,7 +10,7 @@ const limiter = new Bottleneck({
     minTime: 201
 });
 
-const SOLANA_RPC_URL = 'https://api.mainnet-beta.solana.com'; // Update to your Solana RPC endpoint
+const SOLANA_RPC_URL = process.env.SOLANA_NODE || 'https://api.mainnet-beta.solana.com';
 const connection = new Connection(SOLANA_RPC_URL);
 
 export default async (chain: string, label: string, timeFrom: number): Promise<void> => {
