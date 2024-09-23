@@ -20,32 +20,43 @@ export default class SolanaWrapper extends BlockchainWrapper {
   public initEventSystem() {
     // Subscribe to all confirmed transactions
     this.connection.onSignatureWithOptions(
-        '*', // wildcard subscription for all signatures
-        async (signature, context) => {
-            console.log("-----------Solana transaction detected--------------");
-            try {
-                const sig: any = signature;
-                const transaction = await this.getTransaction(sig);
-                if (transaction) {
-                    this.emit('mempool-tx', transaction);
-                    console.log("Mempool TX", transaction);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        },
-        { commitment: 'confirmed' }
+      "*", // wildcard subscription for all signatures
+      async (signature, context) => {
+        console.log("-----------Solana transaction detected--------------");
+        try {
+          const sig: any = signature;
+          const transaction = await this.getTransaction(sig);
+          if (transaction) {
+            this.emit("mempool-tx", transaction);
+            console.log("Mempool TX", transaction);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      },
+      { commitment: "confirmed" }
     );
 
     // Subscribe to new block headers (slot updates)
-    this.connection.onSlotUpdate((slotInfo) => {
-        console.log("-----------Solana block detected--------------");
-        if (slotInfo.type === 'completed') {
-            this.emit('confirmed-block', slotInfo.slot);
-            console.log("Confirmed Block", slotInfo.slot);
-        }
+    this.connection.onSlotUpdate(async (slotInfo) => {
+      console.log("-----------Solana block detected--------------");
+      if (slotInfo.type === "completed") {
+        const hash = await this.getBlockHashBySlot(slotInfo.slot);
+        console.log("Confirmed Block", hash);
+        this.emit("confirmed-block", hash);
+      }
     });
-}
+  }
+
+  public async getBlockHashBySlot(slot: number): Promise<string | null> {
+    try {
+      const hash = await this.connection.getBlock(slot, { maxSupportedTransactionVersion: 0 });
+      return hash.blockhash;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
 
   public async getCurrentHeight(): Promise<null | number> {
     try {
@@ -82,8 +93,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
   public async getTransaction(id: string, verbosity?: number): Promise<any> {
     try {
-
-        let transaction: any;
+      let transaction: any;
       transaction = await this.connection.getTransaction(id, {
         maxSupportedTransactionVersion: 0,
       });
@@ -98,7 +108,6 @@ export default class SolanaWrapper extends BlockchainWrapper {
         maxPriorityFeePerGas: 0,
         pendingSortPrice: 0,
       };
-
     } catch (error) {
       console.error(error);
       return null;
@@ -130,8 +139,18 @@ export default class SolanaWrapper extends BlockchainWrapper {
         block.transactions = block.transactions.map((tx: any) => {
           let transaction = {
             hash: tx.transaction.signatures[0], // Solana transaction signature
-            from: tx.transaction.message.accountKeys !== null && tx.transaction.message.accountKeys !== undefined && tx.transaction.message.accountKeys.length ? tx.transaction.message.accountKeys[0]?.toString() : tx.transaction.message.staticAccountKeys[0]?.toString() || null, // Sender
-            to: tx.transaction.message.accountKeys !== null && tx.transaction.message.accountKeys !== undefined && tx.transaction.message.accountKeys.length ? tx.transaction.message.accountKeys[1]?.toString() : tx.transaction.message.staticAccountKeys[1]?.toString() || null, // Receiver
+            from:
+              tx.transaction.message.accountKeys !== null &&
+              tx.transaction.message.accountKeys !== undefined &&
+              tx.transaction.message.accountKeys.length
+                ? tx.transaction.message.accountKeys[0]?.toString()
+                : tx.transaction.message.staticAccountKeys[0]?.toString() || null, // Sender
+            to:
+              tx.transaction.message.accountKeys !== null &&
+              tx.transaction.message.accountKeys !== undefined &&
+              tx.transaction.message.accountKeys.length
+                ? tx.transaction.message.accountKeys[1]?.toString()
+                : tx.transaction.message.staticAccountKeys[1]?.toString() || null, // Receiver
             value: tx.meta.preBalances[0] / LAMPORTS_PER_SOL, // Balance transferred in SOL
             gasPrice: 0,
             maxFeePerGas: 0,
@@ -145,7 +164,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
       } else {
         block.transactions = [];
       }
-      
+
       return block;
     } catch (error) {
       console.error(error);
