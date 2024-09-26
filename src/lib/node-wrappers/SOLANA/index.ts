@@ -42,7 +42,6 @@ export default class SolanaWrapper extends BlockchainWrapper {
       console.log("-----------Solana block detected--------------");
       if (slotInfo.type === "completed") {
         const hash = await this.getBlockHashBySlot(slotInfo.slot);
-        console.log("Confirmed Block", hash);
         const event = {
           hash,
           height: slotInfo.slot,
@@ -57,7 +56,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
       const hash = await this.connection.getBlock(slot, { maxSupportedTransactionVersion: 0 });
       return hash.blockhash;
     } catch (error) {
-      console.error(error);
+      console.error('getBlockHashBySlot error', error);
       return null;
     }
   }
@@ -171,7 +170,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
       return block;
     } catch (error) {
-      console.error(error);
+      console.error('getBlock', error);
       return null;
     }
   }

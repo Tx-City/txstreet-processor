@@ -219,6 +219,8 @@ const init = async () => {
             processTransaction(solanaWrapper, { ...transaction, processed: true });
         });
         solanaWrapper.on('confirmed-block', (event: any) => {
+            console.log(`Got block from event: ${event.hash}`);
+            console.log(`Got block from event: ${event.height}`);
             processBlock(solanaWrapper, event.hash, event.height);
         });
         getLatestBlockLoop(solanaWrapper);

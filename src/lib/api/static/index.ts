@@ -88,12 +88,15 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
         const filePath = path.join(directory, 'blocks', ticker, firstPart, secondPart, hash);
         const key: string = filePath + verbose;
 
+        console.log("firstPart-------------------------------------> &&&&&&&&&&&&&&&&", firstPart);
+
         let data: any = fileCache[key];
         if (data != null) {
             console.log(`Static request served from memory cache.`);
             return response.set('content-type', 'application/json').send(data);
         }
         data = await readNFSFile(filePath);
+        console.log("data-------------------------------------> &&&&&&&&&&&&&&&&", data);
         // Sanity
         if (!data || !data.length) {
             return sendError();

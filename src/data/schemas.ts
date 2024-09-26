@@ -145,6 +145,33 @@ export const BTCTransactionsSchema = avro.Type.forSchema({
     ]
 })
 
+export const SOLANATransactionsSchema = avro.Type.forSchema({
+    name: 'SOLANATransactionsCollection',
+    type: 'record',
+    fields: [
+        { name: 'timestamp', type: 'long', default: 0 },
+        {
+            name: 'collection',
+            type: {
+                type: 'array',
+                items: {
+                    name: "SOLANATransaction",
+                    type: "record",
+                    fields: [
+                        { name: 'hash', type: ['string', 'null'], default: "" },
+                        { name: 'insertedAt', type: ['long', 'null'], default: 0 },
+                        { name: 'fee', type: ['double', 'boolean', 'null'], default: 0 },
+                        { name: 'size', type: ['double', 'null'], default: 0 },
+                        { name: 'timestamp', type: ['long', 'null'], default: -1 },
+                        { name: 'dropped', type: ['boolean', 'null'], default: false },
+                        { name: 'processed', type: ['boolean', 'null'], default: false }
+                    ]
+                }
+            }
+        }
+    ]
+})
+
 export const BTCBlocksSchema = avro.Type.forSchema({
     name: 'BTCBlocksCollection',
     type: 'record',
