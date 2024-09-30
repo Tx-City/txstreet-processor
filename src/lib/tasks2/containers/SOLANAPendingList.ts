@@ -5,6 +5,7 @@ import redis from '../../../databases/redisEvents';
 import path from 'path';
 import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
+import { ETHTransactionsSchema } from '../../../data/schemas';
 
 export default class SolanaPendingList {
     // The maximum allowed size of the collection.
@@ -33,13 +34,13 @@ export default class SolanaPendingList {
         this._onDroppedTransactions = this._onDroppedTransactions.bind(this);
         this._onPendingTransactions = this._onPendingTransactions.bind(this);
 
-        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'SOL-pendingTransactions.bin');
+        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'SOLANA-pendingTransactions.bin');
         // Whenever a new transaction is broadcast.
         redis.subscribe('pendingTx');
 
         redis.events.on('pendingTx', async (data) => {
             const { chain } = data;
-            if (chain !== "SOL") return;
+            if (chain !== "SOLANA") return;
 
             // Format the socket-format back into the SolanaTransactionSchema Format.
             const transaction: ProjectedSolanaTransaction = {
@@ -66,7 +67,7 @@ export default class SolanaPendingList {
         redis.subscribe('block');
         redis.events.on('block', (data) => {
             const { chain, hash } = data;
-            if (chain !== 'SOL') return;
+            if (chain !== 'SOLANA') return;
             this._onConfirmedBlock(hash);
         });
 
@@ -74,16 +75,16 @@ export default class SolanaPendingList {
         redis.subscribe('removeTx');
         redis.events.on('removeTx', (data) => {
             const { chain, hashes } = data;
-            if (chain !== 'SOL') return;
+            if (chain !== 'SOLANA') return;
             this._onDroppedTransactions(hashes);
         });
 
-        // Initiate the _writeTask to create a new pending list every second.
+        // Initiate the _writeTask to create a new pending list every 2 second.
         this._writeTaskInstance = setInterval(this._writeTask, 2000).start(false);
 
         setInterval(async () => {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_SOL');
+            const collection = database.collection('transactions_SOLANA');
             const hashes = this.array.map((a: any) => a.hash);
             const result = await collection.find({ hash: { $in: hashes }, $or: [{ blockHash: { $ne: null } }, { dropped: { $exists: true } }] }).project({ _id: 0, hash: 1 }).toArray();
             const toDelete = result.map((result: any) => result.hash);
@@ -141,7 +142,7 @@ export default class SolanaPendingList {
                     const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
                     const firstPart = hash[hash.length - 1];
                     const secondPart = hash[hash.length - 2];
-                    const filePath = path.join(directory, 'blocks', 'SOL', firstPart, secondPart, hash);
+                    const filePath = path.join(directory, 'blocks', 'SOLANA', firstPart, secondPart, hash);
                     const data = await readNFSFile(filePath);
                     const block = JSON.parse(data as string);
                     if (block) return block;
@@ -200,7 +201,7 @@ export default class SolanaPendingList {
     async init() {
         try {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_SOL');
+            const collection = database.collection('transactions_SOLANA');
             const where: any = { confirmed: false, processed: true, blockHash: { $eq: null }, dropped: { $exists: false } };
             const project = { _id: 0, processed: 1, insertedAt: 1, fee: 1, value: 1, dropped: 1, hash: 1, from: 1, timestamp: 1, extras: 1, pExtras: 1 };
             const results = await collection.find(where).project(project).sort({ pendingSortFee: -1 }).limit(this.capacity).toArray();
@@ -215,16 +216,42 @@ export default class SolanaPendingList {
         }
     }
 
+    // _writeTask = async (): Promise<void> => {
+    //     try {
+    //         if (!this._initialized) return;
+    //         if (!this._dirtyFlag) return;
+    //         this._dirtyFlag = false;
+    //         if (!this.array.length) return;
+    //         let serialized = Buffer.from(JSON.stringify(this.array));
+    //         fs.writeFileSync(this._filePath, serialized);
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // }
+
     _writeTask = async (): Promise<void> => {
         try {
             if (!this._initialized) return;
             if (!this._dirtyFlag) return;
             this._dirtyFlag = false;
-            if (!this.array.length) return;
-            let serialized = Buffer.from(JSON.stringify(this.array));
-            fs.writeFileSync(this._filePath, serialized);
-        } catch (error) {
-            console.error(error);
-        }
+
+            for (let i = 0; i < this.array.length; i++) {
+                const entry = this.array[i];
+                if (entry.extras && typeof entry.extras !== "string") entry.extras = JSON.stringify(entry.extras);
+                if (entry.pExtras && typeof entry.pExtras !== "string") entry.pExtras = JSON.stringify(entry.pExtras);
+
+                //@ts-ignore
+                Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
+            }
+
+            const contents = ETHTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
+
+            const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');
+            fs.writeFileSync(writingFilePath, contents);
+            fs.rename(writingFilePath, this._filePath, (err) => {
+                this._dirtyFlag = false;
+                if (err) throw err
+            });
+        } catch (error) { }
     }
 }

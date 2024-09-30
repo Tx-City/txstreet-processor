@@ -10,7 +10,7 @@ export default async (wrapper: BlockchainWrapper, hash: string, height?: number)
             
             await collection.updateOne({ chain: wrapper.ticker, hash, height }, {
                 $set: { lastInserted: Date.now(), node: true, note: '[node-sub]: store-block' },
-                $setOnInsert: { insertedAt: new Date(), processed: false, locked: false, processFailures: 0, processMetadata: true, processTransactions: true }
+                $setOnInsert: { insertedAt: new Date(), timestamp: Date.now(), processed: false, locked: false, processFailures: 0, processMetadata: true, processTransactions: true }
             }, { upsert: true });
         }
     } catch (error) {

@@ -25,29 +25,31 @@ let lastUploadTime = 0;
 // The purpose of this function is to curate and store the JSON information for the current pending transaction list. 
 setInterval(async () => {
     try {
-        const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'SOL-pendingTransactions.bin');
+        const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'SOLANA-pendingTransactions.bin');
         const { database } = await mongodb();
 
         let data = await readFile(dataPath);
         let parsed = SOLANATransactionsSchema.fromBuffer(data); // Adjust to parse Solana transactions
 
+        console.log(`Found ${parsed.collection.length} transactions`);
+
         let transactions = parsed.collection.sort((a: ProjectedSolanaTransaction, b: ProjectedSolanaTransaction) => b.fee - a.fee); // Sort based on fee
         let transactionMap: any = {};
         let hashes = transactions.map((t: any) => t.signature); // Use Solana's signature
-        let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedSolanaTransaction) => transaction.from))];
+        // let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedSolanaTransaction) => transaction.from))];
 
         // Cache Test
         let cachedHashes = Object.keys(cache);
         let requestHashes: string[] = [];
         transactions.forEach((transaction: ProjectedSolanaTransaction) => {
-            transactionMap[transaction.signature] = true;
-            if (!cache[transaction.signature]) requestHashes.push(transaction.signature);
+            transactionMap[transaction.hash] = true;
+            if (!cache[transaction.hash]) requestHashes.push(transaction.hash);
         });
         cachedHashes.forEach((hash: string) => {
             if (!transactionMap[hash]) delete cache[hash];
         });
 
-        let qResult = await database.collection('transactions_SOL').find({ signature: { $in: requestHashes } })
+        let qResult = await database.collection('transactions_SOLANA').find({ signature: { $in: requestHashes } })
             .project({ _id: 0, signature: 1, to: 1, house: 1 }).toArray(); // Adjust collection name and fields
 
         qResult.forEach((doc: any) => {
@@ -55,9 +57,12 @@ setInterval(async () => {
         });
 
         // Remove confirmed transactions
-        let confirmedSignatures = await solanaConnection.getConfirmedSignaturesForAddress(new PublicKey('YourAddressHere'), { limit: 100 }); // Change to relevant address
-        let confirmedHashes = confirmedSignatures.map(tx => tx.signature);
-        transactions = transactions.filter((tx: any) => !confirmedHashes.includes(tx.signature));
+        // let confirmedSignatures = await solanaConnection.getConfirmedSignaturesForAddress(new PublicKey('YourAddressHere'), { limit: 100 }); // Change to relevant address
+        // let confirmedHashes = confirmedSignatures.map(tx => tx.signature);
+        let _remove = await database.collection('transactions_SOLANA').find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ hash: 1 }).toArray();
+        _remove = _remove.map((tx: any) => tx.hash);
+
+        transactions = transactions.filter((tx: any) => !_remove.includes(tx.signature));
         transactions = transactions.map((transaction: any) => ({ ...transaction, ...cache[transaction.signature] }));
 
         // The array of transactions to store. 
@@ -94,7 +99,7 @@ setInterval(async () => {
         let count = 0;
         pendingList = pendingList.map((transaction: any) => {
             transaction.type = 0; // Adjust type as necessary
-            const formatted = formatTransaction("SOL", transaction); // Format for Solana
+            const formatted = formatTransaction("SOLANA", transaction); // Format for Solana
             if (formatted.an == null) {
                 count++;
             }
@@ -106,14 +111,14 @@ setInterval(async () => {
         const content = JSON.stringify(pendingList);
 
         if (Date.now() - lastUploadTime >= 1990) {
-            const _path = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'SOL-pendingTransactions.json');
+            const _path = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'SOLANA-pendingTransactions.json');
             const writingFilePath = _path.replace(/\.json$/, '-writing.json');
             fs.writeFileSync(writingFilePath, content);
             fs.rename(writingFilePath, _path, (err) => {
                 if (err) throw err;
             });
             lastUploadTime = Date.now();
-            await storeObject(path.join('live', `pendingTxs-SOL`), content);
+            await storeObject(path.join('live', `pendingTxs-SOLANA`), content);
         }
 
     } catch (error) {

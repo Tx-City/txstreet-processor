@@ -21,6 +21,7 @@ export interface ProjectedSolanaTransaction {
     insertedAt: number;
     timestamp: number;
     fee: number;
+    // signature: string;
     value: number;
     dropped: boolean | undefined;
     processed: boolean;
