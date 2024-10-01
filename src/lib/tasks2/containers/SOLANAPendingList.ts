@@ -5,7 +5,7 @@ import redis from '../../../databases/redisEvents';
 import path from 'path';
 import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
-import { ETHTransactionsSchema } from '../../../data/schemas';
+import { ETHTransactionsSchema, SOLANATransactionsSchema } from '../../../data/schemas';
 
 export default class SolanaPendingList {
     // The maximum allowed size of the collection.
@@ -19,7 +19,7 @@ export default class SolanaPendingList {
     // The path at which the file is to be written at.
     _filePath: string;
     // A flag that states whether the array has been updated since the last write.
-    _dirtyFlag: boolean = false;
+    _dirtyFlag: boolean = true;
     // A flag that states whether the list has been initialized.
     _initialized: boolean = false;
 
@@ -85,6 +85,7 @@ export default class SolanaPendingList {
         setInterval(async () => {
             const { database } = await mongodb();
             const collection = database.collection('transactions_SOLANA');
+            console.log('Checking for dropped transactions', this.array.length);
             const hashes = this.array.map((a: any) => a.hash);
             const result = await collection.find({ hash: { $in: hashes }, $or: [{ blockHash: { $ne: null } }, { dropped: { $exists: true } }] }).project({ _id: 0, hash: 1 }).toArray();
             const toDelete = result.map((result: any) => result.hash);
@@ -244,7 +245,7 @@ export default class SolanaPendingList {
                 Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
             }
 
-            const contents = ETHTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
+            const contents = SOLANATransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
 
             const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');
             fs.writeFileSync(writingFilePath, contents);

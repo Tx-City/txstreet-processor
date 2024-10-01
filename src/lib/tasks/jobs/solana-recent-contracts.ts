@@ -24,7 +24,7 @@ export default async (chain: string, label: string, timeFrom: number): Promise<v
             { $group: { _id: "$to", txCount: { $sum: 1 } } },
             { $sort: { txCount: -1 } },
             { $limit: 100 },
-            { $lookup: { from: 'contracts_SOL', localField: '_id', foreignField: 'contract', as: 'contracts' } },
+            { $lookup: { from: 'contracts_SOLANA', localField: '_id', foreignField: 'contract', as: 'contracts' } },
             { $project: { _id: 1, txCount: 1, contract: { $first: "$contracts" } } },
             { $project: { 
                 _id: 1,

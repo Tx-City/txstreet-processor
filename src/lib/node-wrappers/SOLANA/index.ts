@@ -7,25 +7,43 @@ import {
   ConfirmedTransaction,
   VersionedBlockResponse,
   LAMPORTS_PER_SOL,
+  SystemProgram,
 } from "@solana/web3.js";
 
 export default class SolanaWrapper extends BlockchainWrapper {
   public connection: Connection;
+  public programId: PublicKey;
 
   constructor(host: string) {
     super("SOLANA");
-    this.connection = new Connection(host, "confirmed");
+    this.connection = new Connection(host, "processed");
+    this.programId = SystemProgram.programId;
   }
 
   public initEventSystem() {
     // Subscribe to all confirmed transactions
-    this.connection.onSignatureWithOptions(
-      "*", // wildcard subscription for all signatures
+    this.connection.onLogs(
+      // listen for all transactions
+      this.programId,
       async (signature, context) => {
         console.log("-----------Solana transaction detected--------------");
         try {
           const sig: any = signature;
-          const transaction = await this.getTransaction(sig);
+          const status = await this.connection.getSignatureStatus(sig);
+          console.log('statusss...', {status})
+          // const transaction = await this.getTransaction(sig);
+          let transaction = null;
+          if (status && status.value && status.value.confirmations) {
+            // Transaction is confirmed, fetch details
+            transaction = await this.getTransaction(sig);
+          } else {
+            // Transaction is pending or failed, build a mock transaction object
+            transaction = {
+              signature: signature,
+              status: status?.value?.confirmationStatus || 'pending', // Mark as pending
+              // You can add other relevant data here
+            };
+          }
           if (transaction) {
             this.emit("mempool-tx", transaction);
             console.log("Mempool TX", transaction);
@@ -34,7 +52,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
           console.error(error);
         }
       },
-      { commitment: "confirmed" }
+      "processed"
     );
 
     // Subscribe to new block headers (slot updates)
@@ -54,7 +72,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
   public async getBlockHashBySlot(slot: number): Promise<string | null> {
     try {
-      const hash = await this.connection.getBlock(slot, { maxSupportedTransactionVersion: 0 });
+      const hash = await this.connection.getBlock(slot, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
       return hash.blockhash;
     } catch (error) {
       console.error('getBlockHashBySlot error', error);
@@ -87,7 +105,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
   public async getTransactionReceipt(hash: string): Promise<ConfirmedTransaction | null> {
     try {
-      const receipt = await this.connection.getConfirmedTransaction(hash);
+      const receipt = await this.connection.getConfirmedTransaction(hash, 'confirmed');
       return receipt;
     } catch (error) {
       console.error(error);
@@ -100,6 +118,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
       let transaction: any;
       transaction = await this.connection.getTransaction(id, {
         maxSupportedTransactionVersion: 0,
+        commitment: 'confirmed'
       });
       console.log('transaction....', transaction);
       return {
@@ -144,10 +163,10 @@ export default class SolanaWrapper extends BlockchainWrapper {
       const returnTransactionObjects = verbosity > 0;
       let block: any;
       if (returnTransactionObjects) {
-        block = await this.connection.getBlock(id, { maxSupportedTransactionVersion: 0 });
+        block = await this.connection.getBlock(id, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
       } else {
         // Fetch block without transactions
-        block = await this.connection.getBlock(id);
+        block = await this.connection.getBlock(id, { commitment: 'confirmed' });
       }
 
       //   console.log('before normalizing', { block });
@@ -183,8 +202,6 @@ export default class SolanaWrapper extends BlockchainWrapper {
             maxPriorityFeePerGas: 0,
             pendingSortPrice: 0,
           };
-
-          console.log('normalized transaction', { transaction });
 
           // Return normalized transaction
           return transaction;

@@ -216,7 +216,7 @@ const init = async () => {
                 transaction.blockHeight = transaction.blockNumber;
                 delete transaction.blockNumber;
             }
-            processTransaction(solanaWrapper, { ...transaction, processed: true });
+            processTransaction(solanaWrapper, { ...transaction, processed: true, confirmed: false });
         });
         solanaWrapper.on('confirmed-block', (event: any) => {
             processBlock(solanaWrapper, event.hash, event.height);

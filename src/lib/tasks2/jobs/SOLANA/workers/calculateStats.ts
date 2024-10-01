@@ -57,7 +57,7 @@ const interval = setInterval(async () => {
                 if(err) return reject(err);
 
                 try {
-                    let parsed = ETHTransactionsSchema.fromBuffer(data);
+                    let parsed = SOLANATransactionsSchema.fromBuffer(data);
 
                     // Filter transactions in the last 5 minutes
                     const now = Date.now();
@@ -82,6 +82,7 @@ const interval = setInterval(async () => {
                 if(err) return reject(err);
 
                 try {
+                    data = data.slice(4);
                     let parsed = ETHBlocksSchema.fromBuffer(data);
 
                     // Filter blocks in the last hour

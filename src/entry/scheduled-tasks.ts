@@ -16,6 +16,7 @@ import xmrRemoveBadTxs from '../lib/tasks/jobs/xmr-remove-bad-txs';
 import btcBlockBroadcast from '../lib/tasks/jobs/btc-block-broadcast';
 import xmrBlockBroadcast from '../lib/tasks/jobs/xmr-block-broadcast';
 import ethRecentContracts from '../lib/tasks/jobs/eth-recent-contracts';
+import solanaRecentContracts from '../lib/tasks/jobs/solana-recent-contracts';
 import { chainConfig } from '../data/chains';
 var allowed = Object.keys(chainConfig);
 var chains: string[] = []; 
@@ -146,9 +147,9 @@ const run = async () => {
     }
 
     if(chains.includes('SOALNA')) {
-        executeJob(() => ethRecentContracts('SOLANA', '5min', Date.now() - minutes(5)), seconds(5)); 
-        executeJob(() => ethRecentContracts('SOLANA',  '1hour', Date.now() - hours(1)), hours(1)); 
-        executeJob(() => ethRecentContracts('SOLANA',  '1day', Date.now() - days(1)), days(1));
+        executeJob(() => solanaRecentContracts('SOLANA', '5min', Date.now() - minutes(5)), seconds(5)); 
+        executeJob(() => solanaRecentContracts('SOLANA',  '1hour', Date.now() - hours(1)), hours(1)); 
+        executeJob(() => solanaRecentContracts('SOLANA',  '1day', Date.now() - days(1)), days(1));
     }
 
     // if(chains.includes('LUKSO')) {

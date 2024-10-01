@@ -100,6 +100,7 @@ setInterval(async () => {
         pendingList = pendingList.map((transaction: any) => {
             transaction.type = 0; // Adjust type as necessary
             const formatted = formatTransaction("SOLANA", transaction); // Format for Solana
+            console.log('the formatted transaction is', formatted);
             if (formatted.an == null) {
                 count++;
             }

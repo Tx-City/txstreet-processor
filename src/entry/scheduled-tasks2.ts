@@ -8,7 +8,7 @@ import DropoutContainer from '../lib/tasks2/containers/Dropout';
 import ObtainTransactionsFromDatabase from '../lib/tasks2/tasks/ObtainTransactionsFromDatabase';
 import { ProjectedEthereumTransaction, ProjectedEthereumBlock, ProjectedXMRTransaction, ProjectedXMRBlock, ProjectedBTCTransaction, ProjectedBTCBlock, ProjectedSolanaTransaction, ProjectedSolanaBlock } from '../lib/tasks2/types';
 import path from 'path';
-import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchema, XMRTransactionsSchema } from '../data/schemas';
+import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, SOLANATransactionsSchema, XMRBlocksSchema, XMRTransactionsSchema } from '../data/schemas';
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 import ObtainRollupBlocksFromDatabase from '../lib/tasks2/tasks/ObtainRollupBlocksFromDatabase';
 
@@ -51,7 +51,7 @@ const initialize = async () => {
                 blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
                 break;
             case 'SOLANA':
-                transactions = new DropoutContainer<ProjectedSolanaTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
+                transactions = new DropoutContainer<ProjectedSolanaTransaction>(`transactions-${chainToInit}.bin`, SOLANATransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
                 // Create a collection for blocks that lasts one day.
                 blocks = new DropoutContainer<ProjectedSolanaBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
                 break;

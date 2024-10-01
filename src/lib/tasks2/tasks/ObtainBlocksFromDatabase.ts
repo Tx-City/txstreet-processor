@@ -80,7 +80,6 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     let earliest = results.sort((a: any, b: any) => b.height - a.height)[results.length - 1]; 
                     if(!earliest) 
                         earliest = (await collection.find({ chain, hash: { $ne: null }, height: { $ne: null } },  project).sort({ height: -1 }).limit(1).toArray())[0];
-                    console.log({earliest});
                     let earliestHeight: number = earliest.height;
                     const remainder = 250 - results.length;
                     let _results = await collection.find({ chain, height: { $lt: earliestHeight } }).project(project).sort({ height: -1 }).limit(remainder).toArray();
@@ -107,10 +106,6 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                 if(this._firstExecution)
                     this._firstExecution = false; 
 
-                console.log({
-                    results,
-                    firstExecution: this._firstExecution,
-                });
             } catch (error) {
                 console.error(error); 
                 console.error(error);
