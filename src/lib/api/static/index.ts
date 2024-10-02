@@ -67,7 +67,7 @@ staticRouter.get('/live/:file', async (request: Request, response: Response) => 
 staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Response) => {
     let ticker = request.params.ticker;
     let hash = request.params.hash;
-    if(ticker === 'SOL1') {
+    if(ticker === 'SOL1' || ticker === 'SOL' || ticker === 'SOLANA') {
         return {
                 "coin": "SOL",
                 "txs": 153,
