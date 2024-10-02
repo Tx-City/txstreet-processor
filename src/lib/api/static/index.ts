@@ -68,7 +68,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
     let ticker = request.params.ticker;
     let hash = request.params.hash;
     if(ticker === 'SOL1' || ticker === 'SOL' || ticker === 'SOLANA') {
-        return {
+        return response.status(404).send({
                 "coin": "SOL",
                 "txs": 153,
                 "txFull": {
@@ -139,7 +139,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
                 "slot": 153689564,
                 "leader": "12rCFo5DPtMRjNGvknADeauDxDRup1QdrKZ8ZGnDaEtD",
                 "inserted": 1727855173        
-        }
+        });
     }
     let verbose: boolean = request?.query?.verbose ? request?.query?.verbose === 'true' : true;
 
