@@ -36,4 +36,4 @@ setInterval(async () => {
             console.error('Error updating database or Redis:', error);
         }
     }
-}, 1000).start(true);
+}, 4000).start(true);

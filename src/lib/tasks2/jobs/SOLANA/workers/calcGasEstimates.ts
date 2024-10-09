@@ -28,4 +28,4 @@ setInterval(async () => {
         // Ignored, log the error for debugging
         console.log(error);
     }
-}, 2500).start(true);
+}, 5500).start(true);

@@ -42,6 +42,8 @@ export default class SolanaPendingList {
             const { chain } = data;
             if (chain !== "SOLANA") return;
 
+            console.log('Received pendingTx event', data);
+
             // Format the socket-format back into the SolanaTransactionSchema Format.
             const transaction: ProjectedSolanaTransaction = {
                 hash: data.tx,

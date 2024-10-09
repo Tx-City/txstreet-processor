@@ -29,18 +29,19 @@ export default class SolanaWrapper extends BlockchainWrapper {
         console.log("-----------Solana transaction detected--------------");
         try {
           const sig: any = signature;
-          const status = await this.connection.getSignatureStatus(sig);
-          console.log('statusss...', {status})
+          console.log("sig....", { sig: sig.signature, err: sig.err });
+          // if(sig.err) return;
+          const status = await this.connection.getSignatureStatus(sig.signature);
           // const transaction = await this.getTransaction(sig);
           let transaction = null;
           if (status && status.value && status.value.confirmations) {
             // Transaction is confirmed, fetch details
-            transaction = await this.getTransaction(sig);
+            transaction = await this.getTransaction(sig.signature);
           } else {
             // Transaction is pending or failed, build a mock transaction object
             transaction = {
               signature: signature,
-              status: status?.value?.confirmationStatus || 'pending', // Mark as pending
+              status: status?.value?.confirmationStatus || "pending", // Mark as pending
               // You can add other relevant data here
             };
           }
@@ -72,10 +73,10 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
   public async getBlockHashBySlot(slot: number): Promise<string | null> {
     try {
-      const hash = await this.connection.getBlock(slot, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+      const hash = await this.connection.getBlock(slot, { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
       return hash.blockhash;
     } catch (error) {
-      console.error('getBlockHashBySlot error', error);
+      console.error("getBlockHashBySlot error", error);
       return null;
     }
   }
@@ -105,7 +106,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
   public async getTransactionReceipt(hash: string): Promise<ConfirmedTransaction | null> {
     try {
-      const receipt = await this.connection.getConfirmedTransaction(hash, 'confirmed');
+      const receipt = await this.connection.getConfirmedTransaction(hash, "confirmed");
       return receipt;
     } catch (error) {
       console.error(error);
@@ -116,11 +117,11 @@ export default class SolanaWrapper extends BlockchainWrapper {
   public async getTransaction(id: string, verbosity?: number): Promise<any> {
     try {
       let transaction: any;
-      transaction = await this.connection.getTransaction(id, {
+      const tx = await this.connection.getTransaction(id, {
         maxSupportedTransactionVersion: 0,
-        commitment: 'confirmed'
+        commitment: "confirmed",
       });
-      console.log('transaction....', transaction);
+      transaction = tx.transaction;
       return {
         // hash: transaction.signatures[0],
         // blockNumber: transaction.slot,
@@ -133,24 +134,24 @@ export default class SolanaWrapper extends BlockchainWrapper {
         // pendingSortPrice: 0,
 
         hash: transaction.signatures[0], // Solana transaction signature
-            from:
-              transaction.message.accountKeys !== null &&
-              transaction.message.accountKeys !== undefined &&
-              transaction.message.accountKeys.length
-                ? transaction.message.accountKeys[0]?.toString()
-                : transaction.message.staticAccountKeys[0]?.toString() || null, // Sender
-            to:
-              transaction.message.accountKeys !== null &&
-              transaction.message.accountKeys !== undefined &&
-              transaction.message.accountKeys.length
-                ? transaction.message.accountKeys[1]?.toString()
-                : transaction.message.staticAccountKeys[1]?.toString() || null, // Receiver
-            value: transaction.meta.preBalances[0] / LAMPORTS_PER_SOL, // Balance transferred in SOL
-            fee: transaction.meta.fee / LAMPORTS_PER_SOL, // Transaction fee in SOL
-            gasPrice: 0,
-            maxFeePerGas: 0,
-            maxPriorityFeePerGas: 0,
-            pendingSortPrice: 0,
+        from:
+          transaction.message.accountKeys !== null &&
+          transaction.message.accountKeys !== undefined &&
+          transaction.message.accountKeys.length
+            ? transaction.message.accountKeys[0]?.toString()
+            : transaction.message.staticAccountKeys[0]?.toString() || null, // Sender
+        to:
+          transaction.message.accountKeys !== null &&
+          transaction.message.accountKeys !== undefined &&
+          transaction.message.accountKeys.length
+            ? transaction.message.accountKeys[1]?.toString()
+            : transaction.message.staticAccountKeys[1]?.toString() || null, // Receiver
+        value: tx.meta.preBalances[0] / LAMPORTS_PER_SOL, // Balance transferred in SOL
+        fee: tx.meta.fee / LAMPORTS_PER_SOL, // Transaction fee in SOL
+        gasPrice: 0,
+        maxFeePerGas: 0,
+        maxPriorityFeePerGas: 0,
+        pendingSortPrice: 0,
       };
     } catch (error) {
       console.error(error);
@@ -163,10 +164,10 @@ export default class SolanaWrapper extends BlockchainWrapper {
       const returnTransactionObjects = verbosity > 0;
       let block: any;
       if (returnTransactionObjects) {
-        block = await this.connection.getBlock(id, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' });
+        block = await this.connection.getBlock(id, { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
       } else {
         // Fetch block without transactions
-        block = await this.connection.getBlock(id, { commitment: 'confirmed' });
+        block = await this.connection.getBlock(id, { commitment: "confirmed" });
       }
 
       //   console.log('before normalizing', { block });
@@ -212,7 +213,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
       return block;
     } catch (error) {
-      console.error('getBlock', error);
+      console.error("getBlock", error);
       return null;
     }
   }
