@@ -2,7 +2,6 @@ import { storeObject } from '../../../lib/utilities';
 import mongodb from '../../../databases/mongodb';
 import Bottleneck from 'bottleneck';
 import { Connection, PublicKey } from '@solana/web3.js';
-import axios from 'axios';
 import path from 'path';
 
 const limiter = new Bottleneck({

@@ -9,6 +9,11 @@ import {
   LAMPORTS_PER_SOL,
   SystemProgram,
 } from "@solana/web3.js";
+import Client, {
+  CommitmentLevel,
+  SubscribeRequest,
+  SubscribeRequestFilterAccountsFilter,
+} from "@triton-one/yellowstone-grpc";
 
 export default class SolanaWrapper extends BlockchainWrapper {
   public connection: Connection;
