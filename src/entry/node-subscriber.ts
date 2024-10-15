@@ -34,7 +34,7 @@ const blockchainImpls = [
   "MANTA",
   "CELO",
   "DASH",
-  //   "TON" //TODO: TON
+  "TON",
 ];
 Object.keys(process.env).forEach((key) => {
   if (blockchainImpls.includes(key.toUpperCase())) {

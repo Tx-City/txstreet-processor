@@ -31,14 +31,11 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
     case "XMR":
       name = "monero";
       break;
-
-    // TODO: ton
-    // case "TON":
-    //   name = "ton";
-    //   break;
-    // case "XMR":
-    //   name = "monero";
-    //   break;
+    case "TON":
+      return {
+        price: 1.0, // Static price for TON
+        // Add other static fields as needed
+      };
   }
 
   if (!name) return null;

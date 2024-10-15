@@ -28,7 +28,6 @@ const createIndexes = async (): Promise<boolean> => {
       "transactions_LTC",
       "transactions_BCH",
       "transactions_XMR",
-      //   "transactions_TON", // TODO: TON
       "blocks",
       "contracts_ETH",
       "moonhead_owners",
@@ -53,7 +52,6 @@ const createIndexes = async (): Promise<boolean> => {
       database.collection("transactions_LTC"),
       database.collection("transactions_BCH"),
       database.collection("transactions_XMR"),
-      // database.collection('transactions_TON')]; // TODO: TON db collection
     ];
 
     // try { await database.collection('account_nonces').createIndex({ account: 1, chain: 1 }, { name: 'account_chain' }); } catch (e) { console.log(e) }

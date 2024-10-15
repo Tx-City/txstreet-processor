@@ -126,20 +126,16 @@ export default (chain: string, data: any) => {
 
     if (data.blockHash) obj.bh = data.blockHash;
     if (data.paymentId) obj.pid = data.paymentId;
+  } else if (chain === "TON") {
+    return {
+      tx: "dummyTxHashTON",
+      from: "dummyFromAddress",
+      to: "dummyToAddress",
+      gas: 21000,
+      gasPrice: 100,
+      // Add other static fields as needed
+    };
   }
-  // TODO: TON
-  // else if (chain === "TON") {
-  //     obj.tx = data.hash || data.tx;
-  //     obj.s = Number(data.size);
-  //     obj.aByte = parseFloat((data.fee / data.size).toFixed(2));
-  //     obj.f = Number(data.fee);
-
-  //     obj.t = data.timestamp;
-  //     obj.ia = data.insertedAt;
-
-  //     if (data.blockHash) obj.bh = data.blockHash;
-  //     if (data.paymentId) obj.pid = data.paymentId;
-  // }
 
   return obj;
 };

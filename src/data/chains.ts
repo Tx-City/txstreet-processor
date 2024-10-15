@@ -65,9 +65,8 @@ export const chainConfig: any = {
   },
   TON: {
     wikiname: "ton",
-    rollup: false,
-    storeBlockFile: false,
-    deleteBlocksOlderThanSeconds: 9000,
-    txsCollection: false,
+    storeBlockFile: true,
+    deleteBlocksOlderThanSeconds: 90000,
+    txsCollection: true,
   },
 };

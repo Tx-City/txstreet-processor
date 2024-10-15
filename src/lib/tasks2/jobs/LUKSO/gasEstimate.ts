@@ -1,9 +1,9 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
-var baseFee = 0; 
-var currentHeight = 0; 
-var gasDif = 0; 
+var baseFee = 0;
+var currentHeight = 0;
+var gasDif = 0;
 var gasLimit = 0;
 var lowBlockGas = 0;
 
@@ -15,8 +15,16 @@ let ignoreFeesFromHashes: any = {}; //for txs fitted into end of blocks, ignore 
  * but it can be updated to simulate future projections based on gas throughput
  */
 async function go() {
-  const _path = path.join(__dirname, '..', '..', '..', '..', 'data', 'LUKSO-pendingTransactions.json');
-  const _result = fs.readFileSync(_path).toString('utf-8'); 
+  const _path = path.join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "..",
+    "data",
+    "LUKSO-pendingTransactions.json"
+  );
+  const _result = fs.readFileSync(_path).toString("utf-8");
   const result = JSON.parse(_result);
   // const list: any = [...result];
 
@@ -63,13 +71,13 @@ function calcBaseFee(prevBaseFee: number, used: number, limit: number) {
   if (used > target) {
     const usedDelta = used - target;
     const baseDelta = Math.max(
-        prevBaseFee * usedDelta / target / denominator,
+      (prevBaseFee * usedDelta) / target / denominator,
       1
     );
     baseFee = prevBaseFee + baseDelta;
   } else if (used < target) {
     const usedDelta = target - used;
-    const baseDelta = prevBaseFee * usedDelta / target / denominator;
+    const baseDelta = (prevBaseFee * usedDelta) / target / denominator;
     baseFee = prevBaseFee - baseDelta;
   }
   return baseFee;
@@ -134,22 +142,31 @@ function finalizeBlocks(blocks: any[]) {
     if (block.gasUsed < lowBlockGas) targetTipIndex = 0;
     // let targetTipIndex = 0;
     const highTipIndex = Math.floor(tips.length * 0.6);
-    block.minMpfpg = Math.round(Math.max(Number(tips.length && tips[targetTipIndex]
-      ? tips[targetTipIndex]
-      : 1), 1));
+    block.minMpfpg = Math.round(
+      Math.max(
+        Number(tips.length && tips[targetTipIndex] ? tips[targetTipIndex] : 1),
+        1
+      )
+    );
     if (block.gasUsed < lowBlockGas && block.minMpfpg > 1) block.minMpfpg = 1;
-    const actualHigh = Math.max(Number(tips.length && tips[highTipIndex]
-      ? tips[highTipIndex]
-      : 2), 2);
+    const actualHigh = Math.max(
+      Number(tips.length && tips[highTipIndex] ? tips[highTipIndex] : 2),
+      2
+    );
     block.highMpfpg = Math.round(Math.min(block.minMpfpg * 10, actualHigh));
     // block.highMpfpg = Math.round(actualHigh);
 
     block.txCount = block.txArray.length;
     //recommended max priority fee
     const recTipIndex = Math.floor((targetTipIndex + highTipIndex) / 2);
-    block.recMpfpg = Math.max(Number(tips.length && tips[recTipIndex]
-      ? tips[recTipIndex]
-      : block.minMpfpg+1), 2);
+    block.recMpfpg = Math.max(
+      Number(
+        tips.length && tips[recTipIndex]
+          ? tips[recTipIndex]
+          : block.minMpfpg + 1
+      ),
+      2
+    );
 
     if (block.gasUsed < lowBlockGas)
       block.recMpfpg = Math.max(block.minMpfpg, 1);
@@ -157,9 +174,7 @@ function finalizeBlocks(blocks: any[]) {
       block.highMpfpg = Math.max(block.recMpfpg, 2);
     if (block.recMpfpg < block.minMpfpg)
       block.recMpfpg = Math.max(block.minMpfpg, 1);
-    if(block.highMpfpg === block.recMpfpg)
-      block.highMpfpg++;
-
+    if (block.highMpfpg === block.recMpfpg) block.highMpfpg++;
 
     //recommended max fee
     block.recMfpg = Math.ceil((block.baseFee + block.highMpfpg) * 1.5);
@@ -169,13 +184,17 @@ function finalizeBlocks(blocks: any[]) {
   return blocks;
 }
 
-export default async (_baseFee: number, _currentHeight: number, _gasDif: number, _gasLimit: number) => {
-    baseFee = _baseFee / 1000000000;
-    currentHeight = _currentHeight;
-    gasDif = _gasDif / 100;
-    gasLimit = _gasLimit; 
-    lowBlockGas = _gasLimit * 0.7;
+export default async (
+  _baseFee: number,
+  _currentHeight: number,
+  _gasDif: number,
+  _gasLimit: number
+) => {
+  baseFee = _baseFee / 1000000000;
+  currentHeight = _currentHeight;
+  gasDif = _gasDif / 100;
+  gasLimit = _gasLimit;
+  lowBlockGas = _gasLimit * 0.7;
 
-
-    return await go(); 
-}
+  return await go();
+};

@@ -29,7 +29,6 @@ const blockchainImpls = [
   "MANTA",
   "CELO",
   "DASH",
-  "TON",
 ];
 var nodesToInit: string[] = [];
 
@@ -185,7 +184,13 @@ const run = async () => {
     nonBlockingInfiniteLoop(rinkebyWrapper);
   }
   if (nodesToInit.includes("TON")) {
-    // Do the TON thing
+    const tonWrapper = new Wrappers.TONWrapper(process.env.TON_NODE as string);
+
+    nonBlockingInfiniteLoop(tonWrapper);
+    console.log(
+      "running block processor for ton",
+      nonBlockingInfiniteLoop(tonWrapper)
+    );
   }
 };
 
