@@ -11,6 +11,7 @@
   "dependencies": {
     "@alch/alchemy-web3": "^1.4.2",
     "@txstreet/txstreet-token-ids": "^1.6.1",
+    "@types/eventsource": "^1.1.15",
     "abi-decoder": "^2.3.0",
     "avsc": "^5.7.3",
     "axios": "^0.21.4",
@@ -28,6 +29,7 @@
     "dotenv": "^10.0.0",
     "ethers": "^5.7.2",
     "eventemitter3": "^4.0.7",
+    "eventsource": "^2.0.2",
     "express": "^4.17.1",
     "fs.promises": "^0.1.2",
     "helmet": "^4.5.0",

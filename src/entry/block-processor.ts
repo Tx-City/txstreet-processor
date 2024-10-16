@@ -184,7 +184,7 @@ const run = async () => {
     nonBlockingInfiniteLoop(rinkebyWrapper);
   }
   if (nodesToInit.includes("TON")) {
-    const tonWrapper = new Wrappers.TONWrapper(process.env.TON_NODE as string);
+    const tonWrapper = new Wrappers.TONWrapper();
 
     nonBlockingInfiniteLoop(tonWrapper);
     console.log(
