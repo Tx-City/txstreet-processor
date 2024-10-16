@@ -342,6 +342,16 @@ const init = async () => {
 
     getLatestBlockLoop(xmrWrapper);
   }
+  if (chainsToSubscribe.includes("TON")) {
+    const wrapperClass = await import("../lib/node-wrappers/TON");
+    let tonWrapper = new wrapperClass.default();
+    tonWrapper.initEventSystem();
+    tonWrapper.on("new-block", (latestBlock: any) => {
+      processTransaction(tonWrapper, { ...latestBlock, processed: true });
+    });
+
+    getLatestBlockLoop(tonWrapper);
+  }
 };
 
 init();

@@ -28,6 +28,7 @@ const blockchainImpls = [
   "MANTA",
   "CELO",
   "DASH",
+  "TON",
 ];
 var nodesToInit: string[] = [];
 
@@ -168,6 +169,12 @@ const run = async () => {
     if (process.env.PROCESS_PENDING == "true") processPending(rinkebyWrapper);
     if (process.env.PROCESS_CONFIRMED == "true")
       processConfirmed(rinkebyWrapper);
+  }
+
+  if (nodesToInit.includes("TON")) {
+    const tonWrapper = new Wrappers.TONWrapper();
+    if (process.env.PROCESS_PENDING == "true") processPending(tonWrapper);
+    if (process.env.PROCESS_CONFIRMED == "true") processConfirmed(tonWrapper);
   }
 };
 
