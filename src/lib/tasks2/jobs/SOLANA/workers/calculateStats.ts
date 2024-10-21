@@ -111,7 +111,7 @@ const interval = setInterval(async () => {
         try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
         try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
-        try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
 
         // Example: Calculate transaction fees (in lamports) converted to USD
         try {

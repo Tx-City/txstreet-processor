@@ -17,7 +17,7 @@ export default (block: any, transactions: any) => {
     // Here you can add more calculations or format the stats as needed
     const formattedStats = {
         blockHash: block.blockhash, // Solana blockhash
-        blockHeight: block.slot, // Solana slot is equivalent to block height
+        blockHeight: block.height, // Solana slot is equivalent to block height
         ...stats,
     };
 

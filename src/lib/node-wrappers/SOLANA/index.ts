@@ -16,206 +16,173 @@ import Client, {
 } from "@triton-one/yellowstone-grpc";
 
 export default class SolanaWrapper extends BlockchainWrapper {
+  
+  public grpcClient: Client;
+  public stream: any;
   public connection: Connection;
   public programId: PublicKey;
 
   constructor(host: string) {
     super("SOLANA");
+   
+    const parts = host.split('/');
+    const xToken = parts[parts.length - 1];
+    this.grpcClient = new Client(host, xToken, {
+      "grpc.max_receive_message_length": 64 * 1024 * 1024 // 64MiB,
+    });
+    
     this.connection = new Connection(host, "processed");
     this.programId = SystemProgram.programId;
+    
   }
+  public async writing(){
+      this.stream = await this.grpcClient.subscribe();
+      const req: SubscribeRequest = {
+        slots: {},
+        accounts: {},
+        transactions: {},
+        transactionsStatus: {},
+        blocks: {},
+        blocksMeta: { blockmetadata: {} },
+        entry: {},
+        accountsDataSlice: [],
+      };
 
-  public initEventSystem() {
-    // Subscribe to all confirmed transactions
-    this.connection.onLogs(
-      // listen for all transactions
-      this.programId,
-      async (signature, context) => {
-        console.log("-----------Solana transaction detected--------------");
-        try {
-          const sig: any = signature;
-          console.log("sig....", { sig: sig.signature, err: sig.err });
-          // if(sig.err) return;
-          const status = await this.connection.getSignatureStatus(sig.signature);
-          // const transaction = await this.getTransaction(sig);
-          let transaction = null;
-          if (status && status.value && status.value.confirmations) {
-            // Transaction is confirmed, fetch details
-            transaction = await this.getTransaction(sig.signature);
-          } else {
-            // Transaction is pending or failed, build a mock transaction object
-            transaction = {
-              signature: signature,
-              status: status?.value?.confirmationStatus || "pending", // Mark as pending
-              // You can add other relevant data here
-            };
-          }
-          if (transaction) {
-            this.emit("mempool-tx", transaction);
-            console.log("Mempool TX", transaction);
-          }
-        } catch (error) {
-          console.error(error);
+    // Send subscribe request
+    await new Promise<void>((resolve, reject) => {
+      this.stream.write(req, (err: Error | null) => {
+        if (err === null || err === undefined) {
+          resolve();
+        } else {
+          reject(err);
         }
-      },
-      "processed"
-    );
-
-    // Subscribe to new block headers (slot updates)
-    this.connection.onSlotUpdate(async (slotInfo) => {
-      console.log("-----------Solana block detected--------------");
-      if (slotInfo.type === "completed") {
-        const hash = await this.getBlockHashBySlot(slotInfo.slot);
-        if (!hash) return;
-        const event = {
-          hash,
-          height: slotInfo.slot,
-        };
-        this.emit("confirmed-block", event);
-      }
+      });
+    }).catch((reason) => {
+      console.error(reason);
+      throw reason;
     });
   }
 
-  public async getBlockHashBySlot(slot: number): Promise<string | null> {
-    try {
-      const hash = await this.connection.getBlock(slot, { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
-      return hash.blockhash;
-    } catch (error) {
-      console.error("getBlockHashBySlot error", error);
-      return null;
-    }
-  }
 
-  public async getCurrentHeight(): Promise<null | number> {
-    try {
-      const slot = await this.connection.getSlot();
-      return slot;
-    } catch (error) {
-      console.error(error);
-      return null;
+  public async initEventSystem() {
+  
+    await this.writing();
+    
+     // Handle updates
+     this.stream.on("data", async (data:any) => {
+        // console.log(data)
+        try{   
+          const hash = data.blockMeta.blockhash;
+          const height = data.blockMeta.blockHeight.blockHeight;
+          const slot = data.blockMeta.slot;
+          console.log("slot======", data)
+                if (!hash) return;
+                const event = {
+                  hash,
+                  height: height,
+                  slot: slot,
+                };
+                this.emit("confirmed-block", event);
+              
+    }catch(error){
+      if(error){
+        console.log(error)
+      }
     }
-  }
+  });
+  
+  
+   
+  
+    // Subscribe to new block headers (slot updates)
+    
+      
+      
+    };
+  
 
-  public async getTransactionReceipts(block: BlockResponse): Promise<any[]> {
-    try {
-      const promises = block.transactions.map((transaction: any) =>
-        this.getTransactionReceipt(transaction.transaction.signatures[0])
-      );
-      const receipts = await Promise.all(promises);
-      return receipts;
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
-  }
+  public async getCurrentHeight(): Promise<null | number>{
+    await this.writing();
+    let slot;
+     // Handle updates
+     this.stream.on("data", async (data:any) => {
+        // console.log(data)
+        try{   
+          slot = data.blockMeta.slot;
+            return slot;
+          } catch(error){
+              if(error){
+            console.log(error)
+          }
+        }
+  })
+  return slot;
+}
+  
 
-  public async getTransactionReceipt(hash: string): Promise<ConfirmedTransaction | null> {
-    try {
-      const receipt = await this.connection.getConfirmedTransaction(hash, "confirmed");
-      return receipt;
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
-  }
+  public getTransactionReceipts:  undefined
 
-  public async getTransaction(id: string, verbosity?: number): Promise<any> {
-    try {
-      let transaction: any;
-      const tx = await this.connection.getTransaction(id, {
-        maxSupportedTransactionVersion: 0,
-        commitment: "confirmed",
-      });
-      transaction = tx.transaction;
-      return {
-        // hash: transaction.signatures[0],
-        // blockNumber: transaction.slot,
-        // from: transaction.message.accountKeys[0].toString(),
-        // to: transaction.message.accountKeys[1].toString(),
-        // value: transaction.meta.preBalances[0] / LAMPORTS_PER_SOL,
-        // gasPrice: 0,
-        // maxFeePerGas: 0,
-        // maxPriorityFeePerGas: 0,
-        // pendingSortPrice: 0,
+  public getTransactionReceipt: undefined;
 
-        hash: transaction.signatures[0], // Solana transaction signature
-        from:
-          transaction.message.accountKeys !== null &&
-          transaction.message.accountKeys !== undefined &&
-          transaction.message.accountKeys.length
-            ? transaction.message.accountKeys[0]?.toString()
-            : transaction.message.staticAccountKeys[0]?.toString() || null, // Sender
-        to:
-          transaction.message.accountKeys !== null &&
-          transaction.message.accountKeys !== undefined &&
-          transaction.message.accountKeys.length
-            ? transaction.message.accountKeys[1]?.toString()
-            : transaction.message.staticAccountKeys[1]?.toString() || null, // Receiver
-        value: tx.meta.preBalances[0] / LAMPORTS_PER_SOL, // Balance transferred in SOL
-        fee: tx.meta.fee / LAMPORTS_PER_SOL, // Transaction fee in SOL
-        gasPrice: 0,
-        maxFeePerGas: 0,
-        maxPriorityFeePerGas: 0,
-        pendingSortPrice: 0,
-      };
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
-  }
+  
+
+  public getTransaction : undefined;
+
+  // public getBlock: undefined;
 
   public async getBlock(id: number, verbosity: number): Promise<any> {
     try {
       const returnTransactionObjects = verbosity > 0;
       let block: any;
+      console.log("id ++++++ ", id); //27...... height, but it should be slot
       if (returnTransactionObjects) {
-        block = await this.connection.getBlock(id, { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
+        block = await this.connection.getBlock(Number(id), { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
       } else {
         // Fetch block without transactions
-        block = await this.connection.getBlock(id, { commitment: "confirmed" });
+        block = await this.connection.getBlock(Number(id), { commitment: "confirmed" });
       }
 
       //   console.log('before normalizing', { block });
       if (!block) return null;
-
       // Normalize the block data to match Ethereum structure
       block.height = block.blockHeight;
+      console.log("block height ++++++ ", block.height);
       block.baseFeePerGas = 0; // Solana doesn't have gas fees like Ethereum, you can set this to 0
       block.timestamp = Math.floor(block.blockTime);
       block.hash = block.blockhash;
 
       // Normalize transaction data
-      if (block.transactions && returnTransactionObjects) {
-        block.transactions = block.transactions.map((tx: any) => {
-          let transaction = {
-            hash: tx.transaction.signatures[0], // Solana transaction signature
-            from:
-              tx.transaction.message.accountKeys !== null &&
-              tx.transaction.message.accountKeys !== undefined &&
-              tx.transaction.message.accountKeys.length
-                ? tx.transaction.message.accountKeys[0]?.toString()
-                : tx.transaction.message.staticAccountKeys[0]?.toString() || null, // Sender
-            to:
-              tx.transaction.message.accountKeys !== null &&
-              tx.transaction.message.accountKeys !== undefined &&
-              tx.transaction.message.accountKeys.length
-                ? tx.transaction.message.accountKeys[1]?.toString()
-                : tx.transaction.message.staticAccountKeys[1]?.toString() || null, // Receiver
-            value: tx.meta.preBalances[0] / LAMPORTS_PER_SOL, // Balance transferred in SOL
-            fee: tx.meta.fee / LAMPORTS_PER_SOL, // Transaction fee in SOL
-            gasPrice: 0,
-            maxFeePerGas: 0,
-            maxPriorityFeePerGas: 0,
-            pendingSortPrice: 0,
-          };
+      // if (block.transactions && returnTransactionObjects) {
+      //   block.transactions = block.transactions.map((tx: any) => {
+      //     let transaction = {
+      //       hash: tx.transaction.signatures[0], // Solana transaction signature
+      //       from:
+      //         tx.transaction.message.accountKeys !== null &&
+      //         tx.transaction.message.accountKeys !== undefined &&
+      //         tx.transaction.message.accountKeys.length
+      //           ? tx.transaction.message.accountKeys[0]?.toString()
+      //           : tx.transaction.message.staticAccountKeys[0]?.toString() || null, // Sender
+      //       to:
+      //         tx.transaction.message.accountKeys !== null &&
+      //         tx.transaction.message.accountKeys !== undefined &&
+      //         tx.transaction.message.accountKeys.length
+      //           ? tx.transaction.message.accountKeys[1]?.toString()
+      //           : tx.transaction.message.staticAccountKeys[1]?.toString() || null, // Receiver
+      //       value: tx.meta.preBalances[0] / LAMPORTS_PER_SOL, // Balance transferred in SOL
+      //       fee: tx.meta.fee / LAMPORTS_PER_SOL, // Transaction fee in SOL
+      //       gasPrice: 0,
+      //       maxFeePerGas: 0,
+      //       maxPriorityFeePerGas: 0,
+      //       pendingSortPrice: 0,
+      //     };
 
-          // Return normalized transaction
-          return transaction;
-        });
-      } else {
-        block.transactions = [];
-      }
-
+      //     // Return normalized transaction
+      //     return transaction;
+      //   });
+      // } else {
+      //   block.transactions = [];  
+      // }
+      block.transactions = [];  
       return block;
     } catch (error) {
       console.error("getBlock", error);
@@ -223,46 +190,20 @@ export default class SolanaWrapper extends BlockchainWrapper {
     }
   }
 
-  public async resolveBlock(id: number, verbosity: number, depth: number): Promise<any> {
-    try {
-      const block = await this.getBlock(id, verbosity);
-      return block ? { exists: true, block } : { exists: false };
-    } catch (error) {
-      console.error(error);
-      return { exists: false };
-    }
-  }
+  public resolveBlock: undefined;
 
-  public async getTransactionCount(): Promise<number> {
-    try {
-      const count = await this.connection.getTransactionCount();
-      return count;
-    } catch (error) {
-      console.error(error);
-      return 0;
-    }
-  }
+  public getTransactionCount:  undefined;
 
-  public async getTransactionSignatures(account: string): Promise<any> {
-    try {
-      const publicKey = new PublicKey(account);
-      const signatures = await this.connection.getSignaturesForAddress(publicKey);
-      return signatures.length; // Returns the number of transaction signatures
-    } catch (error) {
-      console.error(error);
-      return 0;
-    }
-  }
+  public getTransactionSignatures: undefined;
 
-  public isTransaction(data: any): boolean {
-    return data && data.signature && data.transaction;
-  }
+  public isTransaction: undefined;
 
-  public isTransactionConfirmed(transaction: any): boolean {
-    return transaction && transaction.meta && transaction.meta.err === null;
-  }
+  public isTransactionConfirmed: undefined;
 
   public isBlock(data: any): boolean {
-    return data && data.blockTime && data.blockhash;
-  }
+    if (!data.chain) return false;
+    if (!data.hash) return false;
+    if (!data.height) return false;
+    return true;
+}
 }

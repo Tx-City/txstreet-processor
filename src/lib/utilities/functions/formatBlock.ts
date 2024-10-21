@@ -48,6 +48,17 @@ export default (chain: string, block: any): Promise<any> => {
         obj.time = block.timestamp;
     }
 
+    if(chain === "SOLANA") {
+        obj.tx = block.transactions || []; 
+        obj.txs = block.txs || block.transactions?.length || 0;
+        obj.txFull = block.txFull;
+        obj.hash = block.hash;
+        obj.parentHash = block.prevHash;
+        obj.height = block.height;
+        obj.slot = block.slot;
+        obj.time = block.timestamp;
+    }
+
     if(block.lastInserted) obj.inserted = Math.round(block.lastInserted / 1000);
     return obj;
 }

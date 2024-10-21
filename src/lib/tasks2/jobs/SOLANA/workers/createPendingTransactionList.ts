@@ -49,21 +49,21 @@ setInterval(async () => {
             if (!transactionMap[hash]) delete cache[hash];
         });
 
-        let qResult = await database.collection('transactions_SOLANA').find({ signature: { $in: requestHashes } })
-            .project({ _id: 0, signature: 1, to: 1, house: 1 }).toArray(); // Adjust collection name and fields
+        // let qResult = await database.collection('transactions_SOLANA').find({ signature: { $in: requestHashes } })
+        //     .project({ _id: 0, signature: 1, to: 1, house: 1 }).toArray(); // Adjust collection name and fields
 
-        qResult.forEach((doc: any) => {
-            cache[doc.signature] = { to: doc.to, house: doc.house };
-        });
+        // qResult.forEach((doc: any) => {
+        //     cache[doc.signature] = { to: doc.to, house: doc.house };
+        // });
 
         // Remove confirmed transactions
         // let confirmedSignatures = await solanaConnection.getConfirmedSignaturesForAddress(new PublicKey('YourAddressHere'), { limit: 100 }); // Change to relevant address
         // let confirmedHashes = confirmedSignatures.map(tx => tx.signature);
-        let _remove = await database.collection('transactions_SOLANA').find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ hash: 1 }).toArray();
-        _remove = _remove.map((tx: any) => tx.hash);
+        // let _remove = await database.collection('transactions_SOLANA').find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ hash: 1 }).toArray();
+        // _remove = _remove.map((tx: any) => tx.hash);
 
-        transactions = transactions.filter((tx: any) => !_remove.includes(tx.signature));
-        transactions = transactions.map((transaction: any) => ({ ...transaction, ...cache[transaction.signature] }));
+        // transactions = transactions.filter((tx: any) => !_remove.includes(tx.signature));
+        // transactions = transactions.map((transaction: any) => ({ ...transaction, ...cache[transaction.signature] }));
 
         // The array of transactions to store. 
         var pendingList: any[] = [];

@@ -26,58 +26,61 @@ setInterval(async () => {
 const storeBlock = async (database: any, block: any) => {
     try {
         // Check for unconfirmed transactions in the block
-        const remainingTxs = await database.collection('transactions_SOLANA').find({ confirmed: false, blockHash: block.hash }).count();
-        if (remainingTxs > 0) {
-            let remainingFull = await database.collection('transactions_SOLANA').find({ confirmed: false, blockHash: block.hash }).limit(20).toArray();
-            for (let i = 0; i < remainingFull.length; i++) {
-                const tx = remainingFull[i];
-                if (tx.locked && Date.now() - tx.lockedAt > 3000) {
-                    await database.collection('transactions_SOLANA').updateOne({ hash: tx.hash }, { $set: { locked: false, processed: false } });
-                }
-            }
-            console.log(`Block ${block.hash} is still waiting on ${remainingTxs} transactions to be processed.`);
-            return false;
-        }
+        // const remainingTxs = await database.collection('transactions_SOLANA').find({ confirmed: false, blockHash: block.hash }).count();
+        // if (remainingTxs > 0) {
+        //     let remainingFull = await database.collection('transactions_SOLANA').find({ confirmed: false, blockHash: block.hash }).limit(20).toArray();
+        //     for (let i = 0; i < remainingFull.length; i++) {
+        //         const tx = remainingFull[i];
+        //         if (tx.locked && Date.now() - tx.lockedAt > 3000) {
+        //             await database.collection('transactions_SOLANA').updateOne({ hash: tx.hash }, { $set: { locked: false, processed: false } });
+        //         }
+        //     }
+        //     console.log(`Block ${block.hash} is still waiting on ${remainingTxs} transactions to be processed.`);
+        //     return false;
+        // }
 
-        if (!block.transactions)
-            block.transactions = [];
+        // if (!block.transactions)
+            // block.transactions = [];
 
         block.txFull = {};
-        const transactions = await database.collection('transactions_SOLANA').find({ hash: { $in: block.transactions }, confirmed: true }).toArray();
-        if (block.transactions && block.transactions.length > 0 && transactions.length === 0) {
-            for (let i = 0; i < block.transactions.length; i++) {
-                const hash = block.transactions[i];
-                await database.collection('transactions_SOLANA').updateOne({
-                    hash
-                }, {
-                    $set: {
-                        blockHash: block.hash,
-                        blockHeight: block.height,
-                        confirmed: true,
-                        processed: false,
-                        locked: false
-                    }
-                }, { upsert: true });
-            }
-            return false;
-        }
+        // const transactions = await database.collection('blocks').find({ chain:"SOLANA" }).toArray();
+        // if (block.transactions && block.transactions.length > 0 && transactions.length === 0) {
+        //     for (let i = 0; i < block.transactions.length; i++) {
+        //         const hash = block.transactions[i];
+        //         await database.collection('transactions_SOLANA').updateOne({
+        //             hash
+        //         }, {
+        //             $set: {
+        //                 blockHash: block.hash,
+        //                 blockHeight: block.height,
+        //                 confirmed: true,
+        //                 processed: false,
+        //                 locked: false
+        //             }
+        //         }, { upsert: true });
+        //     }
+        //     return false;
+        // }
 
-        transactions.forEach((transaction: any) => {
-            const formatted = formatTransaction('SOLANA', transaction);
-            block.txFull[formatted.tx] = formatted;
-        });
+        // transactions.forEach((transaction: any) => {
+            // const formatted = formatTransaction('SOLANA', transaction);
+            // block.txFull[formatted.tx] = formatted;
+            // block.hash = transaction.hash;
+            // block.height = transaction.height;
+            // block.slot = transaction.slot;
+        // });
 
-        console.log(`Stored Block:`, block.hash, 'TxFull', Object.values(block.txFull).length, 'Transactions:', transactions.length, 'Block transactions:', block.transactions?.length);
+        console.log(`Stored Block:`, block.hash, 'height', block.height, 'slot', block.slot);
 
         const formattedBlock: any = formatBlock('SOLANA', block);
         formattedBlock.note = 'broadcastReadyBlocks';
         const fileContents = JSON.stringify(formattedBlock);
 
-        const firstPart = block.hash[block.hash.length - 1];
-        const secondPart = block.hash[block.hash.length - 2];
-        await storeObject(path.join('blocks', 'SOLANA', firstPart, secondPart, block.hash), fileContents);
+        const firstPart = block.slot[block.hash.length - 1];
+        const secondPart = block.slot[block.hash.length - 2];
+        await storeObject(path.join('blocks', 'SOLANA', firstPart, secondPart, block.slot), fileContents);
 
-        await database.collection('blocks').updateOne({ chain: 'SOLANA', hash: block.hash }, { $set: { stored: true, broadcast: false } });
+        // await database.collection('blocks').updateOne({ chain: 'SOLANA', hash: block.hash }, { $set: { stored: true, broadcast: false } });
         block.stored = true;
         block.broadcast = false;
         return true;
@@ -112,7 +115,11 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
         }
 
         if (block.stored && parent?.stored || block.stored && !parent) {
+
+            console.log(`Block ${block.hash} is ready to broadcast.`);
             redis.publish('block', JSON.stringify({ chain: 'SOLANA', height: block.height, hash: block.hash }));
+            
+            console.log(`Broadcasting block: ${block.height} - ${block.hash}`);
             await database.collection('blocks').updateOne({ chain: 'SOLANA', hash: block.hash }, { $set: { broadcast: true, note: 'broadcast-ready-block' } });
             return true;
         } else {

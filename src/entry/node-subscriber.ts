@@ -211,15 +211,15 @@ const init = async () => {
         const wrapperClass = await import("../lib/node-wrappers/SOLANA");
         let solanaWrapper = new wrapperClass.default(process.env.SOLANA_NODE as string);
 
-        solanaWrapper.on('mempool-tx', (transaction: any) => {
-            if (!transaction.blockHeight && transaction.blockNumber) {
-                transaction.blockHeight = transaction.blockNumber;
-                delete transaction.blockNumber;
-            }
-            processTransaction(solanaWrapper, { ...transaction, processed: true, confirmed: false });
-        });
+        // solanaWrapper.on('mempool-tx', (transaction: any) => {
+        //     if (!transaction.blockHeight && transaction.blockNumber) {
+        //         transaction.blockHeight = transaction.blockNumber;
+        //         delete transaction.blockNumber;
+        //     }
+        //     processTransaction(solanaWrapper, { ...transaction, processed: true, confirmed: false });
+        // });
         solanaWrapper.on('confirmed-block', (event: any) => {
-            processBlock(solanaWrapper, event.hash, event.height);
+            processBlock(solanaWrapper, event.hash, event.height, event.slot);
         });
         getLatestBlockLoop(solanaWrapper);
         solanaWrapper.initEventSystem();

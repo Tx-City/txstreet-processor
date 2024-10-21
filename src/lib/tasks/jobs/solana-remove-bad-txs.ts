@@ -28,7 +28,7 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
 
     switch(executionType) {
         case ExecutionType.Custom:
-            where = { processed: true, confirmed: false, slot: { $eq: null }, lastProcessed: { $lte: fifteenSeconds }, dropped: { $exists: false } }; 
+            where = { processed: true, confirmed: false, height: { $eq: null }, lastProcessed: { $lte: fifteenSeconds }, dropped: { $exists: false } }; 
             project = { _id: 0, hash: 1 };
             limit = 25;
             sort = { pendingSortPrice: -1 };  
@@ -39,7 +39,7 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
                     $match: {
                         confirmed: false,
                         processed: true,
-                        slot: {
+                        height: {
                             $eq: null
                         },
                         dropped: { $exists: false }
@@ -52,7 +52,7 @@ const getQueryForExecutionType = (chain: string, executionType: ExecutionType): 
                 { $project: { _id: 0, hash: 1 } }
             ];
         case ExecutionType.Small:
-            where = { processed: true, confirmed: false, slot: { $eq: null }, dropped: { $exists: false } };
+            where = { processed: true, confirmed: false, height: { $eq: null }, dropped: { $exists: false } };
             project = { _id: 0, hash: 1 }; 
             limit = 150;
             sort = { lastProcessed: 1 };
@@ -103,11 +103,11 @@ export default async (chain: string): Promise<void> => {
 
         results.forEach(({ hash, nodeTx }) => {
             if (nodeTx) {
-                if (nodeTx.slot && !checkSlots.includes(nodeTx.slot)) 
-                    checkSlots.push(nodeTx.slot);
+                if (nodeTx.height && !checkSlots.includes(nodeTx.height)) 
+                    checkSlots.push(nodeTx.height);
 
                 let set = { lastProcessed: now, confirmed: false };
-                if (nodeTx.slot) {
+                if (nodeTx.height) {
                     set.confirmed = true;
                     deleteTxHashes.push(hash);
                 }
@@ -138,14 +138,14 @@ export default async (chain: string): Promise<void> => {
         const blockInstructions: any[] = []; 
         if(checkSlots.length > 0) {
             const blockTasks: Promise<any>[] = [];
-            checkSlots.forEach((slot: number) => {
+            checkSlots.forEach((height: number) => {
                 blockTasks.push(new Promise(async (resolve) => {
                     try {
-                        const dbBlock = await database.collection(`blocks`).findOne({ chain, slot }); 
+                        const dbBlock = await database.collection(`blocks`).findOne({ chain, height }); 
                         if(!dbBlock) {
                             blockInstructions.push({
                                 updateOne: {
-                                    filter: { chain, slot },
+                                    filter: { chain, height },
                                     update: { $set: { processed: false, locked: false, note: '[cronjob]: solana-remove-bad-txs' },  $setOnInsert: { timestamp: Date.now(), insertedAt: new Date(), lastInsert: new Date(), processFailures: 0, processMetadata: true, processTransactions: true } },
                                     upsert: true 
                                 }  

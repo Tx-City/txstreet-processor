@@ -2,13 +2,13 @@ import mongodb from '../../databases/mongodb';
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 
 // Stores a #Block in the MongoDB Database.
-export default async (wrapper: BlockchainWrapper, hash: string, height?: number): Promise<Boolean> => {
+export default async (wrapper: BlockchainWrapper, hash: string, height?: number, slot?:number): Promise<Boolean> => {
     try {
         if(process.env.USE_DATABASE == "true") {
             const { database } = await mongodb(); 
             const collection = database.collection('blocks');
             
-            await collection.updateOne({ chain: wrapper.ticker, hash, height }, {
+            await collection.updateOne({ chain: wrapper.ticker, hash, height, slot }, {
                 $set: { lastInserted: Date.now(), node: true, note: '[node-sub]: store-block' },
                 $setOnInsert: { insertedAt: new Date(), timestamp: Date.now(), processed: false, locked: false, processFailures: 0, processMetadata: true, processTransactions: true }
             }, { upsert: true });

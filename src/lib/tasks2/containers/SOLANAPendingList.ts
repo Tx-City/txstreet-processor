@@ -84,15 +84,15 @@ export default class SolanaPendingList {
         // Initiate the _writeTask to create a new pending list every 2 second.
         this._writeTaskInstance = setInterval(this._writeTask, 2000).start(false);
 
-        setInterval(async () => {
-            const { database } = await mongodb();
-            const collection = database.collection('transactions_SOLANA');
-            console.log('Checking for dropped transactions', this.array.length);
-            const hashes = this.array.map((a: any) => a.hash);
-            const result = await collection.find({ hash: { $in: hashes }, $or: [{ blockHash: { $ne: null } }, { dropped: { $exists: true } }] }).project({ _id: 0, hash: 1 }).toArray();
-            const toDelete = result.map((result: any) => result.hash);
-            this.remove(toDelete);
-        }, 10000).start(false);
+        // setInterval(async () => {
+        //     const { database } = await mongodb();
+        //     const collection = database.collection('transactions_SOLANA');
+        //     console.log('Checking for dropped transactions', this.array.length);
+        //     const hashes = this.array.map((a: any) => a.hash);
+        //     const result = await collection.find({ hash: { $in: hashes }, $or: [{ blockHash: { $ne: null } }, { dropped: { $exists: true } }] }).project({ _id: 0, hash: 1 }).toArray();
+        //     const toDelete = result.map((result: any) => result.hash);
+        //     this.remove(toDelete);
+        // }, 10000).start(false);
 
         setInterval(async () => {
             if (!this._toAdd.length) return;
@@ -201,23 +201,23 @@ export default class SolanaPendingList {
         this._dirtyFlag = true;
     }
 
-    async init() {
-        try {
-            const { database } = await mongodb();
-            const collection = database.collection('transactions_SOLANA');
-            const where: any = { confirmed: false, processed: true, blockHash: { $eq: null }, dropped: { $exists: false } };
-            const project = { _id: 0, processed: 1, insertedAt: 1, fee: 1, value: 1, dropped: 1, hash: 1, from: 1, timestamp: 1, extras: 1, pExtras: 1 };
-            const results = await collection.find(where).project(project).sort({ pendingSortFee: -1 }).limit(this.capacity).toArray();
-            for (let i = 0; i < results.length; i++) results[i].insertedAt = new Date(results[i].insertedAt).getTime();
-            this.add(results);
-            console.log(`Added ${results.length} results from the database, initialization completed`);
-            this._initialized = true;
-            console.log('Removing', this._remove.length);
-            this.remove(this._remove);
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    // async init() {
+    //     try {
+    //         const { database } = await mongodb();
+    //         const collection = database.collection('transactions_SOLANA');
+    //         const where: any = { confirmed: false, processed: true, blockHash: { $eq: null }, dropped: { $exists: false } };
+    //         const project = { _id: 0, processed: 1, insertedAt: 1, fee: 1, value: 1, dropped: 1, hash: 1, from: 1, timestamp: 1, extras: 1, pExtras: 1 };
+    //         const results = await collection.find(where).project(project).sort({ pendingSortFee: -1 }).limit(this.capacity).toArray();
+    //         for (let i = 0; i < results.length; i++) results[i].insertedAt = new Date(results[i].insertedAt).getTime();
+    //         this.add(results);
+    //         console.log(`Added ${results.length} results from the database, initialization completed`);
+    //         this._initialized = true;
+    //         console.log('Removing', this._remove.length);
+    //         this.remove(this._remove);
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // }
 
     // _writeTask = async (): Promise<void> => {
     //     try {

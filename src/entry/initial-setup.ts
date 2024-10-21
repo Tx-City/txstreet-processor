@@ -102,11 +102,11 @@ const createIndexes = async (): Promise<boolean> => {
         try { await database.collection('transactions_LUKSO').createIndex({ confirmed: 1, processed: 1, locked: 1, blockHeight: 1, lastProcessed: 1, timestamp: 1, processFailures: 1, dropped: 1 }, { name: 'general_purpose' }); } catch (e) { console.log(e) }
 
         // SOLANA
-        try { await database.collection('transactions_SOLANA').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, lastProcessed: -1, dropped: 1, pendingSortPrice: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }
-        try { await database.collection('transactions_SOLANA').createIndex({ contract: 1, insertedAt: -1, to: 1 }); } catch (e) { console.log(e) }
-        try { await database.collection('transactions_SOLANA').createIndex({ from: 1, nonce: 1 }); } catch (e) { console.log(e) }
-        try { await database.collection('transactions_SOLANA').createIndex({ lastInsert: 1 }, { name: 'TTL_lastInsert', expireAfterSeconds: 86400, partialFilterExpression: { "confirmed": false } }); } catch (e) { console.log(e) }
-        try { await database.collection('transactions_SOLANA').createIndex({ confirmed: 1, processed: 1, locked: 1, blockHeight: 1, lastProcessed: 1, timestamp: 1, processFailures: 1, dropped: 1 }, { name: 'general_purpose' }); } catch (e) { console.log(e) }
+        // try { await database.collection('transactions_SOLANA').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, lastProcessed: -1, dropped: 1, pendingSortPrice: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }
+        // try { await database.collection('transactions_SOLANA').createIndex({ contract: 1, insertedAt: -1, to: 1 }); } catch (e) { console.log(e) }
+        // try { await database.collection('transactions_SOLANA').createIndex({ from: 1, nonce: 1 }); } catch (e) { console.log(e) }
+        // try { await database.collection('transactions_SOLANA').createIndex({ lastInsert: 1 }, { name: 'TTL_lastInsert', expireAfterSeconds: 86400, partialFilterExpression: { "confirmed": false } }); } catch (e) { console.log(e) }
+        // try { await database.collection('transactions_SOLANA').createIndex({ confirmed: 1, processed: 1, locked: 1, blockHeight: 1, lastProcessed: 1, timestamp: 1, processFailures: 1, dropped: 1 }, { name: 'general_purpose' }); } catch (e) { console.log(e) }
         
         //CELO
         try { await database.collection('transactions_CELO').createIndex({ confirmed: 1, processed: 1, blockHeight: 1, lastProcessed: -1, dropped: 1, pendingSortPrice: -1 }, { name: 'pending_txlist' }); } catch (e) { console.log(e) }

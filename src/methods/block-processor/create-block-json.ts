@@ -24,7 +24,7 @@ export default async (chain: string, block: any): Promise<any> => {
         const secondPart = block.hash[block.hash.length - 2]; 
         // try { await fs.promises.mkdir(path.join(dataDir, 'blocks', chain, firstPart, secondPart), { recursive: true }); } catch (err) {}
         await storeObject(path.join('blocks', chain, firstPart, secondPart, block.hash), content);
-        console.log("stored");
+        console.log("stored", firstPart, secondPart, block.hash);
 
         // Initialize database 
         const { database } = await mongodb(); 
@@ -56,10 +56,11 @@ export default async (chain: string, block: any): Promise<any> => {
         const where = { chain, hash: block.hash, processed: true }; 
         const updateInstructions = { $set: { stored: true, broadcast: readyToBroadcast, txsChecked: true } }; 
         await collection.updateOne(where, updateInstructions); 
-
+        console.log("readyToBroadcast", readyToBroadcast);
         // Submit this block to the front-end if it was ready.
         if(readyToBroadcast)
             redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
+        console.log("block details for solana", block)
         return block; 
     } catch (error) {
         console.error(error); 

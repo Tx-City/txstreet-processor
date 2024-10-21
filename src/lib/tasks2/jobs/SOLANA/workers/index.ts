@@ -9,15 +9,15 @@ export default async () => {
 
     try {
         console.log('Starting...');
-        const pendingTxList = new SOLANAPendingList(); 
-        await pendingTxList.init();
+        // const pendingTxList = new SOLANAPendingList(); 
+        // await pendingTxList.init();
 
-        new Worker(path.join(__dirname, 'createPendingTransactionList.js'), { workerData }); 
+        // new Worker(path.join(__dirname, 'createPendingTransactionList.js'), { workerData }); 
 
-        new Worker(path.join(__dirname, 'calculateStats.js'), { workerData })
-        new Worker(path.join(__dirname, 'mempoolInfo.js'), { workerData })
+        // new Worker(path.join(__dirname, 'calculateStats.js'), { workerData })
+        // new Worker(path.join(__dirname, 'mempoolInfo.js'), { workerData })
         new Worker(path.join(__dirname, 'broadcastReadyBlocks.js'), { workerData })
-        new Worker(path.join(__dirname, 'calcGasEstimates.js'), { workerData })
+        // new Worker(path.join(__dirname, 'calcGasEstimates.js'), { workerData })
     } catch (error) {
         console.error(error); 
     }
