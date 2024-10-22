@@ -38,10 +38,18 @@ const getLatestBlockLoop = async (wrapper: any) => {
 
     if (process.env.USE_DATABASE !== "true") return;
     const { database } = await mongodb();
+    
     try {
+    
         const height = await wrapper.getCurrentHeight();
-        if (!isNaN(height) && height > 100) {
+        
+        if (!isNaN(height) && height > 100 && wrapper.ticker != 'SOLANA') {
             //height is a valid number
+            
+
+
+            
+            
             const heightExistsInDb = await database.collection('blocks').find({ chain: wrapper.ticker, height }).project({ height: 1 }).limit(1).toArray();
             if (!heightExistsInDb || !heightExistsInDb.length) {
                 const block = await wrapper.getBlock(height, 2);
@@ -55,8 +63,9 @@ const getLatestBlockLoop = async (wrapper: any) => {
                         { upsert: true });
                 }
             }
-
+            
         }
+    
         setTimeout(() => { getLatestBlockLoop(wrapper); }, 1000);
     } catch (error) {
         console.error(error);

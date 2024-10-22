@@ -26,9 +26,14 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
             request = await findNextRequest(wrapper.ticker); 
             if(blockId == null) {
                 if(request) {
-                    blockId = wrapper.ticker === "SOLANA" ? request.height : request.hash || request.height; 
+                    if(wrapper.ticker === 'SOLANA') {
+                        blockId = request.slot;
+                        databaseKey = 'slot';
+                    } else {
+                    blockId = request.hash || request.height; 
                     if(!request.hash && request.height != null) 
                         databaseKey = 'height';
+                    }
                 }
             }
             if(request)

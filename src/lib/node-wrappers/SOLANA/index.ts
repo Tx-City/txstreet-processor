@@ -51,7 +51,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
     // Send subscribe request
     await new Promise<void>((resolve, reject) => {
       this.stream.write(req, (err: Error | null) => {
-        if (err === null || err === undefined) {
+        if (err === null || err === undefined) { 
           resolve();
         } else {
           reject(err);
@@ -132,24 +132,41 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
   public async getBlock(id: number, verbosity: number): Promise<any> {
     try {
+      await this.writing();
       const returnTransactionObjects = verbosity > 0;
       let block: any;
       console.log("id ++++++ ", id); //27...... height, but it should be slot
-      if (returnTransactionObjects) {
-        block = await this.connection.getBlock(Number(id), { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
-      } else {
-        // Fetch block without transactions
-        block = await this.connection.getBlock(Number(id), { commitment: "confirmed" });
-      }
+     
+     
+      this.stream.on("data", async (data:any) => {
+        // if (data.transaction === undefined) {
+        //   return;
+        // }
+        // console.log(data);
+        console.log("SLOT ===== ",data.blockMeta.slot);
+        
+      
+     
+      // if (returnTransactionObjects) {
+
+
+
+      //   // block = await this.connection.getBlock(Number(id), { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
+      // } else {
+      //   // Fetch block without transactions
+      //   // block = await this.connection.getBlock(Number(id), { commitment: "confirmed" });
+      // }
 
       //   console.log('before normalizing', { block });
       if (!block) return null;
       // Normalize the block data to match Ethereum structure
-      block.height = block.blockHeight;
+      block.height = data.blockMeta.blockHeight;
+      block.slot = data.blockMeta.slot;
       console.log("block height ++++++ ", block.height);
+      console.log("block slot ++++++ ", block.slot);
       block.baseFeePerGas = 0; // Solana doesn't have gas fees like Ethereum, you can set this to 0
-      block.timestamp = Math.floor(block.blockTime);
-      block.hash = block.blockhash;
+      block.timestamp = Math.floor(data.blockMeta.blockTime.timestamp);
+      block.hash = data.blockMeta.blockhash;
 
       // Normalize transaction data
       // if (block.transactions && returnTransactionObjects) {
@@ -184,6 +201,7 @@ export default class SolanaWrapper extends BlockchainWrapper {
       // }
       block.transactions = [];  
       return block;
+    });
     } catch (error) {
       console.error("getBlock", error);
       return null;

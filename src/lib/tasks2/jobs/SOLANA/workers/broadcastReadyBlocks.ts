@@ -117,7 +117,7 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
         if (block.stored && parent?.stored || block.stored && !parent) {
 
             console.log(`Block ${block.hash} is ready to broadcast.`);
-            redis.publish('block', JSON.stringify({ chain: 'SOLANA', height: block.height, hash: block.hash }));
+            redis.publish('block', JSON.stringify({ chain: 'SOLANA', height: block.height, hash: block.hash, slot: block.slot }));
             
             console.log(`Broadcasting block: ${block.height} - ${block.hash}`);
             await database.collection('blocks').updateOne({ chain: 'SOLANA', hash: block.hash }, { $set: { broadcast: true, note: 'broadcast-ready-block' } });
