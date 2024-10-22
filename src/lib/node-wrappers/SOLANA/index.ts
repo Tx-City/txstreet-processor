@@ -132,41 +132,32 @@ export default class SolanaWrapper extends BlockchainWrapper {
 
   public async getBlock(id: number, verbosity: number): Promise<any> {
     try {
-      await this.writing();
       const returnTransactionObjects = verbosity > 0;
       let block: any;
       console.log("id ++++++ ", id); //27...... height, but it should be slot
-     
-     
-      this.stream.on("data", async (data:any) => {
-        // if (data.transaction === undefined) {
-        //   return;
-        // }
-        // console.log(data);
-        console.log("SLOT ===== ",data.blockMeta.slot);
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      if (returnTransactionObjects) {
         
-      
-     
-      // if (returnTransactionObjects) {
 
-
-
-      //   // block = await this.connection.getBlock(Number(id), { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
-      // } else {
-      //   // Fetch block without transactions
-      //   // block = await this.connection.getBlock(Number(id), { commitment: "confirmed" });
-      // }
+          // Usage:
+      await delay(3000); // Wait 10 seconds
+        block = await this.connection.getBlock(Number(id), { maxSupportedTransactionVersion: 0, commitment: "confirmed" });
+      } else {
+        await delay(3000); // Wait 10 seconds
+        // Fetch block without transactions
+        block = await this.connection.getBlock(Number(id), { commitment: "confirmed" });
+      }
 
       //   console.log('before normalizing', { block });
       if (!block) return null;
       // Normalize the block data to match Ethereum structure
-      block.height = data.blockMeta.blockHeight;
-      block.slot = data.blockMeta.slot;
+      block.height = block.blockHeight;
+      block.slot = id;
       console.log("block height ++++++ ", block.height);
-      console.log("block slot ++++++ ", block.slot);
+      console.log("block Parent slot ++++++++++ ", id);
       block.baseFeePerGas = 0; // Solana doesn't have gas fees like Ethereum, you can set this to 0
-      block.timestamp = Math.floor(data.blockMeta.blockTime.timestamp);
-      block.hash = data.blockMeta.blockhash;
+      block.timestamp = Math.floor(block.blockTime);
+      block.hash = block.blockhash;
 
       // Normalize transaction data
       // if (block.transactions && returnTransactionObjects) {
@@ -201,7 +192,6 @@ export default class SolanaWrapper extends BlockchainWrapper {
       // }
       block.transactions = [];  
       return block;
-    });
     } catch (error) {
       console.error("getBlock", error);
       return null;
