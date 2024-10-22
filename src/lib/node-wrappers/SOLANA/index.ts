@@ -102,21 +102,28 @@ export default class SolanaWrapper extends BlockchainWrapper {
   
 
   public async getCurrentHeight(): Promise<null | number>{
-    await this.writing();
-    let slot;
+    try {
+      const slot = await this.connection.getSlot();
+      console.log("getCurrentHeightSOLANA", slot)
+      return slot;
+    } catch (error) {
+      console.log(error)
+    }
+    // await this.writing();
+    // let slot;
      // Handle updates
-     this.stream.on("data", async (data:any) => {
-        // console.log(data)
-        try{   
-          slot = data.blockMeta.slot;
-            return slot;
-          } catch(error){
-              if(error){
-            console.log(error)
-          }
-        }
-  })
-  return slot;
+  //    this.stream.on("data", async (data:any) => {
+  //      try{   
+  //        slot = data.blockMeta.slot;
+  //           console.log("getCurrentHeightSOLANA", slot)
+  //           return slot;
+  //         } catch(error){
+  //             if(error){
+  //           console.log(error)
+  //         }
+  //       }
+  // })
+  // return slot;
 }
   
 

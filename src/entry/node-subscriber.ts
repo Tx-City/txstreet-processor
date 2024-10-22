@@ -51,6 +51,7 @@ const getLatestBlockLoop = async (wrapper: any) => {
             
             
             const heightExistsInDb = await database.collection('blocks').find({ chain: wrapper.ticker, height }).project({ height: 1 }).limit(1).toArray();
+            console.log(`Height: ${height}, heightExistsInDb: ${heightExistsInDb}`);
             if (!heightExistsInDb || !heightExistsInDb.length) {
                 const block = await wrapper.getBlock(height, 2);
                 if (block) {

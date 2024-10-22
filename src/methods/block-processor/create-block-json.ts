@@ -15,9 +15,11 @@ export default async (chain: string, block: any): Promise<any> => {
         block.txFull = {}; 
   
         // Encode the file content.
+        console.log("block ++++++ ", block);
         const formatted: any = formatBlock(chain, block);
         formatted.note = 'block-processor'; 
         var content = JSON.stringify(formatted);
+        console.log("formatted", formatted);
 
         // Create the file. 
         const firstPart = block.hash[block.hash.length - 1];
