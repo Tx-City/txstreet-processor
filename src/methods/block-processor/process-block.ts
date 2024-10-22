@@ -60,7 +60,7 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
         // Check if the block already exists in the datbase. 
         // If it already exists, return a success response. 
         let block = await findBlockDatabase(wrapper.ticker, databaseKey, blockId); 
-        if(block && !(request.processMetdata || request.processTransactions)) return; 
+        if(block && !(request.processMetadata || request.processTransactions)) return; 
         if(!searchRequest && block) {
             request.processMetadata = block.timestamp == null;
             request.processTransactions = block.timestamp == null;
@@ -71,17 +71,24 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
 
         if(request.processMetadata || (!block && blockId)) {
             // Utilize the blockchain specific implementation to resolve the block data.
-            let resolvedBlock = await wrapper.getBlock(blockId, 2); 
-
-            // The exists field is appended to ensure that the execution flow is stopped in the event of an error
-            // that has already been logged by the localized log in the blockchain implementation.
-            if(!resolvedBlock) {
-                console.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
-                await unlockRequest(wrapper.ticker, blockId as string); 
-                return await waitForTime(100);
+            let resolvedBlock: any = null;
+            if(wrapper.ticker === 'SOLANA') {
+                resolvedBlock = request;
+                resolvedBlock.transactions = [];
+                block = resolvedBlock;
+            } else {
+                resolvedBlock = await wrapper.getBlock(blockId, 2);
+    
+                // The exists field is appended to ensure that the execution flow is stopped in the event of an error
+                // that has already been logged by the localized log in the blockchain implementation.
+                if(!resolvedBlock) {
+                    console.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
+                    await unlockRequest(wrapper.ticker, blockId as string); 
+                    return await waitForTime(100);
+                }
+                // Assign block the be the resolved block. 
+                block = resolvedBlock;
             }
-            // Assign block the be the resolved block. 
-            block = resolvedBlock;
                         
             if(resolvedBlock.parentHash && block.parentHash != "0x0000000000000000000000000000000000000000000000000000000000000000" && depth < wrapper.blockDepthLimit)
                 await action(wrapper, resolvedBlock.parentHash, depth + 1, false); 
