@@ -9,8 +9,13 @@ export default async (socket: SocketIO.Socket, room: string) => {
     const chain = parts[0];
     const channel = parts[1]; 
     if(chainConfig[chain] && channel == 'blocks') {
+        
         let isRollup = chainConfig?.[chain]?.rollup;
         const blocks = isRollup ? lastBlocksFull[chain] : lastBlocks[chain] || []; 
+
+        console.log("lastBlocks+++++++", lastBlocks[chain]);
+        console.log("lastBlocksFull+++++", lastBlocksFull[chain]);
+        console.log("blocks+++++++",blocks);
         socket.emit('latestblocks', blocks); 
     }
 

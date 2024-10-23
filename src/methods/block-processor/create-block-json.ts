@@ -3,6 +3,7 @@ import mongodb from '../../databases/mongodb';
 import { formatBlock, storeObject  } from '../../lib/utilities';
 import fs from 'fs';
 import path from 'path';
+import { wrap } from 'module';
 const dataDir = path.join(process.env.DATA_DIR as string || '/mnt/disks/txstreet_storage');
 
 // This is only used in the event there's no transactions in the block, otherwise
@@ -50,7 +51,11 @@ export default async (chain: string, block: any): Promise<any> => {
         }
 
         if(readyToBroadcast) 
+            if(chain === 'SOLANA') {
+                redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash, slot:block.slot })); 
+            } else {
             redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
+            }
 
 
         // Update this block to be stored, and set broadcast to isReady. 
@@ -61,7 +66,10 @@ export default async (chain: string, block: any): Promise<any> => {
         console.log("readyToBroadcast", readyToBroadcast);
         // Submit this block to the front-end if it was ready.
         if(readyToBroadcast)
-            redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
+            if(chain === 'SOLANA') 
+                redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash, slot: block.slot })); 
+            else    
+                redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash }));
         console.log("block details for solana", block)
         return block; 
     } catch (error) {
