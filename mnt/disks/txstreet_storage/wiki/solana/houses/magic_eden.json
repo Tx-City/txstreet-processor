@@ -1,6 +1,6 @@
 {
     "name": "magic_eden",
-    "colors": ["d55f82",false],
+    "colors": ["ff1493",false],
     "tracked": true,
     "contracts": [],
     "dappRadarIds": ["/games/up"],

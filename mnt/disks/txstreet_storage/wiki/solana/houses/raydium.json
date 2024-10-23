@@ -1,6 +1,6 @@
 {
     "name": "raydium",
-    "colors": ["blue",false],
+    "colors": ["0000ff",false],
     "contracts": [],
     "dappRadarIds": ["/games/up"],
     "dappReviewIds": [3],

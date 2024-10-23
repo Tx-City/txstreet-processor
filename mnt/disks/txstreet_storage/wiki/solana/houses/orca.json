@@ -1,6 +1,6 @@
 {
     "name": "orca",
-    "colors": ["000000",false],
+    "colors": ["DCAE43",false],
     "tracked": true,
     "contracts": [],
     "dappRadarIds": ["/games/up"],
