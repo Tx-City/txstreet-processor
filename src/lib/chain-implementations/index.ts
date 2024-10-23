@@ -19,7 +19,9 @@ export const enabledHooks: any = {
     LUKSO: [
         // "DefaultHousing",
     ],
-    SOLANA: [],
+    SOLANA: [
+        "DefaultHousing",
+    ],
     CELO: [
         // "DefaultHousing",
     ],

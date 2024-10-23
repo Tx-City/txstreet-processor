@@ -1,0 +1,13 @@
+{
+    "name": "orca",
+    "colors": ["000000",false],
+    "tracked": true,
+    "contracts": [],
+    "dappRadarIds": ["/games/up"],
+    "dappReviewIds": [3],
+    "dataSources": ["wiki"],
+    "etherscanIds": ["up"],
+    "popupLength": 75,
+    "stateOfTheDappsIds": ["up"],
+    "title": "Orca"
+  }

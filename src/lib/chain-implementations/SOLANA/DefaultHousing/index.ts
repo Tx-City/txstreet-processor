@@ -12,11 +12,11 @@ class DefaultHousing extends ChainImplementation {
             const { database } = await mongodb(); 
             const collection = database.collection('houses');
             const results = await collection.find({ chain: this.chain, name: { $ne: [] } }).toArray();  
-            for(let i = 0; i < results.length; i++) {
-                let doc = results[i]; 
-                if(doc.contracts)
-                    doc.contracts.forEach((address: string) => this.mapAddressToHouse[address] = doc.name); 
-            }
+            // for(let i = 0; i < results.length; i++) {
+                // let doc = results[i]; 
+            //     if(doc.contracts)
+            //         doc.contracts.forEach((address: string) => this.mapAddressToHouse[address] = doc.name); 
+            // }
             console.log("initialized default housing");
         } catch (error) {
             console.error(error);
