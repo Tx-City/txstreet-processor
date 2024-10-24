@@ -37,7 +37,7 @@ staticRouter.get('/live/:file', async (request: Request, response: Response) => 
         }
         const filePath = path.join(directory, 'live', file);
 
-        console.log("filePath-------------------------------------> &&&&&&&&&&&&&&&&", filePath);
+        // console.log("filePath-------------------------------------> &&&&&&&&&&&&&&&&", filePath);
         data = await readNFSFile(filePath);
 
         // Sanity
@@ -88,7 +88,8 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
         const filePath = path.join(directory, 'blocks', ticker, firstPart, secondPart, hash);
         const key: string = filePath + verbose;
 
-        console.log("firstPart-------------------------------------> &&&&&&&&&&&&&&&&", firstPart);
+        // console.log("firstPart-------------------------------------> &&&&&&&&&&&&&&&&", firstPart);
+        // console.log("filePath-------------------------------------> &&&&&&&&&&&&&&&&", filePath);
 
         let data: any = fileCache[key];
         if (data != null) {
@@ -96,7 +97,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
             return response.set('content-type', 'application/json').send(data);
         }
         data = await readNFSFile(filePath);
-        console.log("data-------------------------------------> &&&&&&&&&&&&&&&&", data);
+        // console.log("data-------------------------------------> &&&&&&&&&&&&&&&&", data);
         // Sanity
         if (!data || !data.length) {
             return sendError();

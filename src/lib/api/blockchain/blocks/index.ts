@@ -40,23 +40,51 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
 
     const { database } = await mongodb();
     const collection = database.collection('blocks');
-
+    // console.log("isHeight-------------------------------------> &&&&&&&&&&&&&&&&", isHeight);
+    
     // Validation of requests that are requesting a block based on a height. 
-    if (isHeight) {
+    if (isHeight && chain != 'SOLANA') {
         // Obtain the highest known block so that we can make sure `height` isn't overshot. 
         const highestBlock = (await collection.find({ chain }, { height: 1 }).sort({ height: -1 }).limit(1).toArray())[0];
         const topHeight = highestBlock?.height || 0;
+        // console.log("topHeight-------------------------------------> &&&&&&&&&&&&&&&&", topHeight);
         if (id > topHeight)
             return response.json({ success: false, code: -1, message: `Block id (height) is higher than known head.` })
     } else {
+        const highestBlock = (await collection.find({ chain }, { slot: 1 }).sort({ slot: -1 }).limit(1).toArray())[0];
+        const topHeight = highestBlock?.slot || 0;
+        console.log("topHeight-------------------------------------> &&&&&&&&&&&&&&&&", topHeight);
+        if (id > topHeight)
+            return response.json({ success: false, code: -1, message: `Block id (height) is higher than known head.` })
         // TODO: Hash validation. 
     }
 
     // Check to see rather or not this request has already been entered into the database, if so obtain that data. 
     const existingBlock: any = await collection.findOne({ [isHeight ? 'height' : 'hash']: id });
 
+
+    console.log("id-------------------------------------> &&&&&&&&&&&&&&&&", id);
+    console.log("isHeight-------------------------------------> &&&&&&&&&&&&&&&&", isHeight);
+    const existingSOLBlock = await database.collection('blocks').findOne({ 
+        slot: id.toString()  // Try converting to string if needed
+    });
+    console.log("existingSOLBlock-------------------------------------> &&&&&&&&&&&&&&&&", existingSOLBlock);
+    console.log("existingSOLBlock.processed---------> &&&&&&&&", existingSOLBlock.processed);
+    if(chain == 'SOLANA' && existingSOLBlock && existingSOLBlock.processed) {
+        const firstPart = existingSOLBlock.hash[existingSOLBlock.hash.length - 1];
+        const secondPart = existingSOLBlock.hash[existingSOLBlock.hash.length - 2];
+        const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
+        const filePath = path.join(directory, "blocks", chain, firstPart, secondPart, existingSOLBlock.hash);
+        const foundSOLData = await readNFSFile(filePath);
+
+        if (!foundSOLData) {
+            return response.json({ success: false, code: 1, message: `File not found in storage` })
+        } else {
+            return response.json({ success: true, data: JSON.parse(foundSOLData) });
+        }
+    }
     // If the block request already exists and has been processed, we simply process the request. 
-    if (existingBlock && existingBlock.processed && existingBlock.lastTransactionFetch > Date.now() - 1209600000) {
+    else if (existingBlock && existingBlock.processed && existingBlock.lastTransactionFetch > Date.now() - 1209600000) {
         const firstPart = existingBlock.hash[existingBlock.hash.length - 1];
         const secondPart = existingBlock.hash[existingBlock.hash.length - 2];
         const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
@@ -70,7 +98,7 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
         }
     }
     else {
-        return response.json({ success: false, code: 2, message: `Block is not servicable` })
+        return response.json({ success: false, code: 2, message: `Block is not for SOLANA servicable` })
     }
     //     // If the block requests already exists, but has not been processed yet. 
     //     else if(existingBlock && (!existingBlock.processed || existingBlock.lastTransactionFetch <= Date.now() - 1209600)) {
