@@ -92,6 +92,7 @@ staticRouter.get('/blocks/:ticker/:hash', async (request: Request, response: Res
         // console.log("filePath-------------------------------------> &&&&&&&&&&&&&&&&", filePath);
 
         let data: any = fileCache[key];
+        console.log("data-------------------------------------> &&&&&&&&&&&&&&&&", data);
         if (data != null) {
             console.log(`Static request served from memory cache.`);
             return response.set('content-type', 'application/json').send(data);

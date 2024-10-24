@@ -50,13 +50,17 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
         // console.log("topHeight-------------------------------------> &&&&&&&&&&&&&&&&", topHeight);
         if (id > topHeight)
             return response.json({ success: false, code: -1, message: `Block id (height) is higher than known head.` })
-    } else {
+    } else if(chain == 'SOLANA') {
         const highestBlock = (await collection.find({ chain }, { slot: 1 }).sort({ slot: -1 }).limit(1).toArray())[0];
         const topHeight = highestBlock?.slot || 0;
         console.log("topHeight-------------------------------------> &&&&&&&&&&&&&&&&", topHeight);
+        console.log("id-------------------------------------> &&&&&&&&&&&&&&&&", id);
+        const hash = id.toString()
+        if(hash.length < 11) {
         if (id > topHeight)
             return response.json({ success: false, code: -1, message: `Block id (height) is higher than known head.` })
         // TODO: Hash validation. 
+        }
     }
 
     // Check to see rather or not this request has already been entered into the database, if so obtain that data. 
@@ -66,7 +70,11 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
     console.log("id-------------------------------------> &&&&&&&&&&&&&&&&", id);
     console.log("isHeight-------------------------------------> &&&&&&&&&&&&&&&&", isHeight);
     const existingSOLBlock = await database.collection('blocks').findOne({ 
-        slot: id.toString()  // Try converting to string if needed
+        $or: [
+            { hash: id.toString() },
+            { slot: id.toString() }
+        ]
+
     });
     console.log("existingSOLBlock-------------------------------------> &&&&&&&&&&&&&&&&", existingSOLBlock);
     console.log("existingSOLBlock.processed---------> &&&&&&&&", existingSOLBlock.processed);
