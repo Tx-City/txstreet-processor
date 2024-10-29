@@ -48,7 +48,7 @@ let lastKnownBlock: ProjectedEthereumBlock = null;
 redis.subscribe('block');
 redis.events.on('block', (data) => {
     const { chain, uncle } = data;
-    if(chain !== 'LUKSO') return; 
+    if(chain !== 'FLR') return; 
     if(uncle) return; 
     interval.force();
 });
@@ -68,7 +68,7 @@ const interval = setInterval(async () => {
 
         // Create the task to obtain the current ethereum price. 
         initTasks.push(new Promise((resolve, reject) => {
-            database.collection('statistics').findOne({ chain: 'LUKSO' }, { fiatPrice: 1 })
+            database.collection('statistics').findOne({ chain: 'FLR' }, { fiatPrice: 1 })
                 .then((document: any) => {
                     pricePerIncrement = document['fiatPrice-usd'] / 1000000000000000000;
                     return resolve();
@@ -78,7 +78,7 @@ const interval = setInterval(async () => {
         
         // Create the task to load the ethereum transactions collection from disk. 
         initTasks.push(new Promise((resolve, reject) => {
-            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'transactions-LUKSO.bin'); 
+            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'transactions-FLR.bin'); 
             fs.readFile(dataPath, (err: NodeJS.ErrnoException, data: Buffer) => {
                 if(err) return reject(err); 
 
@@ -108,7 +108,7 @@ const interval = setInterval(async () => {
         
         // Create the task to load the ethereum blocks collection from disk.
         initTasks.push(new Promise((resolve, reject) => {
-            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'blocks-LUKSO.bin'); 
+            const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'blocks-FLR.bin'); 
             fs.readFile(dataPath,  (err: NodeJS.ErrnoException, data: Buffer) => {
                 if(err) return reject(err); 
 
@@ -170,8 +170,8 @@ const interval = setInterval(async () => {
 
             if(process.env.UPDATE_DATABASES.toLowerCase() == "true") {
                 // TODO: Optimize to not re-insert data to lower bandwidth consumption. 
-                await collection.updateOne({ chain: 'LUKSO' }, { $set: lastExecutionResults }); 
-                redis.publish('stats', JSON.stringify({ chain: "LUKSO", ...lastExecutionResults })); 
+                await collection.updateOne({ chain: 'FLR' }, { $set: lastExecutionResults }); 
+                redis.publish('stats', JSON.stringify({ chain: "FLR", ...lastExecutionResults })); 
             } else {
                 console.log('=========================')
                 console.log(lastExecutionResults);
