@@ -20,6 +20,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                 switch(chain) {
                     case 'ETH':
                     case 'LUKSO':
+                    case 'FLR':
                     case 'CELO':
                     case 'ARBI':
                     case 'MANTA':
@@ -45,6 +46,9 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
                         break;
                     case 'LUKSO':
+                        project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
+                        break;  
+                    case 'FLR':
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
                         break;  
                     case 'CELO':

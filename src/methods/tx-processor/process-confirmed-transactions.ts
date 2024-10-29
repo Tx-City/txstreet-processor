@@ -69,6 +69,10 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             transactionRequests = await getContactCodes(wrapper, transactionRequests);
             transactionRequests = await getReceipts(wrapper, transactionRequests);
         }
+        if (wrapper.ticker === "FLR") {
+            transactionRequests = await getContactCodes(wrapper, transactionRequests);
+            transactionRequests = await getReceipts(wrapper, transactionRequests);
+        }
 
         if (wrapper.ticker === "CELO") {
             transactionRequests = await getContactCodes(wrapper, transactionRequests);
