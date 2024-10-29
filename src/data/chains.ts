@@ -12,7 +12,7 @@ export const chainConfig: any = {
         txsCollection: true
     },
     FLR: {
-        wikiname: 'flare',
+        wikiname: 'flr',
         storeBlockFile: true,
         deleteBlocksOlderThanSeconds: 90000,
         txsCollection: true
