@@ -9,6 +9,7 @@ import updateHousePriority from '../lib/tasks/jobs/update-house-priority';
 import updatePricing from '../lib/tasks/jobs/update-pricing';
 import ethRemoveBadTxs from '../lib/tasks/jobs/eth-remove-bad-txs'; 
 import luksoRemoveBadTxs from '../lib/tasks/jobs/lukso-remove-bad-txs';
+import flrRemoveBadTxs from '../lib/tasks/jobs/lukso-remove-bad-txs';
 import celoRemoveBadTxs from '../lib/tasks/jobs/celo-remove-bad-txs';
 import unlockLockedTxs from '../lib/tasks/jobs/unlock-locked-txs';
 import btcRemoveBadTxs from '../lib/tasks/jobs/btc-remove-bad-txs';
@@ -73,6 +74,7 @@ const run = async () => {
             switch(chain) {
                 case "ETH":
                 case "LUKSO":
+                case "FLR":
                 case "CELO":
                 case "":
                 case "RINKEBY":
@@ -97,6 +99,7 @@ const run = async () => {
             case "MANTA":
             case "ETH":
             case "LUKSO":
+            case "FLR":
             case "CELO":
             case "RINKEBY":
                 checkBadTxsInterval = 10;
@@ -119,6 +122,7 @@ const run = async () => {
                     return;
                 case "ETH":
                 case "LUKSO": 
+                case "FLR":
                 case "CELO":
                 case "RINKEBY":
                     return ethRemoveBadTxs(chain);

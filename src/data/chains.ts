@@ -11,6 +11,12 @@ export const chainConfig: any = {
         deleteBlocksOlderThanSeconds: 90000,
         txsCollection: true
     },
+    FLARE: {
+        wikiname: 'flare',
+        storeBlockFile: true,
+        deleteBlocksOlderThanSeconds: 90000,
+        txsCollection: true
+    },
     CELO: {
         wikiname: 'celo',
         storeBlockFile: true,

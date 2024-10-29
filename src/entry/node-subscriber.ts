@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -205,6 +205,25 @@ const init = async () => {
         });
         getLatestBlockLoop(luksoWrapper);
         luksoWrapper.initEventSystem();
+    }
+
+    if (chainsToSubscribe.includes('FLR')) {
+        const wrapperClass = await import("../lib/node-wrappers/FLR");
+        let flareWrapper = new wrapperClass.default(process.env.FLR_NODE as string);
+
+        flareWrapper.on('mempool-tx', (transaction: any) => {
+            if (!transaction.blockHeight && transaction.blockNumber) {
+                transaction.blockHeight = transaction.blockNumber;
+                delete transaction.blockNumber;
+            }
+            processTransaction(flareWrapper, { ...transaction, processed: true });
+        });
+        flareWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(flareWrapper, blockHash);
+        });
+        getLatestBlockLoop(flareWrapper);
+        flareWrapper.initEventSystem();
     }
     
     if (chainsToSubscribe.includes('CELO')) {
