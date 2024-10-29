@@ -11,7 +11,7 @@ export const chainConfig: any = {
         deleteBlocksOlderThanSeconds: 90000,
         txsCollection: true
     },
-    FLARE: {
+    FLR: {
         wikiname: 'flare',
         storeBlockFile: true,
         deleteBlocksOlderThanSeconds: 90000,
