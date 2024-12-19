@@ -27,6 +27,9 @@ export default class ObtainTransactionsFromDatabase extends OverlapProtectedInte
                     case 'LUKSO':
                         project = { _id: 0, processed: 1, insertedAt: 1, gas: 1, gasPrice: 1, maxFeePerGas: 1, dropped: 1, hash: 1, from: 1, timestamp: 1 };
                         break;
+                    case 'LUMIA':
+                        project = { _id: 0, processed: 1, insertedAt: 1, gas: 1, gasPrice: 1, maxFeePerGas: 1, dropped: 1, hash: 1, from: 1, timestamp: 1 };
+                        break;
                     case 'FLR':
                         project = { _id: 0, processed: 1, insertedAt: 1, gas: 1, gasPrice: 1, maxFeePerGas: 1, dropped: 1, hash: 1, from: 1, timestamp: 1 };
                         break;
