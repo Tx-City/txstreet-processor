@@ -9,7 +9,8 @@ import updateHousePriority from '../lib/tasks/jobs/update-house-priority';
 import updatePricing from '../lib/tasks/jobs/update-pricing';
 import ethRemoveBadTxs from '../lib/tasks/jobs/eth-remove-bad-txs'; 
 import luksoRemoveBadTxs from '../lib/tasks/jobs/lukso-remove-bad-txs';
-import flrRemoveBadTxs from '../lib/tasks/jobs/lukso-remove-bad-txs';
+import lumiaRemoveBadTxs from '../lib/tasks/jobs/lumia-remove-bad-txs';
+// import flrRemoveBadTxs from '../lib/tasks/jobs/flr-remove-bad-txs';
 import celoRemoveBadTxs from '../lib/tasks/jobs/celo-remove-bad-txs';
 import unlockLockedTxs from '../lib/tasks/jobs/unlock-locked-txs';
 import btcRemoveBadTxs from '../lib/tasks/jobs/btc-remove-bad-txs';
@@ -74,6 +75,7 @@ const run = async () => {
             switch(chain) {
                 case "ETH":
                 case "LUKSO":
+                case "LUMIA":
                 case "FLR":
                 case "CELO":
                 case "":
@@ -99,6 +101,7 @@ const run = async () => {
             case "MANTA":
             case "ETH":
             case "LUKSO":
+            case "LUMIA":
             case "FLR":
             case "CELO":
             case "RINKEBY":
@@ -121,7 +124,8 @@ const run = async () => {
                 case "MANTA":
                     return;
                 case "ETH":
-                case "LUKSO": 
+                case "LUKSO":
+                case "LUMIA": 
                 case "FLR":
                 case "CELO":
                 case "RINKEBY":
@@ -150,6 +154,11 @@ const run = async () => {
     //     executeJob(() => ethRecentContracts('LUKSO', '5min', Date.now() - minutes(5)), seconds(5)); 
     //     executeJob(() => ethRecentContracts('LUKSO',  '1hour', Date.now() - hours(1)), hours(1)); 
     //     executeJob(() => ethRecentContracts('LUKSO',  '1day', Date.now() - days(1)), days(1)); 
+    // }
+    // if(chains.includes('LUMIA')) {
+    //     executeJob(() => ethRecentContracts('LUMIA', '5min', Date.now() - minutes(5)), seconds(5)); 
+    //     executeJob(() => ethRecentContracts('LUMIA',  '1hour', Date.now() - hours(1)), hours(1)); 
+    //     executeJob(() => ethRecentContracts('LUMIA',  '1day', Date.now() - days(1)), days(1)); 
     // }
     // if(chains.includes('CELO')) {
     //     executeJob(() => ethRecentContracts('CELO', '5min', Date.now() - minutes(5)), seconds(5)); 
