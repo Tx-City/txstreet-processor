@@ -111,26 +111,6 @@ export default async (wrapper: BlockchainWrapper, transactions: any[], returnSin
                 let result = await request.result;
                 setAccountValue(accountValues, request.account, result);
             }
-        } else if (lxy == "LUMIA") {
-            console.log("BULK API IS NOT ENABLED FOR LUMIA")
-            //create requests for accounts that aren't cached
-            let requests: { [key: string]: any }[] = [];
-            // let requestsArr: Promise<number>[] = [];
-            for (const account in accounts) {
-                if (typeof accountValues[account] !== "undefined") continue;
-                let request = wrapper.getTransactionCount(account);
-                calls++;
-                requests.push({ account, result: request });
-                // requestsArr.push(request);
-                // await new Promise(r => setTimeout(r, 5));
-            }
-            // await Promise.all(requestsArr);
-
-            for (let i = 0; i < requests.length; i++) {
-                const request = requests[i];
-                let result = await request.result;
-                setAccountValue(accountValues, request.account, result);
-            }
         } else if (lxy == "CELO") {
             console.log("BULK API IS NOT ENABLED FOR CELO")
             //create requests for accounts that aren't cached

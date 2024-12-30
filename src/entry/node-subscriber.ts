@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'LUMIA', 'MANTA', 'CELO', 'DASH', 'FLR'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -207,42 +207,23 @@ const init = async () => {
         luksoWrapper.initEventSystem();
     }
 
-    if (chainsToSubscribe.includes('LUMIA')) {
-        const wrapperClass = await import("../lib/node-wrappers/LUMIA");
-        let lumiaWrapper = new wrapperClass.default(process.env.LUMIA_NODE as string);
-
-        lumiaWrapper.on('mempool-tx', (transaction: any) => {
-            if (!transaction.blockHeight && transaction.blockNumber) {
-                transaction.blockHeight = transaction.blockNumber;
-                delete transaction.blockNumber;
-            }
-            processTransaction(lumiaWrapper, { ...transaction, processed: true });
-        });
-        lumiaWrapper.on('confirmed-block', (blockHash: string) => {
-            console.log(`Got block from event: ${blockHash}`);
-            processBlock(lumiaWrapper, blockHash);
-        });
-        getLatestBlockLoop(lumiaWrapper);
-        lumiaWrapper.initEventSystem();
-    }
-
     if (chainsToSubscribe.includes('FLR')) {
         const wrapperClass = await import("../lib/node-wrappers/FLR");
-        let flrWrapper = new wrapperClass.default(process.env.FLR_NODE as string);
+        let flareWrapper = new wrapperClass.default(process.env.FLR_NODE as string);
 
-        flrWrapper.on('mempool-tx', (transaction: any) => {
+        flareWrapper.on('mempool-tx', (transaction: any) => {
             if (!transaction.blockHeight && transaction.blockNumber) {
                 transaction.blockHeight = transaction.blockNumber;
                 delete transaction.blockNumber;
             }
-            processTransaction(flrWrapper, { ...transaction, processed: true });
+            processTransaction(flareWrapper, { ...transaction, processed: true });
         });
-        flrWrapper.on('confirmed-block', (blockHash: string) => {
+        flareWrapper.on('confirmed-block', (blockHash: string) => {
             console.log(`Got block from event: ${blockHash}`);
-            processBlock(flrWrapper, blockHash);
+            processBlock(flareWrapper, blockHash);
         });
-        getLatestBlockLoop(flrWrapper);
-        flrWrapper.initEventSystem();
+        getLatestBlockLoop(flareWrapper);
+        flareWrapper.initEventSystem();
     }
     
     if (chainsToSubscribe.includes('CELO')) {

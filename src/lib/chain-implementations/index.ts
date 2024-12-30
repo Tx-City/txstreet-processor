@@ -38,9 +38,6 @@ export const enabledHooks: any = {
     LUKSO: [
         // "DefaultHousing",
     ],
-    LUMIA: [
-        // "DefaultHousing",
-    ],
     FLR: [
         // "DefaultHousing",
     ],

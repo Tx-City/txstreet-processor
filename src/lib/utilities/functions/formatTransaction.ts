@@ -10,7 +10,7 @@ const zoomers: any = zoomersJson;
 
 export default (chain: string, data: any) => {
     var obj: any = {};
-    if (chain === "ETH" || chain === "LUKSO"  || chain === "LUMIA" || chain === "FLR" || chain == "RINKEBY" || chain === "ARBI" || chain === "MANTA" || chain === "CELO") {
+    if (chain === "ETH" || chain === "LUKSO" || chain === "FLR" || chain == "RINKEBY" || chain === "ARBI" || chain === "MANTA" || chain === "CELO") {
         obj.tx = (typeof data.hash === "undefined" ? data.tx : data.hash);
         if (data.to) obj.to = data.to;
         if (data.from) obj.fr = data.from;

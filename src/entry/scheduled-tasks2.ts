@@ -12,7 +12,7 @@ import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchem
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 import ObtainRollupBlocksFromDatabase from '../lib/tasks2/tasks/ObtainRollupBlocksFromDatabase';
 
-const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO', 'LUMIA', 'MANTA', 'CELO', 'DASH', 'FLR'];
+const SUPPORTED_CHAINS = ['ETH', 'XMR', 'BTC', 'LTC', 'BCH', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];
 let chainToInit: string = null;
 
 // Check the command line arguments to find one issuing a request for a supported chain. 
