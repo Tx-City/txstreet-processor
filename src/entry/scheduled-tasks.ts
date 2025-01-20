@@ -80,6 +80,8 @@ const run = async () => {
                 case "RINKEBY":
                 case "ARBI":
                     return;
+                case "LUMIA":
+                    return;
                 case "MANTA":
                     return;
                 case "LTC":
@@ -96,6 +98,7 @@ const run = async () => {
         let checkBadTxsInterval = 0;
         switch(chain) {
             case "ARBI":
+            case "LUMIA":
             case "MANTA":
             case "ETH":
             case "LUKSO":
@@ -117,6 +120,8 @@ const run = async () => {
         executeJob(() => {
             switch(chain) {
                 case "ARBI":
+                    return;
+                case "LUMIA":
                     return;
                 case "MANTA":
                     return;

@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -263,6 +263,26 @@ const init = async () => {
         arbiWrapper.initEventSystem();
 
         console.log("Setup all event processors for chain.");
+
+    }
+    if (chainsToSubscribe.includes('LUMIA')) {
+        const wrapperClass = await import("../lib/node-wrappers/LUMIA");
+        let lumiaWrapper = new wrapperClass.default();
+
+        // Hooks.initHooks('ETH', mongodb, redis);
+
+        // console.log("Imported chain implementations");
+
+        lumiaWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(lumiaWrapper, blockHash);
+        });
+
+        // getLatestBlockLoop(ethWrapper);
+
+        lumiaWrapper.initEventSystem();
+
+        console.log("Setup all event processors for LUMIA chain.");
 
     }
     if (chainsToSubscribe.includes('MANTA')) {

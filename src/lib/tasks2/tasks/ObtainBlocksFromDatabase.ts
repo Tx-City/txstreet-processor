@@ -23,6 +23,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     case 'FLR':
                     case 'CELO':
                     case 'ARBI':
+                    case 'LUMIA':
                     case 'MANTA':
                     case 'XMR':
                     case 'BTC':
@@ -55,6 +56,9 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
                         break;  
                     case 'ARBI':
+                        project = { _id: 0, value: 1, hash: 1, from: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, transactions: 1 };
+                        break;
+                    case 'LUMIA':
                         project = { _id: 0, value: 1, hash: 1, from: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, transactions: 1 };
                         break;
                     case 'MANTA':

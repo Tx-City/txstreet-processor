@@ -2,14 +2,14 @@ import BlockchainWrapper from "../base";
 // import { createAlchemyWeb3, AlchemyWeb3 } from "@alch/alchemy-web3";
 import Web3 from 'web3'; 
 
-export default class ARBIWrapper extends BlockchainWrapper {
+export default class LUMIAWrapper extends BlockchainWrapper {
     // public web3: AlchemyWeb3;
     public web3: Web3;
     public options: { [key: string]: any };
     // public blockSubscription: 
 
     constructor() {
-        super('ARBI');
+        super('LUMIA');
 
         // Initialize web3
         this.options = {
@@ -26,7 +26,8 @@ export default class ARBIWrapper extends BlockchainWrapper {
                 onTimeout: false
             }
         };
-        const provider = new Web3.providers.WebsocketProvider("wss://arb-mainnet.g.alchemy.com/v2/7sane8Rpm95_NMx2USP3Vocacmut0_AB", this.options); 
+        //wss://testnet-rpc.lumia.org/ws
+        const provider = new Web3.providers.WebsocketProvider("ws://65.109.115.131:8548", this.options); 
         this.web3 = new Web3(provider); 
 
     

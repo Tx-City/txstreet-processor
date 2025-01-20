@@ -60,8 +60,15 @@ export const chainConfig: any = {
         deleteBlocksOlderThanSeconds: 3600,
         deleteBlocksAmount: 200,
         txsCollection: false
-    }
-    ,
+    },
+    LUMIA: {
+        wikiname: 'lumia',
+        rollup: true,
+        storeBlockFile: false,
+        deleteBlocksOlderThanSeconds: 3600,
+        deleteBlocksAmount: 200,
+        txsCollection: false
+    },
     MANTA: {
         wikiname: 'manta-pacific',
         rollup: true,
