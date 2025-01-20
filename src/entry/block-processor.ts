@@ -18,7 +18,7 @@ import { initHooks } from '../lib/chain-implementations';
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // A hardcoded array of implemented blockchains.
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];   
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];   
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -36,9 +36,6 @@ const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
 
     try {
         if (wrapper.ticker === "ARBI") {
-            await processBlockTxs(wrapper);
-        } 
-        if (wrapper.ticker === "LUMIA") {
             await processBlockTxs(wrapper);
         } 
         else if (wrapper.ticker === "MANTA") {
@@ -123,11 +120,6 @@ const run = async () => {
         initHooks("ARBI");
         const arbiWrapper = new Wrappers.ARBIWrapper();
         nonBlockingInfiniteLoop(arbiWrapper);
-    }
-    if (nodesToInit.includes('LUMIA')) {
-        initHooks("LUMIA");
-        const lumiaWrapper = new Wrappers.LUMIAWrapper();
-        nonBlockingInfiniteLoop(lumiaWrapper);
     }
     if (nodesToInit.includes('MANTA')) {
         initHooks("MANTA");

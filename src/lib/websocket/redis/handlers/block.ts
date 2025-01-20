@@ -24,7 +24,6 @@ export default async (data: any): Promise<any> => {
     if(lastBlocks[chain] && hash && lastBlocks[chain].includes(hash)) return;
     if(lastBlocksFull[chain]){
         // if(chain === "ARBI") console.log(lastBlocksFull[chain]);
-        // if(chain === "LUMIA") console.log(lastBlocksFull[chain]);
         for (let i = 0; i < lastBlocksFull[chain].length; i++) {
             const lastBlock = lastBlocksFull[chain][i];
             if(lastBlock.hash === block.hash) return;

@@ -26,7 +26,7 @@ export default class ARBIWrapper extends BlockchainWrapper {
                 onTimeout: false
             }
         };
-        const provider = new Web3.providers.WebsocketProvider("wss://arb-mainnet.g.alchemy.com/v2/7sane8Rpm95_NMx2USP3Vocacmut0_AB", this.options); 
+        const provider = new Web3.providers.WebsocketProvider("ws://37.27.97.175:8548", this.options); 
         this.web3 = new Web3(provider); 
 
     
