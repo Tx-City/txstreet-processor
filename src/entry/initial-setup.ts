@@ -37,6 +37,7 @@ const createIndexes = async (): Promise<boolean> => {
             database.collection('transactions_FLR'),
             database.collection('transactions_CELO'),
             database.collection('transactions_ARBI'),
+            database.collection('transactions_LUMIA'),
             database.collection('transactions_MANTA'),
             database.collection('transactions_LTC'),
             database.collection('transactions_BCH'),
@@ -62,6 +63,7 @@ const createIndexes = async (): Promise<boolean> => {
         try { await database.collection('statistics').updateOne({ "chain": "FLR" }, { $setOnInsert: { "chain": "FLR" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "CELO" }, { $setOnInsert: { "chain": "CELO" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "ARBI" }, { $setOnInsert: { "chain": "ARBI" } }, { upsert: true }) } catch (e) { console.log(e) }
+        try { await database.collection('statistics').updateOne({ "chain": "LUMIA" }, { $setOnInsert: { "chain": "LUMIA" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "MANTA" }, { $setOnInsert: { "chain": "MANTA" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "ETH-nohistory" }, { $setOnInsert: { "chain": "ETH-nohistory" } }, { upsert: true }) } catch (e) { console.log(e) }
         try { await database.collection('statistics').updateOne({ "chain": "LUKSO-nohistory" }, { $setOnInsert: { "chain": "LUKSO-nohistory" } }, { upsert: true }) } catch (e) { console.log(e) }

@@ -6,6 +6,9 @@ export const enabledHooks: any = {
     ARBI: [
         // "DefaultHousing",
     ],
+    LUMIA: [
+
+    ],
     MANTA: [
         "DefaultHousing",
     ],

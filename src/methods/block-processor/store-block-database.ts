@@ -1,6 +1,6 @@
 import mongodb from '../../databases/mongodb';
 
-const dontCheckTxs = ['ARBI', 'MANTA'];
+const dontCheckTxs = ['ARBI', 'MANTA', 'LUMIA'];
 
 // The purpose of this method is to store chain-provided block information in the database. 
 export default async (chain: string, block: any, databaseKey: string): Promise<void> => {
