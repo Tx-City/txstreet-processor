@@ -1,7 +1,0 @@
-{
-    "name": "gaslite",
-    "title": "Gaslite",
-    "tracked": true,
-    "colors": ["aa336a", "lighten"],
-    "contracts": [{ "address": "0x09350f89e2d7b6e96ba730783c2d76137b045fef" }]
-  }
