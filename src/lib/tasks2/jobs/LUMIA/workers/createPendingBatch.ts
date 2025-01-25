@@ -23,7 +23,7 @@ setInterval(async () => {
     try {
         const { database } = await mongodb();
 
-        const lastPost = await database.collection('transactions_ETH').find({from:"0xc1b634853cb333d3ad8663715b08f41a3aec47cc"}).sort({timestamp: -1}).limit(1).toArray();
+        const lastPost = await database.collection('transactions_ETH').find({from:"0x8f2d2da3044b0a1ea54ee26f7fe376cd9ec4393f"}).sort({timestamp: -1}).limit(1).toArray();
         const lastPostTx = lastPost[0];
         // console.log(lastPost, "lastPost");
 
