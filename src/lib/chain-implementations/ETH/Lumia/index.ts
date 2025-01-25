@@ -6,7 +6,7 @@ import redis from '../../../../databases/redis';
 
 // import contract_0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f from "./0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f.json";
 
-class Arbitrum extends ChainImplementation {
+class Lumia extends ChainImplementation {
 
     async init(): Promise<ChainImplementation> {
         try {
@@ -39,4 +39,4 @@ class Arbitrum extends ChainImplementation {
     }
 }
 
-export default new Arbitrum("ETH");
+export default new Lumia("ETH");
