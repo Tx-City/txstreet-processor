@@ -159,7 +159,7 @@ const interval = setInterval(async () => {
         try { lastExecutionResults['gasLimit'] = await gasLimit(lastKnownBlock); } catch (error) { console.error(error) }
         try { lastExecutionResults['medianGasUsed'] = await medianGasUsed(blocks); } catch (error) { console.error(error) }
         try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { console.error(error) }
-        try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { console.error(error) }
+        try { lastExecutionResults['medianFee-usd'] = 0.0005  } catch (error) { console.error(error) }
         try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
         } catch (error) {  
         console.error(error); 
