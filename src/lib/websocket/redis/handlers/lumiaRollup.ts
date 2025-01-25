@@ -9,7 +9,7 @@ export default async (data: any): Promise<any> => {
 	
     setTimeout(() => {
         delete rollupTxs[hash];
-    }, 60000 * 60);
+    }, 60000 * 60 * 24 * 7);
 
 	io.to(room).emit('lumiaRollup', hash); 
 }
