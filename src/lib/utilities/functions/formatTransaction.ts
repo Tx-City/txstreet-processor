@@ -65,7 +65,8 @@ export default (chain: string, data: any) => {
     } else if (chain === "BTC" || chain === "LTC" || chain === "BCH" || chain === "DASH") {
         obj.tx = data.hash;
         // console.log('data>>>>>>:', data)
-        if (Object.keys(data.extras || {}).length > 0) obj.e = data.extras;
+        if (Object.keys(data.extras || {}).length > 0 && chain !== "DASH") 
+            obj.e = data.extras;
         if (data.house && data.house != "0" && data.house != "0.0") obj.h = data.house;
         if (data.fees && data.size) {
             obj[chain === "LTC" ? "lpb" : "spb"] = parseFloat(((data.fees.base * 100000000) / data.size).toFixed(2));
