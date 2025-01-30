@@ -87,11 +87,11 @@ export default class DASHWrapper extends BlockchainWrapper {
                         transaction.total += output.value;
                         transaction.asmArrays[i] = output.asm.split(' ');
 
-                        if (transaction.asmArrays[i][0] == "OP_RETURN") {
-                            if (!transaction.extras)
-                                transaction.extras = {};
-                            transaction.extras.op_return = true;
-                        }
+                        // if (transaction.asmArrays[i][0] == "OP_RETURN") {
+                        //     if (!transaction.extras)
+                        //         transaction.extras = {};
+                        //     transaction.extras.op_return = true;
+                        // }
                     }
 
                     for (let i = 0; i < transaction.inputs.length; i++) {
@@ -191,17 +191,17 @@ export default class DASHWrapper extends BlockchainWrapper {
                             transaction.total += output.value;
                             transaction.asmArrays[i] = output.asm.split(' ');
 
-                            if (transaction.asmArrays[i] == "OP_RETURN") {
-                                if (!transaction.extras)
-                                    transaction.extras = {};
-                                transaction.extras.op_return = true;
-                            }
+                            // if (transaction.asmArrays[i] == "OP_RETURN") {
+                            //     if (!transaction.extras)
+                            //         transaction.extras = {};
+                            //     transaction.extras.op_return = true;
+                            // }
                         }
                     }
 
                     transaction.rsize = transaction.hex.length / 2;
                     transaction.size = transaction.rsize;
-                    transaction.segwitHash = transaction.hash;
+                    // transaction.segwitHash = transaction.hash;
                     transaction.hash = transaction.txid;
                     delete transaction.txid;
                 }
@@ -319,16 +319,16 @@ export default class DASHWrapper extends BlockchainWrapper {
                         transaction.total += output.value;
                         transaction.asmArrays[i] = output.asm.split(' ');
 
-                        if (transaction.asmArrays[i] == "OP_RETURN") {
-                            if (!transaction.extras)
-                                transaction.extras = {};
-                            transaction.extras.op_return = true;
-                        }
+                        // if (transaction.asmArrays[i] == "OP_RETURN") {
+                        //     if (!transaction.extras)
+                        //         transaction.extras = {};
+                        //     transaction.extras.op_return = true;
+                        // }
                     }
                 }
                 transaction.rsize = transaction.hex.length / 2;
                 transaction.size = transaction.rsize;
-                transaction.segwitHash = transaction.hash;
+                // transaction.segwitHash = transaction.hash;
                 transaction.hash = transaction.txid;
                 delete transaction.txid;
                 return transaction;
