@@ -1,0 +1,7 @@
+{
+    "name": "lumia",
+    "title": "Lumia",
+    "tracked": true,
+    "colors": ["000000", ""],
+    "contracts": [{ "address": "0x92726f7de49300dbdb60930066bc1d0803c0740b" }]
+  }
