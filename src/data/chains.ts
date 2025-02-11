@@ -11,6 +11,12 @@ export const chainConfig: any = {
         deleteBlocksOlderThanSeconds: 90000,
         txsCollection: true
     },
+    EVOLUTION: {
+        wikiname: 'evolution',
+        storeBlockFile: true,
+        deleteBlocksOlderThanSeconds: 90000,
+        txsCollection: true
+    },
     FLR: {
         wikiname: 'flr',
         storeBlockFile: true,

@@ -1,18 +1,18 @@
 
 import { readNFSFile } from '../../../lib/utilities';
-import { ProjectedBTCTransaction } from '../types';
+import { ProjectedEthereumTransaction } from '../types';
 import mongodb from '../../../databases/mongodb';
 import redis from '../../../databases/redisEvents';
 import path from 'path';
 import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
-import { BTCTransactionsSchema } from '../../../data/schemas';
+import { ETHTransactionsSchema } from '../../../data/schemas';
 
-export default class EVOLUTIONendingList {
+export default class EVOLUTIONPendingList {
     // The maximum allowed size of the collection. 
-    public capacity: number = 3000;
+    public capacity: number = 50000;
     // Index -> Value 
-    public array: ProjectedBTCTransaction[] = [];
+    public array: ProjectedEthereumTransaction[] = [];
     // Key -> Index 
     _mapByKey: { [key: string]: any } = {};
     // The internal task used to write the pending list to disk.
@@ -26,6 +26,8 @@ export default class EVOLUTIONendingList {
 
     _remove: string[] = [];
 
+    _toAdd: ProjectedEthereumTransaction[] = [];
+
     constructor() {
         this.add = this.add.bind(this);
         this.remove = this.remove.bind(this);
@@ -33,27 +35,32 @@ export default class EVOLUTIONendingList {
         this._onDroppedTransactions = this._onDroppedTransactions.bind(this);
         this._onPendingTransactions = this._onPendingTransactions.bind(this);
 
-        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'DASH-pendingTransactions.bin');
+        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'LUKSO-pendingTransactions.bin');
         // Whenever a new transaction is broadcast.
         redis.subscribe('pendingTx');
 
         redis.events.on('pendingTx', async (data) => {
             const { chain } = data;
-            if (chain !== "DASH") return;
+            if (chain !== "EVOLUTION") return;
 
             // Format the socket-format back into the ETHTransactionSchema Format.
-            const transaction: ProjectedBTCTransaction = {
-                chain: 'DASH',
+            const transaction: ProjectedEthereumTransaction = {
                 hash: data.tx,
-                fee: parseFloat(data.s) * parseFloat(data.spb),
-                size: data.s,
-                rsize: data.rs,
+                from: data.fr,
                 insertedAt: new Date(data.ia).getTime(),
                 timestamp: data.t,
+                gas: data.g,
+                gasPrice: data.gp || null,
+                maxFeePerGas: data.mfpg || null,
+                maxPriorityFeePerGas: data.mpfpg || null,
+                value: Number(data.tot * Math.pow(10, 18)) || 0,
                 dropped: false,
-                processed: true
+                processed: true,
+                extras: data.e,
+                pExtras: data.pe
             }
-            // console.log("transaction DASH===" + transaction)
+
+
             // Add the transaction to this list.
             this._onPendingTransactions([transaction])
 
@@ -66,7 +73,7 @@ export default class EVOLUTIONendingList {
         redis.subscribe('block');
         redis.events.on('block', (data) => {
             const { chain, hash } = data;
-            if (chain !== 'DASH') return;
+            if (chain !== 'EVOLUTION') return;
             this._onConfirmedBlock(hash);
         });
 
@@ -75,7 +82,7 @@ export default class EVOLUTIONendingList {
         redis.events.on('removeTx', (data) => {
 
             const { chain, hashes } = data;
-            if (chain !== 'DASH') return;
+            if (chain !== 'EVOLUTION') return;
             this._onDroppedTransactions(hashes);
         })
 
@@ -85,12 +92,22 @@ export default class EVOLUTIONendingList {
 
         setInterval(async () => {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_DASH');
+            const collection = database.collection('transactions_EVOLUTION');
             const hashes = this.array.map((a: any) => a.hash);
-            const result = await collection.find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ _id: 0, hash: 1 }).toArray();
+            const result = await collection.find({ hash: { $in: hashes }, $or: [{ blockHash: { $ne: null } }, { dropped: { $exists: true } }] }).project({ _id: 0, hash: 1 }).toArray();
             const toDelete = result.map((result: any) => result.hash);
             this.remove(toDelete);
         }, 10000).start(false);
+
+        setInterval(async () => {
+            if (!this._toAdd.length) return;
+            this.array = this.array.concat(this._toAdd);
+            this._toAdd = [];
+            this.array = this.array.sort((a: ProjectedEthereumTransaction, b: ProjectedEthereumTransaction) => this._getSortValue(a) - this._getSortValue(b));
+            if (this.array.length > this.capacity)
+                this.array.splice(0, this.array.length - this.capacity);
+            this._rebuildKeyMap();
+        }, 1000).start(false);
     }
 
     /**
@@ -99,12 +116,8 @@ export default class EVOLUTIONendingList {
      * 
      * @param transactions An array of transactions that we want to add. 
      */
-    add(transactions: ProjectedBTCTransaction[]) {
-        this.array = this.array.concat(transactions);
-        this.array = this.array.sort((a: ProjectedBTCTransaction, b: ProjectedBTCTransaction) => this._getSortValue(a) - this._getSortValue(b));
-        if (this.array.length > this.capacity)
-            this.array.splice(0, this.array.length - this.capacity);
-        this._rebuildKeyMap();
+    add(transactions: ProjectedEthereumTransaction[]) {
+        this._toAdd = this._toAdd.concat(transactions);
     }
 
     /**
@@ -130,6 +143,7 @@ export default class EVOLUTIONendingList {
             for (let i = 0; i < indexesToDelete.length; i++)
                 delete this.array[indexesToDelete[i]];
             this.array = this.array.filter((value) => value);
+            this._toAdd = this._toAdd.filter((value) => value);
             this._rebuildKeyMap();
         }
     }
@@ -139,7 +153,7 @@ export default class EVOLUTIONendingList {
      * 
      * @param transactions The transactions broadcast.
      */
-    _onPendingTransactions = async (transactions: ProjectedBTCTransaction[]) => {
+    _onPendingTransactions = async (transactions: ProjectedEthereumTransaction[]) => {
         this.add(transactions);
     };
 
@@ -159,7 +173,7 @@ export default class EVOLUTIONendingList {
                     const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
                     const firstPart = hash[hash.length - 1];
                     const secondPart = hash[hash.length - 2];
-                    const filePath = path.join(directory, 'blocks', 'DASH', firstPart, secondPart, hash);
+                    const filePath = path.join(directory, 'blocks', 'EVOLUTION', firstPart, secondPart, hash);
                     const data = await readNFSFile(filePath);
                     const block = JSON.parse(data as string);
                     if (block) return block;
@@ -173,7 +187,7 @@ export default class EVOLUTIONendingList {
 
             const block = await obtainBlock();
             if (!block) {
-                console.log(`EVOLUTIONendingList Failed to get data for block: ${hash}`);
+                console.log(`EVOLUTIONPendingList Failed to get data for block: ${hash}`);
                 return;
             }
             if (block.insertedAt) block.insertedAt = new Date(block.insertedAt).getTime();
@@ -202,8 +216,12 @@ export default class EVOLUTIONendingList {
      * 
      * @param transaction The transaction.
      */
-    _getSortValue(transaction: ProjectedBTCTransaction) {
-        return transaction.fee;
+    _getSortValue(transaction: ProjectedEthereumTransaction) {
+        if (transaction.hasOwnProperty('gasPrice') && transaction.gasPrice != null)
+            return transaction.gasPrice;
+        if (transaction.hasOwnProperty('maxFeePerGas') && transaction.maxFeePerGas != null)
+            return transaction.maxFeePerGas;
+        return 0;
     }
 
     /**
@@ -234,10 +252,10 @@ export default class EVOLUTIONendingList {
     async init() {
         try {
             const { database } = await mongodb();
-            const collection = database.collection('transactions_DASH');
+            const collection = database.collection('transactions_EVOLUTION');
             const where: any = { confirmed: false, processed: true, blockHash: { $eq: null }, dropped: { $exists: false } };
-            const project = { _id: 0, hash: 1, processed: 1, fee: 1, size: 1, dropped: 1, timestamp: 1, insertedAt: 1, rsize: 1 };
-            const results = await collection.find(where).project(project).sort({ fee: -1 }).limit(this.capacity).toArray();
+            const project = { _id: 0, processed: 1, insertedAt: 1, gas: 1, value: 1, gasPrice: 1, maxFeePerGas: 1, maxPriorityFeePerGas: 1, dropped: 1, hash: 1, from: 1, timestamp: 1, extras: 1, pExtras: 1 };
+            const results = await collection.find(where).project(project).sort({ pendingSortPrice: -1 }).limit(this.capacity).toArray();
             for (let i = 0; i < results.length; i++)
                 results[i].insertedAt = new Date(results[i].insertedAt).getTime();
             this.add(results);
@@ -268,7 +286,7 @@ export default class EVOLUTIONendingList {
                 Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
             }
 
-            const contents = BTCTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
+            const contents = ETHTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
 
             const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');
             fs.writeFileSync(writingFilePath, contents);
