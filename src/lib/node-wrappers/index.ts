@@ -4,6 +4,7 @@ import BCHWrapper from "./BCH";
 import LTCWrapper from "./LTC";
 import ETHWrapper from "./ETH";
 import LUKSOWrapper from "./LUKSO";
+import EVOLUTIONWrapper from "./EVOLUTION";
 import FLAREWrapper from "./FLR";
 import CELOWrapper from "./CELO";
 import ARBIWrapper from "./ARBI";
@@ -13,4 +14,4 @@ import XMRWrapper from './XMR';
 import RINKEBYWrapper from "./RINKEBY";
 import BlockchainWrapper from "./base";
 
-export { BlockchainWrapper, XMRWrapper, BTCWrapper, DASHWrapper, BCHWrapper, LTCWrapper, ETHWrapper, LUKSOWrapper, FLAREWrapper, RINKEBYWrapper, LUMIAWrapper, ARBIWrapper, MANTAWrapper, CELOWrapper }; 
+export { BlockchainWrapper, XMRWrapper, BTCWrapper, DASHWrapper, BCHWrapper, LTCWrapper, ETHWrapper, LUKSOWrapper, EVOLUTIONWrapper, FLAREWrapper, RINKEBYWrapper, LUMIAWrapper, ARBIWrapper, MANTAWrapper, CELOWrapper }; 

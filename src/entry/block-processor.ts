@@ -18,7 +18,9 @@ import { initHooks } from '../lib/chain-implementations';
 const nodes: { [key: string]: Wrappers.BlockchainWrapper } = {};
 
 // A hardcoded array of implemented blockchains.
-const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];   
+const blockchainImpls = ['BTC', 'LTC', 'BCH', 'XMR', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR', 
+    'EVOLUTION'
+];   
 var nodesToInit: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
@@ -106,6 +108,12 @@ const run = async () => {
         
         nonBlockingInfiniteLoop(luksoWrapper);
         console.log('running block processor for lukso', nonBlockingInfiniteLoop(luksoWrapper));
+    }
+    if (nodesToInit.includes('EVOLUTION')) {
+        const evolutionWrapper = new Wrappers.EVOLUTIONWrapper(process.env.EVOLUTION_NODE as string);
+        
+        nonBlockingInfiniteLoop(evolutionWrapper);
+        console.log('running block processor for dash evolution', nonBlockingInfiniteLoop(evolutionWrapper));
     }
     if (nodesToInit.includes('FLR')) {
         const flareWrapper = new Wrappers.FLAREWrapper(process.env.FLR_NODE as string);

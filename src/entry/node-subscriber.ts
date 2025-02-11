@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'MANTA', 'CELO', 'DASH', 'FLR'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'EVOLUTION','MANTA', 'CELO', 'DASH', 'FLR'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -205,6 +205,25 @@ const init = async () => {
         });
         getLatestBlockLoop(luksoWrapper);
         luksoWrapper.initEventSystem();
+    }
+
+    if (chainsToSubscribe.includes('EVOLUTION')) {
+        const wrapperClass = await import("../lib/node-wrappers/EVOLUTION");
+        let evolutionWrapper = new wrapperClass.default(process.env.EVOLUTION_NODE as string);
+
+        evolutionWrapper.on('mempool-tx', (transaction: any) => {
+            if (!transaction.blockHeight && transaction.blockNumber) {
+                transaction.blockHeight = transaction.blockNumber;
+                delete transaction.blockNumber;
+            }
+            processTransaction(evolutionWrapper, { ...transaction, processed: true });
+        });
+        evolutionWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event: ${blockHash}`);
+            processBlock(evolutionWrapper, blockHash);
+        });
+        getLatestBlockLoop(evolutionWrapper);
+        evolutionWrapper.initEventSystem();
     }
 
     if (chainsToSubscribe.includes('FLR')) {

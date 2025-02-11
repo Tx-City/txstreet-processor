@@ -25,6 +25,9 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
         case 'LUKSO':
             name = 'lukso'; //lukso-token-2
             break;
+        case 'EVOLUTION':
+            name = 'evolution'; 
+            break;
         // case 'FLR':
         //     name = 'flare'; //flare
         //     break;
