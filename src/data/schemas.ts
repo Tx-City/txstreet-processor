@@ -170,3 +170,58 @@ export const BTCBlocksSchema = avro.Type.forSchema({
         }
     ]
 })
+
+export const EVOLUTIONTransactionsSchema = avro.Type.forSchema({
+    name: "EVOLUTIONTransactionsCollection",
+    type: "record",
+    fields: [
+        { name: "timestamp", type: "long", default: 0 },
+        {
+            name: "collection",
+            type: {
+                type: "array",
+                items: {
+                    name: "EVOLUTIONTransaction",
+                    type: "record",
+                    fields: [
+                        { name: "hash", type: "string" },
+                        { name: "owner", type: "string" },
+                        { name: "insertedAt", type: "long" },
+                        { name: "timestamp", type: "long" },
+                        { name: "fee", type: "double" },
+                        { name: "value", type: "double" },
+                        { name: "gasUsed", type: "long" }
+                    ]
+                }
+            }
+        }
+    ]
+});
+
+export const EVOLUTIONBlocksSchema = avro.Type.forSchema({
+    name: "EVOLUTIONBlocksCollection",
+    type: "record",
+    fields: [
+        { name: "timestamp", type: "long", default: 0 },
+        {
+            name: "collection",
+            type: {
+                type: "array",
+                items: {
+                    name: "EVOLUTIONBlock",
+                    type: "record",
+                    fields: [
+                        { name: "hash", type: "string" },
+                        { name: "timestamp", type: "long" },
+                        { name: "height", type: "long" },
+                        { name: "transactions", type: "long" },
+                        { name: "blockversion", type: "long" },
+                        { name: "appversion", type: "long" },
+                        { name: "l1lockedheight", type: "long" },
+                        { name: "validator", type: "string" }
+                    ]
+                }
+            }
+        }
+    ]
+});

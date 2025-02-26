@@ -1,332 +1,176 @@
-import { error } from "console";
-import BlockchainWrapper from "../base";
-import Web3 from 'web3';
 
+
+// import { error } from "console";
+import BlockchainWrapper from "../base";
+import Dash from "dash"
 
 export default class EVOLUTIONWrapper extends BlockchainWrapper {
-    public web3: Web3;
-    public options: { [key: string]: any };
-    // public blockSubscription: 
+    private ws: WebSocket | null = null;
+    private isConnected: boolean = false;
 
     constructor(host: string) {
         super('EVOLUTION');
-
-        // Initialize web3
-        this.options = {
-            clientConfig: {
-                maxReceivedFrameSize: 10000000000,
-                maxReceivedMessageSize: 10000000000,
-                keepalive: true,
-                keepaliveInterval: 1000,
-            },
-            reconnect: {
-                auto: true,
-                delay: 1000,
-                maxAttempts: Number.MAX_SAFE_INTEGER,
-                onTimeout: false
-            }
+        // Initialize WebSocket connection
+        this.ws = new WebSocket(`ws://65.109.115.131:26657/websocket`);
+        
+        this.ws.onopen = () => {
+            console.log('WebSocket Connected');
+            this.isConnected = true;
         };
-        // host = 'ws://168.119.137.140:9546';
-        const provider = new Web3.providers.WebsocketProvider(host, this.options);
-        this.web3 = new Web3(provider);
-        // Add admin peers, nodeInfo, and removePeer functions. 
-        this.web3.eth.extend({
-            property: 'admin',
-            methods: [
-                { name: 'peers', call: 'admin_peers' },
-                { name: 'nodeInfo', call: 'admin_nodeInfo' },
-                { name: 'removePeer', call: 'admin_removePeer', params: 1 }
-            ]
-        });
 
-        // Add txpoorl content, inspect, and status functions. 
-        this.web3.eth.extend({
-            property: 'txpool',
-            methods: [
-                { name: "content", call: "txpool_content" },
-                { name: "inspect", call: "txpool_inspect" }
-            ]
-        });
+        this.ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+        };
+
+        this.ws.onclose = () => {
+            console.log('WebSocket Connection Closed');
+            this.isConnected = false;
+        };
     }
-
+    
     public initEventSystem() {
-       
-        this.web3.eth.subscribe('pendingTransactions', (error: any, result: any) => { }).on('data', async (hash: string) => {
-            console.log("-----------this.web3.eth.subscribe()--------------");
-            
+        if (!this.ws || !this.isConnected) {
+            throw new Error('WebSocket not connected');
+        }
+
+        // Subscribe to transaction events
+        const txSubscription = {
+            jsonrpc: "2.0",
+            method: "subscribe",
+            params: ["tm.event='Tx'"],
+            id: 1
+        };
+        this.ws.send(JSON.stringify(txSubscription));
+
+        // Subscribe to new block events
+        const blockSubscription = {
+            jsonrpc: "2.0",
+            method: "subscribe",
+            params: ["tm.event='NewBlock'"],
+            id: 2
+        };
+        this.ws.send(JSON.stringify(blockSubscription));
+
+        // Handle incoming messages
+        this.ws.onmessage = (event) => {
             try {
-                const transaction = await this.getTransaction(hash, 2);
-                this.emit('mempool-tx', transaction);
-                console.log("Mempool TX", transaction);
+                const data = JSON.parse(event.data);
+                
+                // Handle transaction events
+                if (data.result?.data?.type === 'tendermint/event/Tx') {
+                    const transaction = data.result.data.value;
+                    this.emit('mempool-tx', transaction);
+                    console.log("Mempool TX", transaction);
+                }
+                
+                // Handle block events
+                if (data.result?.data?.type === 'tendermint/event/NewBlock') {
+                    const block = data.result.data.value;
+                    const blockHash = block.block_id.hash;
+                    this.emit('confirmed-block', blockHash);
+                    console.log("BLOCK TEST", block);
+                }
             } catch (error) {
                 console.error(error);
             }
-        });
-
-        this.web3.eth.subscribe('newBlockHeaders', (error: any, result: any) => { }).on('data', (block: any) => {
-            // console.log("BLOCK TEST", block);
-            this.emit('confirmed-block', block.hash);
-        });
+        };
     }
 
     public async getCurrentHeight(): Promise<null | number> {
-        return await this.web3.eth.getBlockNumber();
-    }
-
-    public async getTransactionReceipts(block: any) {
         try {
-            let promises = [];
-            for (let i = 0; i < block.transactions.length; i++) {
-                const transaction = block.transactions[i];
-                promises.push(this.web3.eth.getTransactionReceipt(transaction.hash));
-            }
-            let receipts = await Promise.all(promises);
-            return receipts;
-        } catch (error) {
-            console.error(error);
-            return [];
-        }
-    };
-
-    public async getTransactionReceipt(hash: string) {
-        try {
-            let receipt = await this.web3.eth.getTransactionReceipt(hash);
-            return receipt;
-        }
-        catch (error) {
-            console.log(error);
-            return null;
-        }
-    }
-
-    public async getTransaction(id: string, verbosity: number, blockId?: string | number): Promise<any> {
-        try {
-            const transaction: any = await this.web3.eth.getTransaction(id);
-            if (!transaction) return null;
-            if (typeof transaction === "string") return null;
-
-            if (transaction.from)
-                transaction.from = transaction.from.toLowerCase();
-            if (transaction.to)
-                transaction.to = transaction.to.toLowerCase();
-
-            if (transaction.gasPrice)
-                transaction.gasPrice = Number(transaction.gasPrice);
-            if (transaction.v)
-                transaction.v = Number(transaction.v);
-            if (transaction.value)
-                transaction.value = Number(transaction.value);
-            if (transaction.maxPriorityFeePerGas)
-                transaction.maxPriorityFeePerGas = Number(transaction.maxPriorityFeePerGas);
-            if (transaction.maxFeePerGas)
-                transaction.maxFeePerGas = Number(transaction.maxFeePerGas);
-
-            transaction.pendingSortPrice = Number(transaction.gasPrice || transaction.maxFeePerGas);
-
-            if (verbosity > 0 && transaction.blockHash) {
-                transaction.receipt = await this.web3.eth.getTransactionReceipt(id);
-            }
-            return transaction;
-        } catch (error: any) {
-            console.error(error);
-            const msg = error.message || error.toString()
-            if (msg.includes("connection not open on send"))
-                process.exit(1);
-            console.error(error);
-            return null;
-        }
-    }
-
-    public async getBlock(id: string | number, verbosity: number): Promise<any> {
-        try {
-            const returnTransactionObjects = verbosity > 0 ? true : false;
-            let block: any;
-            if(returnTransactionObjects){
-                block = await this.web3.eth.getBlock(id, true);
-            }
-            else{
-                block = await this.web3.eth.getBlock(id, false);
-            }
-            if (!block) return null;
-
-            block.height = block.number;
-            block.baseFeePerGas = Number(block.baseFeePerGas);
-            block.timestamp = Math.floor(block.timestamp);
-
-            for (let i = 0; i < block.transactions?.length; i++) {
-                const transaction = block.transactions[i];
-                if (typeof transaction === "string") continue;
-
-                if (transaction.from)
-                    transaction.from = transaction.from.toLowerCase();
-                if (transaction.to)
-                    transaction.to = transaction.to.toLowerCase();
-
-                if (transaction.gasPrice)
-                    transaction.gasPrice = Number(transaction.gasPrice);
-                if (transaction.v)
-                    transaction.v = Number(transaction.v);
-                if (transaction.value)
-                    transaction.value = Number(transaction.value);
-                if (transaction.maxPriorityFeePerGas)
-                    transaction.maxPriorityFeePerGas = Number(transaction.maxPriorityFeePerGas);
-                if (transaction.maxFeePerGas)
-                    transaction.maxFeePerGas = Number(transaction.maxFeePerGas);
-
-                transaction.pendingSortPrice = Number(transaction.gasPrice || transaction.maxFeePerGas);
-
-                block.transactions[i] = transaction;
-            }
-
-            return block;
-        } catch (error: any) {
-            const msg = error.message || error.toString()
-            if (msg.includes("connection not open on send"))
-                process.exit(1);
-            console.error(error);
-            console.error(error);
-            return null;
-        }
-    }
-
-    public async getCode(address: string) {
-        try {
-            return await this.web3.eth.getCode(address);
-        } catch (error) {
-            console.error(error);
-            console.error(error);
-            return "0x";
-        }
-    }
-
-    public async getUncle(blockId: string | number, uncleIndex: number): Promise<any> {
-        try {
-            const block: any = await this.web3.eth.getUncle(blockId, uncleIndex, true);
-            if (!block) return null;
-
-            block.height = block.number;
-            block.baseFeePerGas = Number(block.baseFeePerGas);
-            block.timestamp = Math.floor(block.timestamp);
-
-            if (Array.isArray(block.transactions)) {
-                for (let i = 0; i < block.transactions?.length; i++) {
-                    const transaction = block.transactions[i];
-                    if (typeof transaction === "string") continue;
-
-                    if (transaction.from)
-                        transaction.from = transaction.from.toLowerCase();
-                    if (transaction.to)
-                        transaction.to = transaction.to.toLowerCase();
-
-                    if (transaction.gasPrice)
-                        transaction.gasPrice = Number(transaction.gasPrice);
-                    if (transaction.v)
-                        transaction.v = Number(transaction.v);
-                    if (transaction.value)
-                        transaction.value = Number(transaction.value);
-                    if (transaction.maxPriorityFeePerGas)
-                        transaction.maxPriorityFeePerGas = Number(transaction.maxPriorityFeePerGas);
-                    if (transaction.maxFeePerGas)
-                        transaction.maxFeePerGas = Number(transaction.maxFeePerGas);
-
-                    transaction.pendingSortPrice = Number(transaction.gasPrice || transaction.maxFeePerGas);
-
-                    block.transactions[i] = transaction;
+            // Fetch status data from Tendermint RPC
+            const response = await fetch(`http://65.109.115.131:26657/status`, {
+                headers: {
+                    "accept": "application/json"
                 }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch status: ${response.statusText}`);
             }
-
-            return block;
-        } catch (error: any) {
-            const msg = error.message || error.toString()
-            if (msg.includes("connection not open on send"))
-                process.exit(1);
-            console.error(error);
-            console.error(error);
+            
+            const data = await response.json();
+            
+            // Extract the latest block height from the sync_info
+            if (data.sync_info && data.sync_info.latest_block_height) {
+                return parseInt(data.sync_info.latest_block_height);
+            }
+            
+            throw new Error('Invalid status data structure');
+        } catch (error) {
+            console.error(`Error fetching current height:`, error);
             return null;
         }
     }
+    
+    public getTransactionReceipts:  undefined
 
-    public async resolveUncle(id: string | number, index: number): Promise<any> {
+    public getTransactionReceipt: undefined;
+
+    public getTransaction : undefined;
+
+    public async getBlock(blockHeight: number): Promise<any> {
         try {
-            const block: any = await this.web3.eth.getUncle(id, index, true);
-            if (!block) return { exists: false };
-            if (!block.number) return { exists: false };
-
-            block.height = block.number;
-            block.baseFeePerGas = Number(block.baseFeePerGas);
-            block.timestamp = Math.floor(block.timestamp);
-
-            if (Array.isArray(block.transactions)) {
-                for (let i = 0; i < block.transactions?.length; i++) {
-                    const transaction = block.transactions[i];
-                    if (typeof transaction === "string") continue;
-
-                    if (transaction.from)
-                        transaction.from = transaction.from.toLowerCase();
-                    if (transaction.to)
-                        transaction.to = transaction.to.toLowerCase();
-
-                    if (transaction.gasPrice)
-                        transaction.gasPrice = Number(transaction.gasPrice);
-                    if (transaction.v)
-                        transaction.v = Number(transaction.v);
-                    if (transaction.value)
-                        transaction.value = Number(transaction.value);
-                    if (transaction.maxPriorityFeePerGas)
-                        transaction.maxPriorityFeePerGas = Number(transaction.maxPriorityFeePerGas);
-                    if (transaction.maxFeePerGas)
-                        transaction.maxFeePerGas = Number(transaction.maxFeePerGas);
-
-                    transaction.pendingSortPrice = Number(transaction.gasPrice || transaction.maxFeePerGas);
-
-                    block.transactions[i] = transaction;
+            // Fetch block data from Tendermint RPC
+            const response = await fetch(`http://65.109.115.131:26657/block?height=${blockHeight}`, {
+                headers: {
+                    "accept": "application/json"
                 }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch block: ${response.statusText}`);
             }
-            return block;
+            
+            const data = await response.json();
+            
+            // Return block structure based on the JSON response structure
+            if (data.block && data.block_id) {
+                // If the response is already in the format from paste.txt
+                return this.parseBlockData(data);
+            } else if (data.result && data.result.block) {
+                // If the response is wrapped in a "result" property (typical RPC response)
+                return this.parseBlockData(data.result);
+            }
+            
+            throw new Error('Invalid block data structure');
         } catch (error) {
-            console.error(error);
+            console.error(`Error fetching block at height ${blockHeight}:`, error);
             return null;
         }
     }
-
-    public async resolveBlock(id: string | number, verbosity: number, depth: number): Promise<any> {
-        try {
-            const block = await this.getBlock(id, verbosity);
-            if (!block)
-                return { exists: false };
-            if (block.height == null)
-                return { exists: false };
-            return { exists: true, block };
-        } catch (error) {
-            console.error(error);
-            console.error(error);
-            return { exists: false };
-        }
+    
+    // Helper method to parse block data from the response
+    private parseBlockData(data: any) : any {
+        const block = data.block;
+        const header = block.header;
+        
+        return {
+            hash: data.block_id.hash,
+            timestamp: new Date(header.time).getTime(),
+            height: parseInt(header.height),
+            transactions: block.data.txs ? block.data.txs.length : 0,
+            blockversion: parseInt(header.version.block),
+            appversion: parseInt(header.version.app),
+            l1lockedheight: parseInt(header.core_chain_locked_height),
+            validator: header.proposer_pro_tx_hash
+        };
     }
 
-    public async getTransactionCount(address: string): Promise<number> {
-        try {
-            return await this.web3.eth.getTransactionCount(address);
-        } catch (error) {
-            console.error(error);
-            return 0;
-        }
-    }
+    public resolveBlock: undefined;
 
-    public isTransaction(data: any): boolean {
-        if (!data.hash) return false;
-        if (!data.gasPrice) return false;
-        return true;
-    }
-
-    public isTransactionConfirmed(transaction: any): boolean {
-        return transaction.blockHash != null;
-    }
-
+    public getTransactionCount:  undefined;
+  
+    public getTransactionSignatures: undefined;
+  
+    public isTransaction: undefined;
+  
+    public isTransactionConfirmed: undefined;
+  
     public isBlock(data: any): boolean {
-        if (!data.chain) return false;
-        if (!data.hash) return false;
-        if (!data.height) return false;
-        return true;
-    }
+      if (!data.chain) return false;
+      if (!data.hash) return false;
+      if (!data.height) return false;
+      return true;
+  }
 }

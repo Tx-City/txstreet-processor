@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'EVOLUTION','MANTA', 'CELO', 'DASH', 'FLR'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'EVOLUTION', 'MANTA', 'CELO', 'DASH', 'FLR'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());

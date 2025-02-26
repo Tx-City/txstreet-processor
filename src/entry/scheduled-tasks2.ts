@@ -6,9 +6,9 @@ Object.assign(process.env, minimist(process.argv.slice(2)));
 
 import DropoutContainer from '../lib/tasks2/containers/Dropout';
 import ObtainTransactionsFromDatabase from '../lib/tasks2/tasks/ObtainTransactionsFromDatabase';
-import { ProjectedEthereumTransaction, ProjectedEthereumBlock, ProjectedXMRTransaction, ProjectedXMRBlock, ProjectedBTCTransaction, ProjectedBTCBlock } from '../lib/tasks2/types';
+import { ProjectedEthereumTransaction, ProjectedEthereumBlock, ProjectedXMRTransaction, ProjectedXMRBlock, ProjectedBTCTransaction, ProjectedBTCBlock, ProjectedEvolutionBlock, ProjectedEvolutionTransaction } from '../lib/tasks2/types';
 import path from 'path';
-import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, XMRBlocksSchema, XMRTransactionsSchema } from '../data/schemas';
+import { BTCBlocksSchema, BTCTransactionsSchema, ETHBlocksSchema, EVOLUTIONBlocksSchema, EVOLUTIONTransactionsSchema, XMRBlocksSchema, XMRTransactionsSchema } from '../data/schemas';
 import ObtainBlocksFromDatabase from '../lib/tasks2/tasks/ObtainBlocksFromDatabase';
 import ObtainRollupBlocksFromDatabase from '../lib/tasks2/tasks/ObtainRollupBlocksFromDatabase';
 
@@ -51,9 +51,9 @@ const initialize = async () => {
                 blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
                 break;
             case 'EVOLUTION':  
-                transactions = new DropoutContainer<ProjectedEthereumTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
+                transactions = new DropoutContainer<ProjectedEvolutionTransaction>(`transactions-${chainToInit}.bin`, EVOLUTIONTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
                 // Create a collection for blocks that lasts one day.
-                blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
+                blocks = new DropoutContainer<ProjectedEvolutionBlock>(`blocks-${chainToInit}.bin`, EVOLUTIONBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
                 break;
             case 'FLR':
                     transactions = new DropoutContainer<ProjectedEthereumTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);

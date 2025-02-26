@@ -6,7 +6,7 @@ import redis from '../../../databases/redisEvents';
 import path from 'path';
 import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
-import { ETHTransactionsSchema } from '../../../data/schemas';
+import { EVOLUTIONTransactionsSchema } from '../../../data/schemas';
 
 export default class EVOLUTIONPendingList {
     // The maximum allowed size of the collection. 
@@ -286,7 +286,7 @@ export default class EVOLUTIONPendingList {
                 Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
             }
 
-            const contents = ETHTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
+            const contents = EVOLUTIONTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
 
             const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');
             fs.writeFileSync(writingFilePath, contents);
