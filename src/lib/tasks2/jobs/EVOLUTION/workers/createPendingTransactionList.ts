@@ -44,10 +44,10 @@ setInterval(async () => {
             if(entry.pExtras && typeof entry.pExtras === "string") entry.pExtras = JSON.parse(entry.pExtras);
         }
 
-        let transactions = parsed.collection.sort((a: ProjectedEvolutionTransaction, b: ProjectedEvolutionTransaction) => (b.maxFeePerGas || b.gasPrice) - (a.maxFeePerGas || a.gasPrice));
+        let transactions = parsed.collection.sort((a: ProjectedEvolutionTransaction, b: ProjectedEvolutionTransaction) => (b.fee || b.gasUsed) - (a.fee || a.gasUsed));
         let transactionMap: any = {};
         let hashes = transactions.map((t: any) => t.hash);
-        let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedEvolutionTransaction) => transaction.from))] as string[]
+        let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedEvolutionTransaction) => transaction.owner))] as string[]
 
         // console.log("TRANSACTIONS: " + transactions.length);
 

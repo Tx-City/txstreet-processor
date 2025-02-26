@@ -484,11 +484,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     /**
      * Get transaction count for an account (base class compatibility)
      */
-    public async getTransactionCount(account: string): Promise<number> {
-        console.warn('getTransactionCount by account not directly supported in Tendermint');
-        return 0;
-    }
-  
+    public getTransactionCount:  undefined;
     /**
      * Check if data represents a transaction (synchronous)
      */
