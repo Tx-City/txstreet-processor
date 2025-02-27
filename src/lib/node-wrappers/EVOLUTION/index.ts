@@ -10,42 +10,227 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     private isConnected: boolean = false;
     private tmClient: Tendermint34Client | null = null;
     private rpcUrl: string;
+    private wsUrl: string;
+    private reconnectAttempts: number = 0;
+    private maxReconnectAttempts: number = Infinity; // Set to Infinity to keep trying forever
+    private reconnectInterval: number = 2000; // Start with 2 seconds
+    private maxReconnectInterval: number = 30000; // Max 30 seconds
+    private reconnectTimeoutId: NodeJS.Timeout | null = null;
+    private pingInterval: NodeJS.Timeout | null = null;
+    private pingIntervalTime: number = 30000; // 30 seconds ping interval
 
     constructor(host: string) {
         super('EVOLUTION');
         
         // Store the RPC URL for Tendermint client
         this.rpcUrl = `http://65.109.115.131:26657`;
+        this.wsUrl = `ws://65.109.115.131:26657/websocket`;
         
-        // Initialize WebSocket connection using the host parameter
-        this.ws = new WebSocket(`ws://65.109.115.131:26657/websocket`);
-        
-        this.ws.on('open', () => {
-            console.log('WebSocket Connected');
-            this.isConnected = true;
-            try {
-                this.initEventSystem();
-                console.log('Event system initialized');
-        } catch (error) {
-                console.error('Failed to initialize event system:', error);
-            }
-        });
-
-        // Fixed type for ws.onerror
-        this.ws.on('error', (event) => {
-            console.error('WebSocket Error:', event);
-        });
-
-        this.ws.on('close', () => {
-            console.log('WebSocket Connection Closed');
-            this.isConnected = false;
-        });
+        // Initialize WebSocket connection
+        this.connectWebSocket();
         
         // Initialize Tendermint client
         this.initTendermint().catch(err => {
             console.error('Failed to initialize Tendermint client:', err);
         });
     }
+
+    /**
+     * Connect to WebSocket with auto-reconnect capability
+     */
+    private connectWebSocket(): void {
+        if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+            console.log('WebSocket already connected or connecting');
+            return;
+        }
+
+        console.log(`Connecting to WebSocket: ${this.wsUrl}`);
+        
+        try {
+            this.ws = new WebSocket(this.wsUrl);
+            
+            this.ws.on('open', () => {
+                console.log('WebSocket Connected');
+                this.isConnected = true;
+                this.reconnectAttempts = 0; // Reset counter on successful connection
+                
+                // Set up ping interval to keep connection alive
+                this.setupPingInterval();
+                
+                try {
+                    this.initEventSystem();
+                    console.log('Event system initialized');
+                } catch (error) {
+                    console.error('Failed to initialize event system:', error);
+                }
+                
+                this.emit('connected');
+            });
+            
+            this.ws.on('error', (event) => {
+                console.error('WebSocket Error:', event);
+            });
+            
+            this.ws.on('close', (code, reason) => {
+                console.log(`WebSocket Connection Closed: Code ${code}, Reason: ${reason}`);
+                this.isConnected = false;
+                
+                // Clear ping interval
+                if (this.pingInterval) {
+                    clearInterval(this.pingInterval);
+                    this.pingInterval = null;
+                }
+                
+                // Schedule reconnect
+                this.scheduleReconnect();
+            });
+            
+            this.ws.on('message', async (data: WebSocket.Data) => {
+                this.handleWebSocketMessage(data);
+            });
+            
+        } catch (error) {
+            console.error('Error creating WebSocket:', error);
+            this.scheduleReconnect();
+        }
+    }
+    
+    /**
+     * Set up ping interval to keep connection alive
+     */
+    private setupPingInterval(): void {
+        // Clear any existing interval
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+        }
+        
+        // Setup new ping interval
+        this.pingInterval = setInterval(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                // Send a ping message to keep the connection alive
+                const pingMessage = {
+                    jsonrpc: "2.0",
+                    method: "health",
+                    id: "ping-" + Date.now()
+                };
+                
+                try {
+                    this.ws.send(JSON.stringify(pingMessage));
+                    console.log('Ping sent to keep connection alive');
+                } catch (error) {
+                    console.error('Error sending ping:', error);
+                    // If there's an error sending the ping, the connection might be dead
+                    this.reconnect();
+                }
+            } else if (this.ws) {
+                // Connection is not open but exists
+                console.warn('WebSocket exists but is not open. Current state:', this.ws.readyState);
+                this.reconnect();
+            } else {
+                // No connection exists
+                console.warn('No WebSocket connection exists');
+                this.reconnect();
+            }
+        }, this.pingIntervalTime);
+    }
+    
+    /**
+     * Schedule a reconnect with exponential backoff
+     */
+    private scheduleReconnect(): void {
+        // Clear any existing reconnect timeout
+        if (this.reconnectTimeoutId) {
+            clearTimeout(this.reconnectTimeoutId);
+        }
+        
+        // If we've reached max attempts, stop trying
+        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.error(`Maximum reconnect attempts (${this.maxReconnectAttempts}) reached. Giving up.`);
+            return;
+        }
+        
+        // Calculate backoff time with exponential increase and jitter
+        const backoff = Math.min(
+            this.maxReconnectInterval,
+            this.reconnectInterval * Math.pow(1.5, this.reconnectAttempts)
+        );
+        const jitter = Math.random() * 0.5 + 0.75; // Random factor between 0.75 and 1.25
+        const delay = Math.floor(backoff * jitter);
+        
+        console.log(`Scheduling reconnect attempt ${this.reconnectAttempts + 1} in ${Math.round(delay / 1000)} seconds`);
+        
+        // Schedule reconnect
+        this.reconnectTimeoutId = setTimeout(() => {
+            this.reconnect();
+        }, delay);
+    }
+    
+    /**
+     * Perform the actual reconnect
+     */
+    private reconnect(): void {
+        this.reconnectAttempts++;
+        console.log(`Reconnect attempt ${this.reconnectAttempts}`);
+        
+        // Close existing connection if any
+        if (this.ws) {
+            try {
+                this.ws.terminate();
+            } catch (error) {
+                console.error('Error terminating WebSocket:', error);
+            }
+            this.ws = null;
+        }
+        
+        // Create new connection
+        this.connectWebSocket();
+    }
+    
+    /**
+     * Handle incoming WebSocket messages
+     */
+    private async handleWebSocketMessage(data: WebSocket.Data): Promise<void> {
+        try {
+            const parsedData = JSON.parse(data.toString());
+            
+            // Handle transaction events
+            if (parsedData.result?.data?.type === 'tendermint/event/Tx') {
+                const txevent = parsedData.result.data.value;
+                
+                console.log('Transaction event structure:', JSON.stringify(txevent, null, 2));
+                
+                // Extract the tx field - make sure this matches your actual data structure
+                if (!txevent.tx) {
+                    console.error('Transaction event missing tx field');
+                    return;
+                }
+                
+                const txHash = await this.calculateDashTransactionHash(txevent.tx);
+                const transaction = this.getTransaction(txHash, 1);
+                
+                console.log("Hash:", txHash);
+                this.emit('mempool-tx', transaction);
+                console.log("Mempool TX", transaction);
+            }
+            
+            // Handle block events
+            if (parsedData.result?.data?.type === 'tendermint/event/NewBlock') {
+                const block = parsedData.result.data.value;
+                const blockHash = block.block_id.hash;
+                console.log("Hash:", blockHash);
+                this.emit('confirmed-block', blockHash);
+                console.log("BLOCK TEST", block);
+            }
+            
+            // Handle ping responses
+            if (parsedData.id && typeof parsedData.id === 'string' && parsedData.id.startsWith('ping-')) {
+                console.log('Received ping response');
+            }
+        } catch (error) {
+            console.error('Error handling WebSocket message:', error);
+        }
+    }
+
     /**
      * Initialize event system for WebSocket subscriptions
      */
@@ -76,38 +261,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             id: 2
         };
         this.ws.send(JSON.stringify(blockSubscription));
-
-        // Handle incoming messages - Fixed type for ws.onmessage
-        this.ws.on('message', async (data: WebSocket.Data) => {
-            try {
-                const parsedData = JSON.parse(data.toString());
-                
-                // Handle transaction events
-                if (parsedData.result?.data?.type === 'tendermint/event/Tx') {
-                    const txevent = parsedData.result.data.value;
-                    
-                    const txHash = await this.calculateDashTransactionHash(txevent);
-                    const transaction = this.getTransaction(txHash, 1);
-                    
-                    console.log("Hash:", txHash);
-                    this.emit('mempool-tx', transaction);
-                    console.log("Mempool TX", transaction);
-                }
-                
-                // Handle block events
-                if (parsedData.result?.data?.type === 'tendermint/event/NewBlock') {
-                    const block = parsedData.result.data.value;
-                    const blockHash = block.block_id.hash;
-                    this.emit('confirmed-block', blockHash);
-                    console.log("BLOCK TEST", block);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        });
     }
-
-
     
     /**
      * Initialize Tendermint client
@@ -118,9 +272,29 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             console.log('Tendermint client initialized');
         } catch (error) {
             console.error('Error initializing Tendermint client:', error);
+            
+            // Retry connecting to Tendermint client
+            setTimeout(() => {
+                console.log('Retrying Tendermint client connection...');
+                this.initTendermint();
+            }, 5000);
         }
     }
-    
+
+    // Rest of the methods remain the same...
+    // [Including calculateDashTransactionHash, getTransaction, getBlock, etc.]
+
+    private async calculateDashTransactionHash(base64Data: string): Promise<string> {
+        // Decode the Base64 data to binary
+        const binaryData: Buffer = Buffer.from(base64Data, "base64");
+      
+        // Calculate SHA-256 hash
+        const hash: Buffer = crypto.createHash("sha256").update(binaryData).digest();
+      
+        // Convert to uppercase hex string
+        return hash.toString("hex").toUpperCase();
+    }
+
     /**
      * Format block data into a structured JSON representation
      */
@@ -173,7 +347,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             
             // Get status from Tendermint client
             const status = await this.tmClient!.status();
-            
+            console.log(`getCurrentHeight`, parseInt(status.syncInfo.latestBlockHeight.toString()));
             // Extract the block height
             return parseInt(status.syncInfo.latestBlockHeight.toString());
         } catch (error) {
@@ -243,7 +417,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             // Get transaction data
             const txResponse = await this.tmClient!.tx(txParams);
             
-            // Map to a receipt-like structure - Fixed property name gasUsed
+            // Map to a receipt-like structure
             return {
                 hash: Buffer.from(txResponse.hash).toString('hex').toUpperCase(),
                 height: txResponse.height,
@@ -258,16 +432,6 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         }
     }
 
-    private async calculateDashTransactionHash(base64Data: string): Promise<string> {
-        // Decode the Base64 data to binary
-        const binaryData: Buffer = Buffer.from(base64Data, "base64");
-      
-        // Calculate SHA-256 hash
-        const hash: Buffer = crypto.createHash("sha256").update(binaryData).digest();
-      
-        // Convert to uppercase hex string
-        return hash.toString("hex").toUpperCase();
-    }
     /**
      * Get transaction details
      */
@@ -297,24 +461,12 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             };
             
             if (verbosity > 1) {
-                // Fixed property access for gasUsed
                 return {
-                     // Basic info
                     ...txInfo,
                     height: txResponse.height,
                     index: txResponse.index,
                     success: txResponse?.result.code === 0,
-                    // Additional details
                     logs: txResponse?.result.log || '',
-                    // tx: Buffer.from(txResponse.tx).toString('base64'),
-                    // owner: '', // Would need chain-specific logic
-                    // insertedAt: Date.now(),
-                    // timestamp: Date.now(),
-                    // fee: 0,
-                    // value: 0,
-                    // gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
-                    // logs: txResponse.result.log || '',
-                    // result: txResponse.result
                 };
             }
             
@@ -328,69 +480,152 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     /**
      * Get block details
      */
+    private async curlGet(url: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            // Import the child_process module with proper types
+            const { exec } = require('child_process') as typeof import('child_process');
+            
+            // Use fetch API instead of curl when possible
+            try {
+                return fetch(url, {
+                    headers: {
+                        "accept": "application/json"
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => resolve(data))
+                .catch(error => {
+                    console.log(`Fetch failed, falling back to curl: ${error.message}`);
+                    // Continue to curl fallback
+                });
+            } catch (fetchError) {
+                console.log(`Fetch attempt failed: ${fetchError.message}`);
+                // Continue to curl fallback
+            }
+            
+            // Fix the URL to handle quotes properly
+            // Remove existing quotes around the hash value if present
+            const fixedUrl = url.replace(/hash="([^"]+)"/, 'hash=$1');
+            
+            // Create a curl command with proper escaping
+            const curlCommand = `curl -s -X GET "${fixedUrl}" -H "accept: application/json"`;
+            
+            console.log(`Executing: ${curlCommand}`);
+            
+            // Execute the curl command with proper type annotations
+            exec(curlCommand, (error: Error | null, stdout: string, stderr: string) => {
+                if (error) {
+                    console.error(`Curl error: ${error.message}`);
+                    reject(error);
+                    return;
+                }
+                
+                if (stderr) {
+                    console.error(`Curl stderr: ${stderr}`);
+                }
+                
+                // Parse the JSON response
+                try {
+                    const data = JSON.parse(stdout);
+                    resolve(data);
+                } catch (parseError) {
+                    console.error(`Error parsing curl output: ${parseError.message}`);
+                    console.error(`Raw output: ${stdout.substring(0, 200)}...`);
+                    reject(parseError);
+                }
+            });
+        });
+    }
 
     public async getBlock(id: string | number, verbosity: number = 1): Promise<any> {
         try {
-            // Tendermint client code as before...
+            // Ensure Tendermint client is initialized
+            if (!this.tmClient) {
+                await this.initTendermint();
+            }
+            
+            // Detect if this is a hash (64 character hex string) or height
+            const isHash = typeof id === 'string' && /^[0-9A-Fa-f]{64}$/.test(id);
+            const isHeight = typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id));
+            
+            if (isHeight) {
+                // It's a height, use Tendermint client
+                const blockHeight = typeof id === 'number' ? id : parseInt(id);
+                try {
+                    const blockResponse = await this.tmClient!.block(blockHeight);
+                    const blockResults = await this.tmClient!.blockResults(blockHeight);
+                    return this.parseBlockData(blockResponse, blockResults, verbosity);
+                } catch (clientError) {
+                    console.error(`Tendermint client error for height ${blockHeight}:`, clientError);
+                    throw clientError; // Re-throw to fall back to HTTP
+                }
+            } else if (isHash) {
+                // It's a hash, skip Tendermint client and use HTTP directly
+                throw new Error('Using HTTP fallback for hash lookup');
+            } else {
+                throw new Error(`Invalid block identifier format: ${id}`);
+            }
         } catch (error) {
             console.error(`Error fetching block ${id}:`, error);
             
-            // HTTP fallback
+            // Fallback to HTTP request
             try {
-                console.log(`Attempting HTTP fallback for block ${id}`);
-                const response = await new Promise<any>((resolve, reject) => {
-                    get(`${this.rpcUrl}/block?height=${id}`, {
-                        headers: {
-                            "accept": "application/json"
-                        }
-                    }, (res) => {
-                        let data = '';
-                        res.on('data', (chunk) => {
-                            data += chunk;
-                        });
-                        res.on('end', () => {
-                            if (res.statusCode !== 200) {
-                                reject(new Error(`Failed to fetch block: ${res.statusMessage}`));
-                                return;
-                            }
-                            
-                            try {
-                                const parsedData = JSON.parse(data);
-                                resolve(parsedData);
-                            } catch (parseError) {
-                                reject(new Error(`Failed to parse response: ${parseError.message}`));
-                            }
-                        });
-                    }).on('error', (err) => {
-                        reject(err);
-                    });
-                });
+                // Determine the correct endpoint based on whether it's a hash or height
+                const isHash = typeof id === 'string' && /^[0-9A-Fa-f]{64}$/.test(id);
                 
-                // Handle the actual structure
-                if (response.result) {
-                    console.log(`response`, response);
-                    return this.parseRpcBlockData(response.result, verbosity);
+                let endpoint;
+                if (isHash) {
+                    // For hash queries, use the block_by_hash endpoint without wrapping hash in quotes
+                    endpoint = `${this.rpcUrl}/block_by_hash?hash=${id}`;
                 } else {
-                    return this.parseRpcBlockData(response, verbosity);
+                    // For height queries, use the block endpoint
+                    endpoint = `${this.rpcUrl}/block?height=${id}`;
                 }
+                
+                console.log(`Fetching block using HTTP: ${endpoint}`);
+                
+                const data = await this.curlGet(endpoint);
+                console.log(`data curl response--------`, data);
+                
+                // Handle both response formats
+                if (data.result && data.result.block) {
+                    // Format 1: Response has a result wrapper
+                    return this.parseRpcBlockData(data.result, verbosity);
+                } else if (data.block && data.block_id) {
+                    // Format 2: Response has direct block data
+                    return this.parseRpcBlockData(data, verbosity);
+                }
+                
+                // If we get here, the structure is unexpected
+                console.error('Unexpected response structure:', JSON.stringify(data));
+                throw new Error('Invalid response format');
             } catch (fallbackError) {
-                console.error(`Fallback request failed for block ${id}:`, fallbackError);
+                console.error(`HTTP request failed for block ${id}:`, fallbackError);
+                
+                // Return minimal block data to avoid crashes
                 return {
-                    hash: `placeholder_for_block_${id}`,
+                    hash: typeof id === 'string' ? id : `unknown_${id}`,
                     timestamp: Date.now(),
-                    height: typeof id === 'number' ? id : parseInt(id.toString()),
+                    height: typeof id === 'number' ? id : (parseInt(String(id), 10) || 0),
                     transactions: 0,
                     blockversion: 0,
                     appversion: 0,
                     l1lockedheight: 0,
                     validator: "unknown",
-                    error: "Block data could not be retrieved"
+                    error: `Block data could not be retrieved: ${fallbackError.message}`
                 };
             }
         }
     }
+
     private parseRpcBlockData(data: any, verbosity: number = 1): any {
         // Make sure we have a proper structure to work with
+        console.log(`data`, data);
         if (!data || !data.block || !data.block.header) {
             console.error('Unexpected block data structure:', JSON.stringify(data));
             throw new Error('Invalid block data structure');
@@ -399,7 +634,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         const block = data.block;
         const header = block.header;
         const blockId = data.block_id;
-        
+        console.log(`-----------------------blockId----------------------`, blockId);
         const basicBlock = {
             hash: blockId?.hash || 'unknown',
             timestamp: header.time ? new Date(header.time).getTime() : Date.now(),
@@ -409,9 +644,9 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             appversion: header.version?.app ? parseInt(header.version.app.toString()) : 0,
             l1lockedheight: header.core_chain_locked_height ? 
                 parseInt(header.core_chain_locked_height.toString()) : 0,
-            validator: header.proposer_pro_tx_hash || '', // Evolution uses this field
+            validator: header.proposer_pro_tx_hash || '',
         };
-        
+        console.log(`basicBlock`, basicBlock);
         // For higher verbosity, include more details
         if (verbosity > 1) {
             return {
@@ -426,283 +661,52 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         
         return basicBlock;
     }
-    // public async getBlock(id: string | number, verbosity: number = 1): Promise<any> {
-    //     try {
-    //         // Ensure Tendermint client is initialized
-    //         if (!this.tmClient) {
-    //             await this.initTendermint();
-    //         }
-            
-    //         // Handle string ID (could be hash or height as string)
-    //         const blockHeight = typeof id === 'string' ? 
-    //             (id.match(/^[0-9]+$/) ? parseInt(id) : null) : id;
-            
-    //         // If it's not a number (height), we need to search by hash
-    //         if (blockHeight === null) {
-    //             throw new Error('Fetching block by hash not implemented for Tendermint');
-    //         }
-            
-    //         try {
-    //             // Using Tendermint client directly to fetch the block
-    //             const blockResponse = await this.tmClient!.block(blockHeight);
-                
-    //             // Get block results for more details if needed
-    //             const blockResults = await this.tmClient!.blockResults(blockHeight);
-                
-    //             // Combine data and parse it
-    //             return this.parseBlockData(blockResponse, blockResults, verbosity);
-    //         } catch (clientError) {
-    //             console.log(`Falling back to HTTP for block ${blockHeight} due to client error`);
-    //             throw clientError; // Force fallback to HTTP
-    //         }
-    //     } catch (error) {
-    //         console.error(`Error fetching block ${id}:`, error);
-            
-    //         // Always try the HTTP fallback
-    //         try {
-    //             console.log(`Attempting HTTP fallback for block ${id}`);
-    //             const response = await new Promise<any>((resolve, reject) => {
-    //                 get(`${this.rpcUrl}/block?height=${id}`, {
-    //                     headers: {
-    //                         "accept": "application/json"
-    //                     }
-    //                 }, (res) => {
-    //                     let data = '';
-    //                     res.on('data', (chunk) => {
-    //                         data += chunk;
-    //                     });
-    //                     res.on('end', () => {
-    //                         if (res.statusCode !== 200) {
-    //                             reject(new Error(`Failed to fetch block: ${res.statusMessage}`));
-    //                             return;
-    //                         }
-    //                         resolve(JSON.parse(data));
-    //                     });
-    //                 }).on('error', (err) => {
-    //                     reject(err);
-    //                 });
-    //             });
-    //             console.log(`response`, response);
-    //             // Check if the response has the expected structure
-    //             if (response && response.result && response.result.block) {
-                    
-    //                 return this.parseRpcBlockData(response.result, verbosity);
-    //             }
-                
-    //             throw new Error('Invalid block data structure');
-    //         } catch (fallbackError) {
-    //             console.error(`Fallback request failed for block ${id}:`, fallbackError);
-    //             return null;
-    //         }
-    //     }
-    // }
-    // public async getBlock(id: string | number, verbosity: number = 1): Promise<any> {
-    //     try {
-    //         // Ensure Tendermint client is initialized
-    //         if (!this.tmClient) {
-    //             await this.initTendermint();
-    //             // Double-check initialization was successful
-    //             if (!this.tmClient) {
-    //                 throw new Error('Failed to initialize Tendermint client');
-    //             }
-    //         }
-            
-    //         // Handle string ID (could be hash or height as string)
-    //         let blockHeight: number | null = null;
-    //         if (typeof id === 'string') {
-    //             // Check if it's a numeric string
-    //             if (id.match(/^[0-9]+$/)) {
-    //                 blockHeight = parseInt(id);
-    //             }
-    //         } else if (typeof id === 'number') {
-    //             blockHeight = id;
-    //         }
-            
-    //         // Validate blockHeight
-    //         if (blockHeight === null || isNaN(blockHeight) || blockHeight < 0) {
-    //             throw new Error(`Invalid block height: ${id}`);
-    //         }
-            
-    //         console.log(`Fetching block at height: ${blockHeight}`);
-            
-    //         // Using Tendermint client directly to fetch the block
-    //         try {
-    //             const blockResponse = await this.tmClient.block(blockHeight);
-                
-    //             // Verify the response
-    //             if (!blockResponse || !blockResponse.block) {
-    //                 throw new Error(`Invalid block response for height ${blockHeight}`);
-    //             }
-                
-    //             // Get block results for more details
-    //             const blockResults = await this.tmClient.blockResults(blockHeight);
-                
-    //             // Combine data and parse it
-    //             return this.parseBlockData(blockResponse, blockResults, verbosity);
-    //         } catch (clientError) {
-    //             console.error(`Tendermint client error for block ${blockHeight}:`, clientError);
-    //             throw clientError; // Re-throw to fall back to HTTP method
-    //         }
-            
-    //     } catch (error) {
-    //         console.error(`Error fetching block ${id}:`, error);
-            
-    //         // Rest of the fallback code...
-    //     }
-    // }
-    // public async getBlock(id: string | number, verbosity: number = 1): Promise<any> {
-    //     try {
-    //         // Ensure Tendermint client is initialized
-    //         if (!this.tmClient) {
-    //             await this.initTendermint();
-    //         }
-            
-    //         // Handle string ID (could be hash or height as string)
-    //         const blockHeight = typeof id === 'string' ? 
-    //             (id.match(/^[0-9]+$/) ? parseInt(id) : null) : id;
-            
-    //         // If it's not a number (height), we need to search by hash
-    //         if (blockHeight === null) {
-    //             throw new Error('Fetching block by hash not implemented for Tendermint');
-    //         }
-    //         console.log("Block Height", blockHeight);
-    //         // Using Tendermint client directly to fetch the block
-    //         const blockResponse = await this.tmClient!.block(blockHeight);
-    //         // console.log("Block Results", blockResults);
-    //         console.log("Block Response", blockResponse);
-    //         // Get block results for more details if needed
-    //         const blockResults = await this.tmClient!.blockResults(blockHeight);
-            
-    //         // Combine data and parse it
-    //         return this.parseBlockData(blockResponse, blockResults, verbosity);
-    //     } catch (error) {
-    //         console.error(`Error fetching block ${id}:`, error);
-            
-    //         // Fallback to HTTP request if client fails
-    //         try {
-    //             const response = await fetch(`${this.rpcUrl}/block?height=${id}`, {
-    //                 headers: {
-    //                     "accept": "application/json"
-    //                 }
-    //             });
-                
-    //             if (!response.ok) {
-    //                 throw new Error(`Failed to fetch block: ${response.statusText}`);
-    //             }
-                
-    //             const data = await response.json();
-                
-    //             // Fallback parsing for RPC response format
-    //             if (data.result && data.result.block) {
-    //                 return this.parseRpcBlockData(data.result, verbosity);
-    //             }
-                
-    //             throw new Error('Invalid block data structure');
-    //         } catch (fallbackError) {
-    //             console.error(`Fallback request failed for block ${id}:`, fallbackError);
-    //             return null;
-    //         }
-    //     }
-    // }
-    
+ 
     /**
      * Parse block data from Tendermint client SDK response
      */
-    // private parseBlockData(blockResponse: any, blockResults: any, verbosity: number = 1): any {
-    //     const block = blockResponse.block;
-    //     const header = block.header;
-    //     const blockId = blockResponse.blockId;
+    private parseBlockData(blockResponse: any, blockResults: any, verbosity: number = 1): any {
+        const block = blockResponse.block;
+        const header = block.header;
+        const blockId = blockResponse.blockId;
         
-    //     // Calculate transaction count and extract tx hashes
-    //     const txs = block.data.txs || [];
-    //     const txHashes = txs.map((tx: Uint8Array) => Buffer.from(tx).toString('hex').toUpperCase());
+        // Calculate transaction count and extract tx hashes
+        const txs = block.data.txs || [];
+        const txHashes = txs.map((tx: Uint8Array) => Buffer.from(tx).toString('hex').toUpperCase());
         
-    //     const basicBlock = {
-    //         hash: Buffer.from(blockId.hash).toString('hex').toUpperCase(),
-    //         timestamp: new Date(header.time).getTime(),
-    //         height: Number(header.height),
-    //         transactions: txs.length,
-    //         blockversion: Number(header.version.block),
-    //         appversion: Number(header.version.app),
-    //         l1lockedheight: header.coreChainLockedHeight ? Number(header.coreChainLockedHeight) : 0,
-    //         validator: header.proposerAddress ? Buffer.from(header.proposerAddress).toString('hex').toUpperCase() : '',
-            
-    //         // Add additional context
-    //         // chain_id: header.chainId,
-    //         // last_block_id: header.lastBlockId ? {
-    //         //     hash: Buffer.from(header.lastBlockId.hash).toString('hex').toUpperCase(),
-    //         //     parts: {
-    //         //         total: header.lastBlockId.parts.total,
-    //         //         hash: Buffer.from(header.lastBlockId.parts.hash).toString('hex').toUpperCase()
-    //         //     }
-    //         // } : null,
-    //         // consensusHash: Buffer.from(header.consensusHash).toString('hex').toUpperCase(),
-    //         // appHash: Buffer.from(header.appHash).toString('hex').toUpperCase(),
-    //         // lastResultsHash: Buffer.from(header.lastResultsHash).toString('hex').toUpperCase(),
-    //         // evidenceHash: Buffer.from(header.evidenceHash).toString('hex').toUpperCase(),
-    //         // validatorsHash: Buffer.from(header.validatorsHash).toString('hex').toUpperCase()
-    //     };
+        const basicBlock = {
+            hash: Buffer.from(blockId.hash).toString('hex').toUpperCase(),
+            timestamp: new Date(header.time).getTime(),
+            height: Number(header.height),
+            transactions: txs.length,
+            blockversion: Number(header.version.block),
+            appversion: Number(header.version.app),
+            l1lockedheight: header.coreChainLockedHeight ? Number(header.coreChainLockedHeight) : 0,
+            validator: header.proposerAddress ? Buffer.from(header.proposerAddress).toString('hex').toUpperCase() : '',
+        };
         
-    //     // For higher verbosity, include more details
-    //     if (verbosity > 1) {
-    //         return {
-    //             ...basicBlock,
-    //             txHashes: txHashes,
-    //             blockResults: {
-    //                 height: blockResults.height,
-    //                 txsResults: blockResults.txsResults,
-    //                 beginBlockEvents: blockResults.beginBlockEvents,
-    //                 endBlockEvents: blockResults.endBlockEvents,
-    //                 validatorUpdates: blockResults.validatorUpdates,
-    //                 consensusUpdates: blockResults.consensusUpdates
-    //             },
-    //             evidence: block.evidence,
-    //             lastCommit: block.lastCommit,
-    //             fullHeader: header
-    //         };
-    //     }
+        // For higher verbosity, include more details
+        if (verbosity > 1) {
+            return {
+                ...basicBlock,
+                txHashes: txHashes,
+                blockResults: {
+                    height: blockResults.height,
+                    txsResults: blockResults.txsResults,
+                    beginBlockEvents: blockResults.beginBlockEvents,
+                    endBlockEvents: blockResults.endBlockEvents,
+                    validatorUpdates: blockResults.validatorUpdates,
+                    consensusUpdates: blockResults.consensusUpdates
+                },
+                evidence: block.evidence,
+                lastCommit: block.lastCommit,
+                fullHeader: header
+            };
+        }
         
-    //     return basicBlock;
-    // }
+        return basicBlock;
+    }
     
-    /**
-     * Parse block data from RPC response (fallback method)
-     */
-    // private parseRpcBlockData(data: any, verbosity: number = 1): any {
-    //     const block = data.block;
-    //     const header = block.header;
-        
-    //     const basicBlock = {
-    //         hash: data.block_id?.hash || 'unknown',
-    //         timestamp: header.time ? new Date(header.time).getTime() : Date.now(),
-    //         height: parseInt(header.height || '0'),
-    //         transactions: block.data?.txs?.length || 0,
-    //         blockversion: header.version?.block ? parseInt(header.version.block.toString()) : 0,
-    //         appversion: header.version?.app ? parseInt(header.version.app.toString()) : 0,
-    //         l1lockedheight: parseInt(header.core_chain_locked_height || '0'),
-    //         validator: header.proposer_pro_tx_hash || '',
-            
-    //         // Add additional context with optional chaining
-    //         // chain_id: header.chain_id,
-    //         // last_block_id: header.last_block_id,
-    //         // consensusHash: header.consensus_hash,
-    //         // appHash: header.app_hash
-    //     };
-        
-    //     // For higher verbosity, include more details
-    //     if (verbosity > 1) {
-    //         return {
-    //             ...basicBlock,
-    //             txs: verbosity > 2 ? block.data?.txs || [] : 
-    //                 (block.data?.txs || []).map((tx: string) => tx),
-    //             core_chain_lock: block.core_chain_lock,
-    //             fullHeader: header
-    //         };
-    //     }
-        
-    //     return basicBlock;
-    // }
-
     /**
      * Resolve block details with optional logging
      */
@@ -747,6 +751,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
      * Get transaction count for an account (base class compatibility)
      */
     public getTransactionCount:  undefined;
+    
     /**
      * Check if data represents a transaction (synchronous)
      */
@@ -781,11 +786,25 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
      * Clean up resources and disconnect
      */
     public async disconnect(): Promise<void> {
+        // Clear ping interval
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        
+        // Clear reconnect timeout
+        if (this.reconnectTimeoutId) {
+            clearTimeout(this.reconnectTimeoutId);
+            this.reconnectTimeoutId = null;
+        }
+        
+        // Close WebSocket
         if (this.ws) {
-            this.ws.close();
+            this.ws.terminate();
             this.ws = null;
         }
         
         this.tmClient = null;
+        this.isConnected = false;
     }
 }
