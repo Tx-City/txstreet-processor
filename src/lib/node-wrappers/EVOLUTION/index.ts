@@ -710,42 +710,43 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     /**
      * Resolve block details with optional logging
      */
-    public async resolveBlock(id: string | number, verbosity: number = 1, depth: number = 0): Promise<any> {
-        // Check depth limit to prevent infinite recursion
-        if (depth >= this.blockDepthLimit) {
-            throw new Error(`Depth limit reached (${this.blockDepthLimit})`);
-        }
+    public resolveBlock: undefined;
+    // public async resolveBlock(id: string | number, verbosity: number = 1, depth: number = 0): Promise<any> {
+    //     // Check depth limit to prevent infinite recursion
+    //     if (depth >= this.blockDepthLimit) {
+    //         throw new Error(`Depth limit reached (${this.blockDepthLimit})`);
+    //     }
         
-        try {
-            // Get the block
-            const block = await this.getBlock(id, verbosity);
+    //     try {
+    //         // Get the block
+    //         const block = await this.getBlock(id, verbosity);
             
-            if (!block) {
-                throw new Error(`Block ${id} not found`);
-            }
+    //         if (!block) {
+    //             throw new Error(`Block ${id} not found`);
+    //         }
             
-            // If high verbosity, resolve all transactions in the block
-            if (verbosity > 1 && block.txs && Array.isArray(block.txs)) {
-                block.transactions = await Promise.all(
-                    block.txs.map(async (txId: string) => {
-                        return await this.getTransaction(txId, verbosity - 1, block.height);
-                    })
-                );
-            }
+    //         // If high verbosity, resolve all transactions in the block
+    //         if (verbosity > 1 && block.txs && Array.isArray(block.txs)) {
+    //             block.transactions = await Promise.all(
+    //                 block.txs.map(async (txId: string) => {
+    //                     return await this.getTransaction(txId, verbosity - 1, block.height);
+    //                 })
+    //             );
+    //         }
             
-            // Optional: Log the block if needed
-            if (verbosity > 0) {
-                const formattedBlock = this.formatBlockLog(block, verbosity);
-                console.log('Block Information:');
-                console.log(formattedBlock.formatted);
-            }
+    //         // Optional: Log the block if needed
+    //         if (verbosity > 0) {
+    //             const formattedBlock = this.formatBlockLog(block, verbosity);
+    //             console.log('Block Information:');
+    //             console.log(formattedBlock.formatted);
+    //         }
             
-            return block;
-        } catch (error) {
-            console.error(`Error resolving block ${id}:`, error);
-            throw error;
-        }
-    }
+    //         return block;
+    //     } catch (error) {
+    //         console.error(`Error resolving block ${id}:`, error);
+    //         throw error;
+    //     }
+    // }
 
     /**
      * Get transaction count for an account (base class compatibility)
