@@ -542,8 +542,118 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         });
     }
 
+    /**
+     * Send a WebSocket request and wait for a response
+     * @param method The JSON-RPC method to call
+     * @param params The parameters to send
+     * @param timeoutMs Maximum time to wait for response in milliseconds
+     * @returns Promise that resolves with the response data
+     */
+    private async sendWebSocketRequest(method: string, params: any, timeoutMs: number = 5000): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+                return reject(new Error('WebSocket not connected'));
+            }
+            
+            // Generate a unique request ID
+            const requestId = `req-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+            
+            // Create a timeout to reject the promise if no response arrives
+            const timeoutId = setTimeout(() => {
+                this.ws?.removeEventListener('message', responseHandler);
+                reject(new Error(`WebSocket request timed out after ${timeoutMs}ms`));
+            }, timeoutMs);
+            
+            // Create message handler
+            const responseHandler = (event: WebSocket.MessageEvent) => {
+                try {
+                    const response = JSON.parse(event.data.toString());
+                    
+                    // Check if this is the response to our request
+                    if (response.id === requestId) {
+                        // Clear the timeout and remove the handler
+                        clearTimeout(timeoutId);
+                        this.ws?.removeEventListener('message', responseHandler);
+                        
+                        // Check for errors
+                        if (response.error) {
+                            reject(new Error(`WebSocket error: ${JSON.stringify(response.error)}`));
+                            return;
+                        }
+                        
+                        // Resolve with the result
+                        resolve(response.result);
+                    }
+                } catch (error) {
+                    // Ignore parsing errors for other messages
+                }
+            };
+            
+            // Add the response handler
+            this.ws.addEventListener('message', responseHandler);
+            
+            // Create and send the request
+            const request = {
+                jsonrpc: '2.0',
+                id: requestId,
+                method: method,
+                params: params
+            };
+            
+            try {
+                this.ws.send(JSON.stringify(request));
+                console.log(`WebSocket request sent: ${method}`, params);
+            } catch (error) {
+                // Clear the timeout and remove the handler
+                clearTimeout(timeoutId);
+                this.ws?.removeEventListener('message', responseHandler);
+                reject(error);
+            }
+        });
+    }
+
+    /**
+     * Get block details
+     */
     public async getBlock(id: string | number, verbosity: number = 1): Promise<any> {
         try {
+            // Try WebSocket first if connected
+            if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                try {
+                    // Determine method and params based on id type
+                    let method: string;
+                    let params: any;
+                    
+                    const isHash = typeof id === 'string' && /^[0-9A-Fa-f]{64}$/.test(id);
+                    const isHeight = typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id));
+                    
+                    if (isHeight) {
+                        // It's a height
+                        method = 'block';
+                        params = [typeof id === 'number' ? id : parseInt(id as string)];
+                    } else if (isHash) {
+                        // It's a hash
+                        method = 'block_by_hash';
+                        params = { hash: id };
+                    } else {
+                        throw new Error(`Invalid block identifier format: ${id}`);
+                    }
+                    
+                    console.log(`Requesting block via WebSocket: ${method}`, params);
+                    const wsResponse = await this.sendWebSocketRequest(method, params, 8000);
+                    
+                    if (!wsResponse || !wsResponse.block) {
+                        throw new Error('Empty block response from WebSocket');
+                    }
+                    
+                    return this.parseRpcBlockData(wsResponse, verbosity);
+                } catch (wsError) {
+                    console.warn(`WebSocket request failed: ${wsError.message}, falling back to regular methods`);
+                    // Continue to traditional methods
+                }
+            }
+            
+            // Fall back to Tendermint client and HTTP methods
             // Ensure Tendermint client is initialized
             if (!this.tmClient) {
                 await this.initTendermint();
@@ -623,6 +733,9 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         }
     }
 
+    /**
+     * Parse RPC block data from HTTP or WebSocket response
+     */
     private parseRpcBlockData(data: any, verbosity: number = 1): any {
         // Make sure we have a proper structure to work with
         console.log(`data`, data);
@@ -630,13 +743,26 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             console.error('Unexpected block data structure:', JSON.stringify(data));
             throw new Error('Invalid block data structure');
         }
-    
+
         const block = data.block;
         const header = block.header;
         const blockId = data.block_id;
         console.log(`-----------------------blockId----------------------`, blockId);
+        
+        // Try to handle base64 encoded hashes if present
+        let blockHash = blockId?.hash || 'unknown';
+        if (blockHash.includes('/') || blockHash.includes('+') || blockHash.includes('=')) {
+            try {
+                // Attempt to decode base64
+                const rawHash = Buffer.from(blockHash, 'base64');
+                blockHash = rawHash.toString('hex').toUpperCase();
+            } catch (error) {
+                console.warn(`Failed to decode potential base64 hash: ${blockHash}`);
+            }
+        }
+        
         const basicBlock = {
-            hash: blockId?.hash || 'unknown',
+            hash: blockHash,
             timestamp: header.time ? new Date(header.time).getTime() : Date.now(),
             height: parseInt(header.height || '0'),
             transactions: block.data?.txs?.length || 0,
@@ -661,7 +787,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         
         return basicBlock;
     }
- 
+
     /**
      * Parse block data from Tendermint client SDK response
      */
