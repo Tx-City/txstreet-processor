@@ -13,7 +13,7 @@ export default async (chain: string, block: any): Promise<any> => {
 
         // Format the txFull array
         block.txFull = {}; 
-  
+        console.log("block ++++++ ", block);
         // Encode the file content.
         const formatted: any = formatBlock(chain, block);
         formatted.note = 'block-processor'; 
@@ -25,7 +25,7 @@ export default async (chain: string, block: any): Promise<any> => {
         // try { await fs.promises.mkdir(path.join(dataDir, 'blocks', chain, firstPart, secondPart), { recursive: true }); } catch (err) {}
         await storeObject(path.join('blocks', chain, firstPart, secondPart, block.hash), content);
         console.log("stored");
-
+        
         // Initialize database 
         const { database } = await mongodb(); 
         const collection = database.collection('blocks');

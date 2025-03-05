@@ -54,9 +54,22 @@ router.get('/:chain/:id', async (request: Request, response: Response) => {
 
     // Check to see rather or not this request has already been entered into the database, if so obtain that data. 
     const existingBlock: any = await collection.findOne({ [isHeight ? 'height' : 'hash']: id });
+    console.log('===============Existing block==============:', existingBlock);
+    if (chain == 'EVOLUTION' && existingBlock && existingBlock.processed) {
+        const firstPart = existingBlock.hash[existingBlock.hash.length - 1];
+        const secondPart = existingBlock.hash[existingBlock.hash.length - 2];
+        const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');
+        const filePath = path.join(directory, "blocks", chain, firstPart, secondPart, existingBlock.hash);
+        const foundEVOData = await readNFSFile(filePath);
 
+        if (!foundEVOData) {
+            return response.json({ success: false, code: 1, message: `File not found in storage` })
+        } else {
+            return response.json({ success: true, data: JSON.parse(foundEVOData) });
+        }
+    } 
     // If the block request already exists and has been processed, we simply process the request. 
-    if (existingBlock && existingBlock.processed && existingBlock.lastTransactionFetch > Date.now() - 1209600000) {
+    else if (existingBlock && existingBlock.processed && existingBlock.lastTransactionFetch > Date.now() - 1209600000) {
         const firstPart = existingBlock.hash[existingBlock.hash.length - 1];
         const secondPart = existingBlock.hash[existingBlock.hash.length - 2];
         const directory = process.env.DATA_DIR || path.join('/mnt', 'disks', 'txstreet_storage');

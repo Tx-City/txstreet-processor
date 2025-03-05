@@ -143,18 +143,6 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 const transactionPromises: any = [];
                 transactions.forEach((transaction: any) => {
                     transactionPromises.push(new Promise(async (resolve) => {
-                        // for (let i = 0; i < receipts.length; i++) {
-                        //     const receipt = receipts[i];
-                        //     if (receipt.transactionHash === transaction.hash) {
-                        //         transaction.receipt = receipt;
-                        //         // transaction.gasUsed = Number(receipt.gasUsed);
-                        //         // transaction.cumulativeGasUsed = Number(receipt.cumulativeGasUsed);
-                        //         // transaction.effectiveGasPrice = Number(receipt.effectiveGasPrice);
-                        //         if (transaction.gas > 21000) {
-                        //             differences.push(Number(transaction.receipt.gasUsed) / transaction.gas);
-                        //         }
-                        //     }
-                        // }
 
                         await callChainHooks(wrapper.ticker, transaction);
                         const formatted = formatTransaction(wrapper.ticker, transaction);

@@ -11,6 +11,7 @@ export default async (chain: string, block: any): Promise<any> => {
   
         // Encode the file content.
         const formatted: any = formatBlock(chain, block);
+        console.log(formatted);
         formatted.note = 'block-processor'; 
         var content = JSON.stringify(formatted);
 

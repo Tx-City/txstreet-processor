@@ -20,7 +20,7 @@ export const lastBlocksFull: any = {};
 export default async (data: any): Promise<any> => {
     const { chain, height, hash, block } = data;
     const room = `${chain}-blocks`;
-
+    console.log("chain-----", chain);
     if(lastBlocks[chain] && hash && lastBlocks[chain].includes(hash)) return;
     if(lastBlocksFull[chain]){
         // if(chain === "ARBI") console.log(lastBlocksFull[chain]);
@@ -51,7 +51,8 @@ export default async (data: any): Promise<any> => {
         lastBlocksFull[chain].shift();
     if (hash) lastBlocks[chain].push(hash);
     if (block) lastBlocksFull[chain].push(block);
-
+    console.log("block+++++", block);
+    console.log("hash-----", hash);
     io.to(room).emit('block', block || hash);
     // } else if (height === lastBlockHeight) {
     //     if (hashesForLastHeight[chain].includes(hash))

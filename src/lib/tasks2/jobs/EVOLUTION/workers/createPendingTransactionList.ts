@@ -80,7 +80,7 @@ setInterval(async () => {
         transactions = transactions.map((transaction: any) => ({ ...transaction, ...cache[transaction.hash] }));
         // End TMP
 
-        transactions = await updateAccountNonces(evolutionWrapper, transactions);
+        // transactions = await updateAccountNonces(evolutionWrapper, transactions);
 
         // The amount of transactions added by an account. 
         const addedByAddress: any = {};

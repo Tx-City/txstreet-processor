@@ -208,18 +208,18 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 const txHash = await this.calculateDashTransactionHash(txevent.tx);
                 const transaction = this.getTransaction(txHash, 1);
                 
-                console.log("Hash:", txHash);
+                // console.log("Hash:", txHash);
                 this.emit('mempool-tx', transaction);
-                console.log("Mempool TX", transaction);
+                // console.log("Mempool TX", transaction);
             }
             
             // Handle block events
             if (parsedData.result?.data?.type === 'tendermint/event/NewBlock') {
                 const block = parsedData.result.data.value;
                 const blockHash = block.block_id.hash;
-                console.log("Hash:", blockHash);
+                // console.log("Hash:", blockHash);
                 this.emit('confirmed-block', blockHash);
-                console.log("BLOCK TEST", block);
+                // console.log("BLOCK TEST", block);
             }
             
             // Handle ping responses
@@ -251,7 +251,34 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             params: ["tm.event='Tx'"],
             id: 1
         };
+        // console.log(222222222);
+        // console.log(JSON.stringify(txSubscription));
         this.ws.send(JSON.stringify(txSubscription));
+
+        // Handle transaction events directly in the subscription
+        this.ws.on('message', async (data: WebSocket.Data) => {
+            try {
+                const parsedData = JSON.parse(data.toString());
+                
+                // Handle transaction events
+                if (parsedData.result?.data?.type === 'tendermint/event/Tx') {
+                    const txevent = parsedData.result.data.value;
+                    
+                    if (!txevent.tx) {
+                        console.error('Transaction event missing tx field');
+                        return;
+                    }
+                    
+                    const txHash = await this.calculateDashTransactionHash(txevent.tx);
+                    const transaction = await this.getTransaction(txHash, 2);
+                    
+                    this.emit('mempool-tx', transaction);
+                    console.log("Mempool TX", transaction);
+                }
+            } catch (error) {
+                console.error('Error handling transaction event:', error);
+            }
+        });
 
         // Subscribe to new block events
         const blockSubscription = {
@@ -261,6 +288,24 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             id: 2
         };
         this.ws.send(JSON.stringify(blockSubscription));
+        
+        // Handle block events directly in the subscription
+        this.ws.on('message', async (data: WebSocket.Data) => {
+            try {
+                const parsedData = JSON.parse(data.toString());
+                
+                // Handle block events
+                if (parsedData.result?.data?.type === 'tendermint/event/NewBlock') {
+                    const block = parsedData.result.data.value;
+                    const blockHash = block.block_id.hash;
+                    
+                    this.emit('confirmed-block', blockHash);
+                    console.log("Block confirmed:", blockHash);
+                }
+            } catch (error) {
+                console.error('Error handling block event:', error);
+            }
+        });
     }
     
     /**
@@ -338,20 +383,42 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     /**
      * Get current blockchain height
      */
+    /**
+ * Get current blockchain height using WebSocket
+ */
     public async getCurrentHeight(): Promise<null | number> {
         try {
-            // Ensure Tendermint client is initialized
+            // Try WebSocket first if connected
+            if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                try {
+                    // Use sendWebSocketRequest method that's already defined in the class
+                    const statusResponse = await this.sendWebSocketRequest('status', [], 5000);
+                    
+                    if (statusResponse && statusResponse.sync_info && statusResponse.sync_info.latest_block_height) {
+                        const height = parseInt(statusResponse.sync_info.latest_block_height);
+                        console.log(`getCurrentHeight (WebSocket): ${height}`);
+                        return height;
+                    }
+                    
+                    throw new Error('Invalid status response structure from WebSocket');
+                } catch (wsError) {
+                    console.warn(`WebSocket status request failed: ${wsError.message}, falling back to Tendermint client`);
+                    // Continue to Tendermint client method
+                }
+            }
+            
+            // Fallback to Tendermint client
             if (!this.tmClient) {
                 await this.initTendermint();
             }
             
             // Get status from Tendermint client
             const status = await this.tmClient!.status();
-            console.log(`getCurrentHeight`, parseInt(status.syncInfo.latestBlockHeight.toString()));
+            console.log(`getCurrentHeight (Tendermint client)`, parseInt(status.syncInfo.latestBlockHeight.toString()));
             // Extract the block height
             return parseInt(status.syncInfo.latestBlockHeight.toString());
         } catch (error) {
-            // Fallback to HTTP request if Tendermint client fails
+            // Fallback to HTTP request if both WebSocket and Tendermint client fail
             try {
                 const response = await fetch(`${this.rpcUrl}/status`, {
                     headers: {
@@ -378,56 +445,100 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     }
 
     /**
-     * Get transaction receipts for a block
+     * Gets transaction receipts for all transactions in a block
+     * @param block The block containing transactions
+     * @returns Array of transaction receipts
      */
     public async getTransactionReceipts(block: any): Promise<any[]> {
         try {
-            if (block && block.transactions && Array.isArray(block.transactions)) {
+            // Check if block exists
+            if (block) {
+                // Handle case where transactions property might not be an array
+                const transactions = Array.isArray(block.transactions) ? block.transactions : 
+                                    (Array.isArray(block.tx) ? block.tx : []);
+                // Handle empty transactions array
+                if (transactions.length === 0) {
+                    return [];
+                }
+                
+                // Process all transactions in parallel using Promise.all
                 const receipts = await Promise.all(
-                    block.transactions.map(async (txHash: string) => {
-                        return await this.getTransactionReceipt(txHash);
+                    transactions.map(async (txHash: string) => {
+                        try {
+                            return await this.getTransactionReceipt(txHash);
+                        } catch (txError) {
+                            console.error(`Error processing transaction ${txHash}:`, txError);
+                            return null;
+                        }
                     })
                 );
                 
+                // Filter out any null receipts (failed fetches)
                 return receipts.filter(receipt => receipt !== null);
             }
             
+            // Block doesn't exist
             return [];
         } catch (error) {
-            console.error(`Error getting transaction receipts for block:`, error);
+            console.error(`Error getting transaction receipts for block ${block?.height || 'unknown'}:`, error);
             return [];
         }
     }
 
     /**
      * Get transaction receipt by hash
-     */
+     * @param hash Transaction hash in hex format
+     * @returns Transaction receipt object or null if not found
+    */
     public async getTransactionReceipt(hash: string): Promise<any> {
         try {
+            // Validate hash
+            if (!hash || typeof hash !== 'string') {
+                console.warn('Invalid transaction hash provided:', hash);
+                return null;
+            }
+            
             // Ensure Tendermint client is initialized
             if (!this.tmClient) {
                 await this.initTendermint();
+                
+                // Verify initialization worked
+                if (!this.tmClient) {
+                    throw new Error('Failed to initialize Tendermint client');
+                }
             }
             
-            // Correct TxParams structure
+            // Create TxParams with proper binary hash
             const txParams: TxParams = {
                 hash: new Uint8Array(Buffer.from(hash, 'hex'))
             };
             
             // Get transaction data
-            const txResponse = await this.tmClient!.tx(txParams);
+            const txResponse = await this.tmClient.tx(txParams);
             
-            // Map to a receipt-like structure
+            // Verify response exists
+            if (!txResponse) {
+                return null;
+            }
+            
+            // Map to the requested receipt structure
             return {
-                hash: Buffer.from(txResponse.hash).toString('hex').toUpperCase(),
-                height: txResponse.height,
-                index: txResponse.index,
-                success: txResponse.result.code === 0,
-                gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
-                logs: txResponse.result.log || ""
+                hash: hash, // Using the original hash as requested
+                owner: '', // Would need chain-specific logic
+                insertedAt: Date.now(),
+                timestamp: Date.now(),
+                fee: 0,
+                value: 0,
+                gasUsed: txResponse.result && txResponse.result.gasUsed ? 
+                    Number(txResponse.result.gasUsed) : 0
             };
         } catch (error) {
-            console.error(`Error fetching transaction receipt ${hash}:`, error);
+            // Log error but don't throw to allow batch processing to continue
+            if (error.message && error.message.includes('not found')) {
+                console.warn(`Transaction ${hash} not found`);
+            } else {
+                console.error(`Error fetching transaction receipt ${hash}:`, error);
+            }
             return null;
         }
     }
@@ -435,6 +546,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     /**
      * Get transaction details
      */
+
     public async getTransaction(id: string, verbosity: number = 1, blockId?: string | number): Promise<any> {
         try {
             // Ensure Tendermint client is initialized
@@ -451,7 +563,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             const txResponse = await this.tmClient!.tx(txParams);
             
             const txInfo = {
-                tx: Buffer.from(txResponse.tx).toString('base64'),
+                hash: id,
                 owner: '', // Would need chain-specific logic
                 insertedAt: Date.now(),
                 timestamp: Date.now(),
@@ -461,12 +573,24 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             };
             
             if (verbosity > 1) {
+                // Fixed property access for gasUsed
                 return {
+                     // Basic info
                     ...txInfo,
                     height: txResponse.height,
                     index: txResponse.index,
                     success: txResponse?.result.code === 0,
+                    // Additional details
                     logs: txResponse?.result.log || '',
+                    // tx: Buffer.from(txResponse.tx).toString('base64'),
+                    // owner: '', // Would need chain-specific logic
+                    // insertedAt: Date.now(),
+                    // timestamp: Date.now(),
+                    // fee: 0,
+                    // value: 0,
+                    // gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
+                    // logs: txResponse.result.log || '',
+                    // result: txResponse.result
                 };
             }
             
@@ -476,6 +600,47 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             return null;
         }
     }
+    // public async getTransaction(id: string, verbosity: number = 1, blockId?: string | number): Promise<any> {
+    //     try {
+    //         // Ensure Tendermint client is initialized
+    //         if (!this.tmClient) {
+    //             await this.initTendermint();
+    //         }
+            
+    //         // Correct TxParams structure
+    //         const txParams: TxParams = {
+    //             hash: new Uint8Array(Buffer.from(id, 'hex'))
+    //         };
+            
+    //         // Get transaction data
+    //         const txResponse = await this.tmClient!.tx(txParams);
+            
+    //         const txInfo = {
+    //             tx: Buffer.from(txResponse.tx).toString('base64'),
+    //             owner: '', // Would need chain-specific logic
+    //             insertedAt: Date.now(),
+    //             timestamp: Date.now(),
+    //             fee: 0,
+    //             value: 0,
+    //             gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
+    //         };
+            
+    //         if (verbosity > 1) {
+    //             return {
+    //                 ...txInfo,
+    //                 height: txResponse.height,
+    //                 index: txResponse.index,
+    //                 success: txResponse?.result.code === 0,
+    //                 logs: txResponse?.result.log || '',
+    //             };
+    //         }
+            
+    //         return txInfo;
+    //     } catch (error) {
+    //         console.error(`Error fetching transaction ${id}:`, error);
+    //         return null;
+    //     }
+    // }
 
     /**
      * Get block details
@@ -639,7 +804,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                         throw new Error(`Invalid block identifier format: ${id}`);
                     }
                     
-                    console.log(`Requesting block via WebSocket: ${method}`, params);
+                    // console.log(`Requesting block via WebSocket: ${method}`, params);
                     const wsResponse = await this.sendWebSocketRequest(method, params, 8000);
                     
                     if (!wsResponse || !wsResponse.block) {
@@ -697,10 +862,10 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                     endpoint = `${this.rpcUrl}/block?height=${id}`;
                 }
                 
-                console.log(`Fetching block using HTTP: ${endpoint}`);
+                // console.log(`Fetching block using HTTP: ${endpoint}`);
                 
                 const data = await this.curlGet(endpoint);
-                console.log(`data curl response--------`, data);
+                // console.log(`data curl response--------`, data);
                 
                 // Handle both response formats
                 if (data.result && data.result.block) {
@@ -738,7 +903,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
      */
     private parseRpcBlockData(data: any, verbosity: number = 1): any {
         // Make sure we have a proper structure to work with
-        console.log(`data`, data);
+        // console.log(`data`, data);
         if (!data || !data.block || !data.block.header) {
             console.error('Unexpected block data structure:', JSON.stringify(data));
             throw new Error('Invalid block data structure');
@@ -747,7 +912,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         const block = data.block;
         const header = block.header;
         const blockId = data.block_id;
-        console.log(`-----------------------blockId----------------------`, blockId);
+        // console.log(`-----------------------blockId----------------------`, blockId);
         
         // Try to handle base64 encoded hashes if present
         let blockHash = blockId?.hash || 'unknown';
@@ -772,7 +937,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 parseInt(header.core_chain_locked_height.toString()) : 0,
             validator: header.proposer_pro_tx_hash || '',
         };
-        console.log(`basicBlock`, basicBlock);
+        // console.log(`basicBlock`, basicBlock);
         // For higher verbosity, include more details
         if (verbosity > 1) {
             return {
@@ -837,42 +1002,6 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
      * Resolve block details with optional logging
      */
     public resolveBlock: undefined;
-    // public async resolveBlock(id: string | number, verbosity: number = 1, depth: number = 0): Promise<any> {
-    //     // Check depth limit to prevent infinite recursion
-    //     if (depth >= this.blockDepthLimit) {
-    //         throw new Error(`Depth limit reached (${this.blockDepthLimit})`);
-    //     }
-        
-    //     try {
-    //         // Get the block
-    //         const block = await this.getBlock(id, verbosity);
-            
-    //         if (!block) {
-    //             throw new Error(`Block ${id} not found`);
-    //         }
-            
-    //         // If high verbosity, resolve all transactions in the block
-    //         if (verbosity > 1 && block.txs && Array.isArray(block.txs)) {
-    //             block.transactions = await Promise.all(
-    //                 block.txs.map(async (txId: string) => {
-    //                     return await this.getTransaction(txId, verbosity - 1, block.height);
-    //                 })
-    //             );
-    //         }
-            
-    //         // Optional: Log the block if needed
-    //         if (verbosity > 0) {
-    //             const formattedBlock = this.formatBlockLog(block, verbosity);
-    //             console.log('Block Information:');
-    //             console.log(formattedBlock.formatted);
-    //         }
-            
-    //         return block;
-    //     } catch (error) {
-    //         console.error(`Error resolving block ${id}:`, error);
-    //         throw error;
-    //     }
-    // }
 
     /**
      * Get transaction count for an account (base class compatibility)

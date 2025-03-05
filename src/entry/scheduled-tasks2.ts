@@ -38,7 +38,7 @@ const initialize = async () => {
         let transactions: DropoutContainer<any> | null = null;
         // Blocks collection
         let blocks: DropoutContainer<any> | null = null;
-
+        console.log("Block data before adding to container:", JSON.stringify(blocks, null, 2)); 
         switch (chainToInit) {
             case 'ETH':
                 transactions = new DropoutContainer<ProjectedEthereumTransaction>(`transactions-${chainToInit}.bin`, ETHTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
@@ -50,7 +50,9 @@ const initialize = async () => {
                 // Create a collection for blocks that lasts one day.
                 blocks = new DropoutContainer<ProjectedEthereumBlock>(`blocks-${chainToInit}.bin`, ETHBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);
                 break;
-            case 'EVOLUTION':  
+            case 'EVOLUTION': 
+            // In ObtainBlocksFromDatabase.ts or similar file
+            
                 transactions = new DropoutContainer<ProjectedEvolutionTransaction>(`transactions-${chainToInit}.bin`, EVOLUTIONTransactionsSchema, 'hash', ((1000 * 60) * 60) * 1, 'insertedAt', true);
                 // Create a collection for blocks that lasts one day.
                 blocks = new DropoutContainer<ProjectedEvolutionBlock>(`blocks-${chainToInit}.bin`, EVOLUTIONBlocksSchema, 'hash', ((1000 * 60) * 60) * 24, 'timestamp', false, 250);

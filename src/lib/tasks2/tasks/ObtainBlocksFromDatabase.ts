@@ -41,7 +41,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     height: { $ne: null }, 
                     processed: true, 
                     timestamp: { $gt: this._lastKnownItemTimestamp === 0 ? Math.floor((Date.now() - (((1000 * 60) * 60) * 24)) / divider) : this._lastKnownItemTimestamp } };
-
+                    
                 let project: any = {};
                 switch(chain) {
                     case 'ETH':
@@ -51,8 +51,8 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
                         break; 
                     case 'EVOLUTION':
-                        project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
-                        break; 
+                        project = { _id: 0, hash: 1, timestamp: 1, height: 1, transactions: 1, blockversion: 1, appversion: 1, l1lockedheight: 1, validator: 1 };
+                        break;
                     case 'FLR':
                         project = { _id: 0, value: 1, hash: 1, from: 1, baseFeePerGas: 1, gasUsed: 1, gasLimit: 1, difficulty: 1, size: 1, height: 1, timestamp: 1, gasUsedDif: 1, transactions: 1 };
                         break;  
@@ -79,8 +79,22 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         break;
                 }
 
-
+                // Test query to check if any EVOLUTION blocks exist
+if (chain === 'EVOLUTION') {
+    const testResults = await collection.find({ chain: 'EVOLUTION' }).limit(5).toArray();
+    console.log(`Test query found ${testResults.length} EVOLUTION blocks`);
+    if (testResults.length > 0) {
+      console.log("Sample block:", JSON.stringify(testResults[0], null, 2));
+    }
+  }
                 let results = await collection.find(where).project(project).toArray();
+                console.log("AFTER MONGODB QUERY FOR", chain, "GOT", results.length, "RESULTS");
+
+
+                     // Add this logging
+                     console.log(`---EVOLUTION DEBUG---`);
+                     console.log(`Block sample before insert:`, JSON.stringify(results, null, 2));
+                
                 // Make sure we atleast have 250 blocks. 
                 if(results.length < 250 && this._firstExecution) {
                     // Find earliest known height. 
@@ -107,6 +121,8 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                 if(results.length > 0) {
                     const latest = results.sort((a: any, b: any) => a.height - b.height)[results.length - 1]; 
                     this._lastKnownItemTimestamp = latest.timestamp; 
+
+                    
                     blocks.insert(results);
                 }
                 this._done = true; 

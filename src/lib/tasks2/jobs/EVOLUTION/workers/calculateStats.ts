@@ -24,22 +24,22 @@ import medianGasUsed from '../medianGasUsed';
 
 // The last value(s) calculated during the execution of this task. 
 let lastExecutionResults = {
-    'tps': 0,
-    'ctps': 0,
-    'difficulty': '0',
+    //'tps': 0,
+    //'ctps': 0,
+    //'difficulty': '0',
     'blockHeight': 0,
-    'baseFee': 0,
+    // 'baseFee': 0,
     // 'tipPrice': 0,
-    'gasTarget': 0,
-    'gasLimit': 0,
-    'medianGasUsed': 0,
-    'medianBlockSize': 0,
-    'medianBlockTime': 0,
-    'medianTxsPerBlock': 0,
-    'medianFee-gasPrice': 0,
-    'medianFee-usd': 0,
-    'medianFee-usdTransfer': 0,
-    'gasUsedDif': 0,
+    // 'gasTarget': 0,
+    // 'gasLimit': 0,
+    // 'medianGasUsed': 0,
+    // 'medianBlockSize': 0,
+    // 'medianBlockTime': 0,
+    // 'medianTxsPerBlock': 0,
+    // 'medianFee-gasPrice': 0,
+    // 'medianFee-usd': 0,
+    // 'medianFee-usdTransfer': 0,
+    // 'gasUsedDif': 0,
 }; 
 
 let lastKnownBlock: ProjectedEvolutionBlock = null;
@@ -142,11 +142,11 @@ const interval = setInterval(async () => {
         // These tasks are all individually wrapped because their failures are not task-haulting. Even if one of these tasks fail to execute, 
         // the others can execute and if they depend on the failed task the lastExecutionResult will be available to use. 
         const startTime = Date.now(); 
-        try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
         // try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { console.error(error); };
-        try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
-        try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
-        try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
         // try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
         // try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
@@ -157,7 +157,7 @@ const interval = setInterval(async () => {
         // try { lastExecutionResults['medianGasUsed'] = await medianGasUsed(blocks); } catch (error) { console.error(error) }
         // try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { console.error(error) }
         // try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { console.error(error) }
-        try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
+        // try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
     } catch (error) {  
         console.error(error); 
     } finally {
