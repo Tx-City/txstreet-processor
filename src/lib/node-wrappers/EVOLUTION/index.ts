@@ -341,51 +341,8 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
     }
 
     /**
-     * Format block data into a structured JSON representation
-     */
-    public formatBlockLog(block: any, verbosity: number = 1): { 
-        formatted: string, 
-        compact: string 
-    } {
-        const blockLog = {
-            height: block.height,
-            hash: block.hash,
-            chainId: block.chain_id || 'unknown',
-            timestamp: new Date(block.timestamp).toISOString(),
-            age: `${Math.floor((Date.now() - block.timestamp) / 1000)} seconds`,
-            transactions: {
-                count: block.transactions || 0,
-                status: (block.transactions === 0) ? 'empty' : 'active'
-            },
-            validator: block.validator || 'unknown',
-            metadata: {
-                blockVersion: block.blockversion || 0,
-                appVersion: block.appversion || 0,
-                l1LockedHeight: block.l1lockedheight || 0,
-                consensusHash: block.consensusHash || '',
-                appHash: block.appHash || ''
-            }
-        };
-
-        if (verbosity > 1) {
-            (blockLog as any).additionalDetails = {
-                lastBlockId: block.last_block_id,
-                coreChainLock: block.core_chain_lock
-            };
-        }
-
-        return {
-            formatted: JSON.stringify(blockLog, null, 2),
-            compact: JSON.stringify(blockLog)
-        };
-    }
-
-    /**
-     * Get current blockchain height
-     */
-    /**
- * Get current blockchain height using WebSocket
- */
+     * Get current blockchain height using WebSocket
+    */
     public async getCurrentHeight(): Promise<null | number> {
         try {
             // Try WebSocket first if connected
@@ -526,7 +483,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 hash: hash, // Using the original hash as requested
                 owner: '', // Would need chain-specific logic
                 insertedAt: Date.now(),
-                timestamp: Date.now(),
+                timestamp: Math.floor(Date.now() / 1000),
                 fee: 0,
                 value: 0,
                 gasUsed: txResponse.result && txResponse.result.gasUsed ? 
@@ -566,7 +523,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 hash: id,
                 owner: '', // Would need chain-specific logic
                 insertedAt: Date.now(),
-                timestamp: Date.now(),
+                timestamp: Math.floor(Date.now() / 1000),
                 fee: 0,
                 value: 0,
                 gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
@@ -600,47 +557,6 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             return null;
         }
     }
-    // public async getTransaction(id: string, verbosity: number = 1, blockId?: string | number): Promise<any> {
-    //     try {
-    //         // Ensure Tendermint client is initialized
-    //         if (!this.tmClient) {
-    //             await this.initTendermint();
-    //         }
-            
-    //         // Correct TxParams structure
-    //         const txParams: TxParams = {
-    //             hash: new Uint8Array(Buffer.from(id, 'hex'))
-    //         };
-            
-    //         // Get transaction data
-    //         const txResponse = await this.tmClient!.tx(txParams);
-            
-    //         const txInfo = {
-    //             tx: Buffer.from(txResponse.tx).toString('base64'),
-    //             owner: '', // Would need chain-specific logic
-    //             insertedAt: Date.now(),
-    //             timestamp: Date.now(),
-    //             fee: 0,
-    //             value: 0,
-    //             gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
-    //         };
-            
-    //         if (verbosity > 1) {
-    //             return {
-    //                 ...txInfo,
-    //                 height: txResponse.height,
-    //                 index: txResponse.index,
-    //                 success: txResponse?.result.code === 0,
-    //                 logs: txResponse?.result.log || '',
-    //             };
-    //         }
-            
-    //         return txInfo;
-    //     } catch (error) {
-    //         console.error(`Error fetching transaction ${id}:`, error);
-    //         return null;
-    //     }
-    // }
 
     /**
      * Get block details
@@ -885,7 +801,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 // Return minimal block data to avoid crashes
                 return {
                     hash: typeof id === 'string' ? id : `unknown_${id}`,
-                    timestamp: Date.now(),
+                    timestamp: Math.floor(Date.now() / 1000),
                     height: typeof id === 'number' ? id : (parseInt(String(id), 10) || 0),
                     transactions: 0,
                     blockversion: 0,
@@ -925,10 +841,12 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 console.warn(`Failed to decode potential base64 hash: ${blockHash}`);
             }
         }
-        
+        console.log(`header.time`, header);
         const basicBlock = {
             hash: blockHash,
-            timestamp: header.time ? new Date(header.time).getTime() : Date.now(),
+            timestamp: header.time 
+               ? Math.floor(new Date(header.time).getTime() / 1000) 
+                : Math.floor(Date.now() / 1000),
             height: parseInt(header.height || '0'),
             transactions: block.data?.txs?.length || 0,
             blockversion: header.version?.block ? parseInt(header.version.block.toString()) : 0,
@@ -967,7 +885,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         
         const basicBlock = {
             hash: Buffer.from(blockId.hash).toString('hex').toUpperCase(),
-            timestamp: new Date(header.time).getTime(),
+            timestamp: Math.floor(new Date(header.time).getTime() / 1000),
             height: Number(header.height),
             transactions: txs.length,
             blockversion: Number(header.version.block),

@@ -11,6 +11,8 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
     constructor(chain: string, blocks: DropoutContainer<any>) {
         super(async () => {
             try { 
+                console.log(`ObtainBlocksFromDatabase executing for chain: ${chain}`);
+                
                 // Initialize the database. 
                 const { database } = await mongodb(); 
                 // Create a reference to the database transactions collection. 
@@ -34,13 +36,25 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         divider = 1000;
                         break;
                 }
-
+                console.log(1111111111111111111111)
+                console.log("this._lastKnownItemTimestamp", this._lastKnownItemTimestamp)
+                console.log({
+                    lastKnownTimestamp: this._lastKnownItemTimestamp,
+                    isZero: this._lastKnownItemTimestamp === 0,
+                    calculatedTimestamp: this._lastKnownItemTimestamp === 0 
+                      ? Math.floor((Date.now() - (((1000 * 60) * 60) * 24)) / divider) 
+                      : this._lastKnownItemTimestamp,
+                    currentDateNow: Date.now(),
+                    dividerValue: divider
+                  });
                 const where: any = {
                     chain,
                     hash: { $ne: null },
                     height: { $ne: null }, 
                     processed: true, 
                     timestamp: { $gt: this._lastKnownItemTimestamp === 0 ? Math.floor((Date.now() - (((1000 * 60) * 60) * 24)) / divider) : this._lastKnownItemTimestamp } };
+                
+                console.log(`Query conditions for ${chain}:`, JSON.stringify(where));
                     
                 let project: any = {};
                 switch(chain) {
@@ -71,66 +85,178 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     case 'XMR': 
                         project = { _id: 0, hash: 1, timestamp: 1, height: 1, difficulty: 1, transactions: 1, size: 1 }
                         break;
-                        case 'BTC':
-                        case 'BCH':
-                        case 'DASH':
-                        case 'LTC': 
+                    case 'BTC':
+                    case 'BCH':
+                    case 'DASH':
+                    case 'LTC': 
                         project = { _id: 0, hash: 1, timestamp: 1, height: 1, difficulty: 1, transactions: 1, size: 1 }
                         break;
                 }
 
-                // Test query to check if any EVOLUTION blocks exist
-if (chain === 'EVOLUTION') {
-    const testResults = await collection.find({ chain: 'EVOLUTION' }).limit(5).toArray();
-    console.log(`Test query found ${testResults.length} EVOLUTION blocks`);
-    if (testResults.length > 0) {
-      console.log("Sample block:", JSON.stringify(testResults[0], null, 2));
-    }
-  }
-                let results = await collection.find(where).project(project).toArray();
-                console.log("AFTER MONGODB QUERY FOR", chain, "GOT", results.length, "RESULTS");
-
-
-                     // Add this logging
-                     console.log(`---EVOLUTION DEBUG---`);
-                     console.log(`Block sample before insert:`, JSON.stringify(results, null, 2));
+                // Initialize results
+                let results: any[] = [];
                 
+                // Test query for EVOLUTION blocks
+                // if (chain === 'EVOLUTION') {
+                //     try {
+                //         const where1: any = {
+                //             chain,
+                //             hash: { $ne: null },
+                //             height: { $ne: null }, 
+                //             processed: true, 
+                //             timestamp: { 
+                //                 $gt: this._lastKnownItemTimestamp === 0 
+                //                     ? Math.floor((Date.now() - (((1000 * 60) * 60) * 24)) / divider / 1000) // Add division by 1000 here
+                //                     : Math.floor(this._lastKnownItemTimestamp / 1000) // Also convert this to seconds
+                //             } 
+                //         };
+                //         const testResults = await collection.find(where1).project(project).toArray();
+                //         console.log(`Test query found ${testResults.length} EVOLUTION blocks`);
+                //         if (testResults.length > 0) {
+                //             console.log("Sample block:", JSON.stringify(testResults[0], null, 2));
+                //         }
+                        
+                //         // Try a more permissive query if there are blocks but our regular query might be too restrictive
+                //         if (testResults.length > 0) {
+                //             // First try the normal query
+                //             results = await collection.find(where).project(project).toArray();
+                            
+                //             // If no results, try without timestamp restriction
+                //             if (results.length === 0) {
+                //                 const modifiedWhere = { ...where };
+                //                 delete modifiedWhere.timestamp;
+                //                 console.log("Using modified query without timestamp restriction");
+                //                 results = await collection.find(modifiedWhere).project(project).toArray();
+                //                 console.log(`Modified query found ${results.length} blocks`);
+                //             }
+                //         }
+                //     } catch (testError) {
+                //         console.error("Error in test query:", testError);
+                //     }
+                // } else {
+                //     // Normal query for other chains
+                //     results = await collection.find(where).project(project).toArray();
+                // }
+                console.log("this._lastKnownItemTimestamp", this._lastKnownItemTimestamp)
+
+                results = await collection.find(where).project(project).toArray();
+                console.log("Sample block:", JSON.stringify(results[0], null, 2));
+                
+                
+                console.log(`Found ${results.length} blocks for ${chain}`);
+
                 // Make sure we atleast have 250 blocks. 
                 if(results.length < 250 && this._firstExecution) {
-                    // Find earliest known height. 
-                    let earliest = results.sort((a: any, b: any) => b.height - a.height)[results.length - 1]; 
-                    if(!earliest) 
-                        earliest = (await collection.find({ chain, hash: { $ne: null }, height: { $ne: null } },  project).sort({ height: -1 }).limit(1).toArray())[0];
-                    let earliestHeight: number = earliest.height;
-                    const remainder = 250 - results.length;
-                    let _results = await collection.find({ chain, height: { $lt: earliestHeight } }).project(project).sort({ height: -1 }).limit(remainder).toArray();
-                    results = results.concat(_results); 
+                    try {
+                        // Find earliest known height. 
+                        let earliest = results.length > 0 ? 
+                            results.sort((a: any, b: any) => b.height - a.height)[results.length - 1] : null; 
+                            
+                        if(!earliest) {
+                            const earlyResults = await collection.find(
+                                { chain, hash: { $ne: null }, height: { $ne: null } }
+                            ).project(project).sort({ height: -1 }).limit(1).toArray();
+                            
+                            earliest = earlyResults.length > 0 ? earlyResults[0] : null;
+                        }
+                        
+                        if (earliest) {
+                            let earliestHeight = earliest.height;
+                            const remainder = 250 - results.length;
+                            
+                            console.log(`Fetching ${remainder} more blocks before height ${earliestHeight}`);
+                            
+                            let _results = await collection.find({ 
+                                chain, 
+                                height: { $lt: earliestHeight } 
+                            }).project(project).sort({ height: -1 }).limit(remainder).toArray();
+                            
+                            console.log(`Found ${_results.length} additional blocks`);
+                            results = results.concat(_results);
+                        }
+                    } catch (error) {
+                        console.error("Error fetching additional blocks:", error);
+                    }
                 }
 
-                // TODO Optimize into a $project
+                // Process transactions field
                 for(let i = 0; i < results.length; i++) {
-                    if(!results[i].transactions)
+                    if(!results[i].transactions) {
                         results[i].transactions = [];
-                    let txcount = results[i].transactions.length; 
-                    delete results[i].transactions;
-                    results[i].transactions = txcount;
-                    if(!results[i].gasUsedDif)
+                    }
+                    
+                    // Convert transactions to count if it's an array
+                    if(Array.isArray(results[i].transactions)) {
+                        let txcount = results[i].transactions.length; 
+                        delete results[i].transactions;
+                        results[i].transactions = txcount;
+                    }
+                    
+                    if(!results[i].gasUsedDif) {
                         results[i].gasUsedDif = 0.0; 
+                    }
+                }
+
+                // Special handling for EVOLUTION chain to ensure required fields exist
+                if(chain === 'EVOLUTION' && results.length > 0) {
+                    console.log(`Processing ${results.length} EVOLUTION blocks to ensure schema compatibility`);
+                    
+                    // Add missing fields with default values if needed
+                    for(let i = 0; i < results.length; i++) {
+                        // Make sure required fields exist with valid values
+                        if(results[i].hash === undefined || results[i].hash === null) {
+                            results[i].hash = "";
+                        }
+                        
+                        if(results[i].timestamp === undefined || results[i].timestamp === null) {
+                            results[i].timestamp = Date.now();
+                        }
+                        
+                        if(results[i].height === undefined || results[i].height === null) {
+                            results[i].height = 0;
+                        }
+                        
+                        if(results[i].transactions === undefined || results[i].transactions === null) {
+                            results[i].transactions = 0;
+                        }
+                        
+                        if(results[i].blockversion === undefined || results[i].blockversion === null) {
+                            results[i].blockversion = 0;
+                        }
+                        
+                        if(results[i].appversion === undefined || results[i].appversion === null) {
+                            results[i].appversion = 0;
+                        }
+                        
+                        if(results[i].l1lockedheight === undefined || results[i].l1lockedheight === null) {
+                            results[i].l1lockedheight = 0;
+                        }
+                        
+                        if(results[i].validator === undefined || results[i].validator === null) {
+                            results[i].validator = "";
+                        }
+                    }
+                    
+                    console.log("First EVOLUTION block after processing:", JSON.stringify(results[0], null, 2));
                 }
 
                 if(results.length > 0) {
+                    console.log(`Sorting and inserting ${results.length} blocks for ${chain}`);
                     const latest = results.sort((a: any, b: any) => a.height - b.height)[results.length - 1]; 
                     this._lastKnownItemTimestamp = latest.timestamp; 
-
                     
                     blocks.insert(results);
+                    console.log(`Successfully inserted blocks for ${chain}`);
+                } else {
+                    console.log(`No blocks to insert for ${chain}`);
                 }
+                
                 this._done = true; 
-                if(this._firstExecution)
-                    this._firstExecution = false; 
+                if(this._firstExecution) {
+                    this._firstExecution = false;
+                }
             } catch (error) {
-                console.error(error); 
-                console.error(error);
+                console.error("Error in ObtainBlocksFromDatabase:", error);
             }
         }, 250); 
     }
