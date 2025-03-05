@@ -184,13 +184,13 @@ export const EVOLUTIONTransactionsSchema = avro.Type.forSchema({
                     name: "EVOLUTIONTransaction",
                     type: "record",
                     fields: [
-                        { name: "hash", type: "string" },
-                        { name: "owner", type: "string" },
-                        { name: "insertedAt", type: "long" },
-                        { name: "timestamp", type: "long" },
-                        { name: "fee", type: "double" },
-                        { name: "value", type: "double" },
-                        { name: "gasUsed", type: "long" }
+                        { name: "hash", type: "string", default: "" },
+                        { name: "owner", type: "string", default: "" },
+                        { name: "insertedAt", type: "long", default: 0 },
+                        { name: "timestamp", type: "long", default: 0 },
+                        { name: "fee", type: "double", default: 0.0 },
+                        { name: "value", type: "double", default: 0.0 },
+                        { name: "gasUsed", type: "long", default: 0 }
                     ]
                 }
             }
@@ -211,14 +211,14 @@ export const EVOLUTIONBlocksSchema = avro.Type.forSchema({
                     name: "EVOLUTIONBlock",
                     type: "record",
                     fields: [
-                        { name: "hash", type: "string" },
-                        { name: "timestamp", type: "long" },
-                        { name: "height", type: "long" },
-                        { name: "transactions", type: "long" },
-                        { name: "blockversion", type: "long" },
-                        { name: "appversion", type: "long" },
-                        { name: "l1lockedheight", type: "long" },
-                        { name: "validator", type: "string" }
+                        { name: "hash", type: "string", default: "" },
+                        { name: "timestamp", type: "long", default: 0 },
+                        { name: "height", type: "long", default: 0 },
+                        { name: "transactions", type: "long", default: 0 },
+                        { name: "blockversion", type: "long", default: 0 },
+                        { name: "appversion", type: "long", default: 0 },
+                        { name: "l1lockedheight", type: "long", default: 0 },
+                        { name: "validator", type: "string", default: "" }
                     ]
                 }
             }

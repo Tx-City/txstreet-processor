@@ -36,17 +36,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                         divider = 1000;
                         break;
                 }
-                console.log(1111111111111111111111)
-                console.log("this._lastKnownItemTimestamp", this._lastKnownItemTimestamp)
-                console.log({
-                    lastKnownTimestamp: this._lastKnownItemTimestamp,
-                    isZero: this._lastKnownItemTimestamp === 0,
-                    calculatedTimestamp: this._lastKnownItemTimestamp === 0 
-                      ? Math.floor((Date.now() - (((1000 * 60) * 60) * 24)) / divider) 
-                      : this._lastKnownItemTimestamp,
-                    currentDateNow: Date.now(),
-                    dividerValue: divider
-                  });
+              
                 const where: any = {
                     chain,
                     hash: { $ne: null },
@@ -95,50 +85,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
 
                 // Initialize results
                 let results: any[] = [];
-                
-                // Test query for EVOLUTION blocks
-                // if (chain === 'EVOLUTION') {
-                //     try {
-                //         const where1: any = {
-                //             chain,
-                //             hash: { $ne: null },
-                //             height: { $ne: null }, 
-                //             processed: true, 
-                //             timestamp: { 
-                //                 $gt: this._lastKnownItemTimestamp === 0 
-                //                     ? Math.floor((Date.now() - (((1000 * 60) * 60) * 24)) / divider / 1000) // Add division by 1000 here
-                //                     : Math.floor(this._lastKnownItemTimestamp / 1000) // Also convert this to seconds
-                //             } 
-                //         };
-                //         const testResults = await collection.find(where1).project(project).toArray();
-                //         console.log(`Test query found ${testResults.length} EVOLUTION blocks`);
-                //         if (testResults.length > 0) {
-                //             console.log("Sample block:", JSON.stringify(testResults[0], null, 2));
-                //         }
-                        
-                //         // Try a more permissive query if there are blocks but our regular query might be too restrictive
-                //         if (testResults.length > 0) {
-                //             // First try the normal query
-                //             results = await collection.find(where).project(project).toArray();
-                            
-                //             // If no results, try without timestamp restriction
-                //             if (results.length === 0) {
-                //                 const modifiedWhere = { ...where };
-                //                 delete modifiedWhere.timestamp;
-                //                 console.log("Using modified query without timestamp restriction");
-                //                 results = await collection.find(modifiedWhere).project(project).toArray();
-                //                 console.log(`Modified query found ${results.length} blocks`);
-                //             }
-                //         }
-                //     } catch (testError) {
-                //         console.error("Error in test query:", testError);
-                //     }
-                // } else {
-                //     // Normal query for other chains
-                //     results = await collection.find(where).project(project).toArray();
-                // }
-                console.log("this._lastKnownItemTimestamp", this._lastKnownItemTimestamp)
-
+  
                 results = await collection.find(where).project(project).toArray();
                 console.log("Sample block:", JSON.stringify(results[0], null, 2));
                 
