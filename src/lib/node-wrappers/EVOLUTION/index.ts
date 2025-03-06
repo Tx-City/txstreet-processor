@@ -37,6 +37,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
 
     /**
      * Connect to WebSocket with auto-reconnect capability
+     * Updated to use consolidated event handling
      */
     private connectWebSocket(): void {
         if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
@@ -57,6 +58,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 // Set up ping interval to keep connection alive
                 this.setupPingInterval();
                 
+                // Initialize event system after connection
                 try {
                     this.initEventSystem();
                     console.log('Event system initialized');
@@ -85,9 +87,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 this.scheduleReconnect();
             });
             
-            this.ws.on('message', async (data: WebSocket.Data) => {
-                this.handleWebSocketMessage(data);
-            });
+            // No message handler here - all message handling is now in initEventSystem()
             
         } catch (error) {
             console.error('Error creating WebSocket:', error);
@@ -185,128 +185,84 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         // Create new connection
         this.connectWebSocket();
     }
-    
-    /**
-     * Handle incoming WebSocket messages
-     */
-    private async handleWebSocketMessage(data: WebSocket.Data): Promise<void> {
-        try {
-            const parsedData = JSON.parse(data.toString());
-            
-            // Handle transaction events
-            if (parsedData.result?.data?.type === 'tendermint/event/Tx') {
-                const txevent = parsedData.result.data.value;
-                
-                console.log('Transaction event structure:', JSON.stringify(txevent, null, 2));
-                
-                // Extract the tx field - make sure this matches your actual data structure
-                if (!txevent.tx) {
-                    console.error('Transaction event missing tx field');
-                    return;
-                }
-                
-                const txHash = await this.calculateDashTransactionHash(txevent.tx);
-                const transaction = this.getTransaction(txHash, 1);
-                
-                // console.log("Hash:", txHash);
-                this.emit('mempool-tx', transaction);
-                // console.log("Mempool TX", transaction);
-            }
-            
-            // Handle block events
-            if (parsedData.result?.data?.type === 'tendermint/event/NewBlock') {
-                const block = parsedData.result.data.value;
-                const blockHash = block.block_id.hash;
-                // console.log("Hash:", blockHash);
-                this.emit('confirmed-block', blockHash);
-                // console.log("BLOCK TEST", block);
-            }
-            
-            // Handle ping responses
-            if (parsedData.id && typeof parsedData.id === 'string' && parsedData.id.startsWith('ping-')) {
-                console.log('Received ping response');
-            }
-        } catch (error) {
-            console.error('Error handling WebSocket message:', error);
-        }
-    }
 
-    /**
-     * Initialize event system for WebSocket subscriptions
-     */
-    public initEventSystem() {
-        if (!this.ws || !this.isConnected) {
-            // throw new Error('WebSocket not connected');
-            console.log('WebSocket not connected, will initialize when connected');
-            this.once('connected', () => {
-                this.initEventSystem(); // Will call itself when connected
-            });
-            return; 
-        }
+        /**
+         * Initialize event system for WebSocket subscriptions
+         */
+        public initEventSystem() {
+            if (!this.ws || !this.isConnected) {
+                // throw new Error('WebSocket not connected');
+                console.log('WebSocket not connected, will initialize when connected');
+                this.once('connected', () => {
+                    this.initEventSystem(); // Will call itself when connected
+                });
+                return; 
+            }
 
-        // Subscribe to transaction events
-        const txSubscription = {
-            jsonrpc: "2.0",
-            method: "subscribe",
-            params: ["tm.event='Tx'"],
-            id: 1
-        };
-        // console.log(222222222);
-        // console.log(JSON.stringify(txSubscription));
-        this.ws.send(JSON.stringify(txSubscription));
+            // Subscribe to transaction events
+            const txSubscription = {
+                jsonrpc: "2.0",
+                method: "subscribe",
+                params: ["tm.event='Tx'"],
+                id: 1
+            };
+            // console.log(222222222);
+            // console.log(JSON.stringify(txSubscription));
+            this.ws.send(JSON.stringify(txSubscription));
 
-        // Handle transaction events directly in the subscription
-        this.ws.on('message', async (data: WebSocket.Data) => {
-            try {
-                const parsedData = JSON.parse(data.toString());
-                
-                // Handle transaction events
-                if (parsedData.result?.data?.type === 'tendermint/event/Tx') {
-                    const txevent = parsedData.result.data.value;
+            // Handle transaction events directly in the subscription
+            this.ws.on('message', async (data: WebSocket.Data) => {
+                try {
+                    const parsedData = JSON.parse(data.toString());
                     
-                    if (!txevent.tx) {
-                        console.error('Transaction event missing tx field');
-                        return;
+                    // Handle transaction events
+                    if (parsedData.result?.data?.type === 'tendermint/event/Tx') {
+                        const txevent = parsedData.result.data.value;
+                        console.log('Transaction event structure in side initEventSystem():', JSON.stringify(txevent, null, 2));
+
+                        if (!txevent.tx) {
+                            console.error('Transaction event missing tx field');
+                            return;
+                        }
+                        
+                        const txHash = await this.calculateDashTransactionHash(txevent.tx);
+                        const transaction = await this.getTransaction(txHash, 2);
+                        console.log("transaction inside initEventSystem():", transaction);
+                        this.emit('mempool-tx', transaction);
+                        console.log("Mempool TX", transaction);
                     }
-                    
-                    const txHash = await this.calculateDashTransactionHash(txevent.tx);
-                    const transaction = await this.getTransaction(txHash, 2);
-                    
-                    this.emit('mempool-tx', transaction);
-                    console.log("Mempool TX", transaction);
+                } catch (error) {
+                    console.error('Error handling transaction event:', error);
                 }
-            } catch (error) {
-                console.error('Error handling transaction event:', error);
-            }
-        });
+            });
 
-        // Subscribe to new block events
-        const blockSubscription = {
-            jsonrpc: "2.0",
-            method: "subscribe",
-            params: ["tm.event='NewBlock'"],
-            id: 2
-        };
-        this.ws.send(JSON.stringify(blockSubscription));
-        
-        // Handle block events directly in the subscription
-        this.ws.on('message', async (data: WebSocket.Data) => {
-            try {
-                const parsedData = JSON.parse(data.toString());
-                
-                // Handle block events
-                if (parsedData.result?.data?.type === 'tendermint/event/NewBlock') {
-                    const block = parsedData.result.data.value;
-                    const blockHash = block.block_id.hash;
+            // Subscribe to new block events
+            const blockSubscription = {
+                jsonrpc: "2.0",
+                method: "subscribe",
+                params: ["tm.event='NewBlock'"],
+                id: 2
+            };
+            this.ws.send(JSON.stringify(blockSubscription));
+            
+            // Handle block events directly in the subscription
+            this.ws.on('message', async (data: WebSocket.Data) => {
+                try {
+                    const parsedData = JSON.parse(data.toString());
                     
-                    this.emit('confirmed-block', blockHash);
-                    console.log("Block confirmed:", blockHash);
+                    // Handle block events
+                    if (parsedData.result?.data?.type === 'tendermint/event/NewBlock') {
+                        const block = parsedData.result.data.value;
+                        const blockHash = block.block_id.hash;
+                        
+                        this.emit('confirmed-block', blockHash);
+                        console.log("Block confirmed:", blockHash);
+                    }
+                } catch (error) {
+                    console.error('Error handling block event:', error);
                 }
-            } catch (error) {
-                console.error('Error handling block event:', error);
-            }
-        });
-    }
+            });
+        }
     
     /**
      * Initialize Tendermint client
@@ -442,121 +398,204 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         }
     }
 
-    /**
-     * Get transaction receipt by hash
-     * @param hash Transaction hash in hex format
-     * @returns Transaction receipt object or null if not found
-    */
-    public async getTransactionReceipt(hash: string): Promise<any> {
-        try {
-            // Validate hash
-            if (!hash || typeof hash !== 'string') {
-                console.warn('Invalid transaction hash provided:', hash);
-                return null;
-            }
-            
-            // Ensure Tendermint client is initialized
-            if (!this.tmClient) {
-                await this.initTendermint();
+  /**
+ * Get transaction details using WebSocket first, with fallback to Tendermint client
+ */
+public async getTransaction(id: string, verbosity: number = 1, blockId?: string | number): Promise<any> {
+    try {
+        // Try WebSocket first if connected
+        if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+            try {
+                // Convert hex hash to base64 format needed for the RPC call
+                const txHash = Buffer.from(id, 'hex');
+                const txBase64 = txHash.toString('base64');
                 
-                // Verify initialization worked
-                if (!this.tmClient) {
-                    throw new Error('Failed to initialize Tendermint client');
+                // Use tx endpoint which accepts a base64-encoded transaction hash
+                const wsResponse = await this.sendWebSocketRequest('tx', {
+                    hash: txBase64,
+                    prove: verbosity > 1 // Request proof data for higher verbosity
+                }, 5000);
+                
+                if (!wsResponse) {
+                    throw new Error('Empty transaction response from WebSocket');
                 }
-            }
-            
-            // Create TxParams with proper binary hash
-            const txParams: TxParams = {
-                hash: new Uint8Array(Buffer.from(hash, 'hex'))
-            };
-            
-            // Get transaction data
-            const txResponse = await this.tmClient.tx(txParams);
-            
-            // Verify response exists
-            if (!txResponse) {
-                return null;
-            }
-            
-            // Map to the requested receipt structure
-            return {
-                hash: hash, // Using the original hash as requested
-                owner: '', // Would need chain-specific logic
-                insertedAt: Date.now(),
-                timestamp: Math.floor(Date.now() / 1000),
-                fee: 0,
-                value: 0,
-                gasUsed: txResponse.result && txResponse.result.gasUsed ? 
-                    Number(txResponse.result.gasUsed) : 0
-            };
-        } catch (error) {
-            // Log error but don't throw to allow batch processing to continue
-            if (error.message && error.message.includes('not found')) {
-                console.warn(`Transaction ${hash} not found`);
-            } else {
-                console.error(`Error fetching transaction receipt ${hash}:`, error);
-            }
-            return null;
-        }
-    }
-
-    /**
-     * Get transaction details
-     */
-
-    public async getTransaction(id: string, verbosity: number = 1, blockId?: string | number): Promise<any> {
-        try {
-            // Ensure Tendermint client is initialized
-            if (!this.tmClient) {
-                await this.initTendermint();
-            }
-            
-            // Correct TxParams structure
-            const txParams: TxParams = {
-                hash: new Uint8Array(Buffer.from(id, 'hex'))
-            };
-            
-            // Get transaction data
-            const txResponse = await this.tmClient!.tx(txParams);
-            
-            const txInfo = {
-                hash: id,
-                owner: '', // Would need chain-specific logic
-                insertedAt: Date.now(),
-                timestamp: Math.floor(Date.now() / 1000),
-                fee: 0,
-                value: 0,
-                gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
-            };
-            
-            if (verbosity > 1) {
-                // Fixed property access for gasUsed
-                return {
-                     // Basic info
-                    ...txInfo,
-                    height: txResponse.height,
-                    index: txResponse.index,
-                    success: txResponse?.result.code === 0,
-                    // Additional details
-                    logs: txResponse?.result.log || '',
-                    // tx: Buffer.from(txResponse.tx).toString('base64'),
-                    // owner: '', // Would need chain-specific logic
-                    // insertedAt: Date.now(),
-                    // timestamp: Date.now(),
-                    // fee: 0,
-                    // value: 0,
-                    // gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
-                    // logs: txResponse.result.log || '',
-                    // result: txResponse.result
+                
+                // Create the transaction info object
+                const txInfo = {
+                    hash: id,
+                    owner: '', // Would need chain-specific logic
+                    insertedAt: Date.now(),
+                    timestamp: Math.floor(Date.now() / 1000),
+                    fee: 0,
+                    value: 0,
+                    gasUsed: wsResponse.tx_result?.gas_used ? Number(wsResponse.tx_result.gas_used) : 0,
                 };
+                
+                // Add additional details for higher verbosity
+                if (verbosity > 1) {
+                    return {
+                        ...txInfo,
+                        height: wsResponse.height ? parseInt(wsResponse.height) : 0,
+                        index: wsResponse.index,
+                        success: wsResponse.tx_result?.code === 0,
+                        logs: wsResponse.tx_result?.log || '',
+                        txData: wsResponse.tx ? Buffer.from(wsResponse.tx, 'base64').toString('hex') : null,
+                        tx_result: wsResponse.tx_result || {},
+                        proof: wsResponse.proof || null
+                    };
+                }
+                
+                return txInfo;
+            } catch (wsError) {
+                console.warn(`WebSocket transaction request failed: ${wsError.message}, falling back to Tendermint client`);
+                // Continue to the fallback implementation
             }
-            
-            return txInfo;
-        } catch (error) {
-            console.error(`Error fetching transaction ${id}:`, error);
+        }
+        
+        // Fallback to the original implementation
+        // Ensure Tendermint client is initialized
+        if (!this.tmClient) {
+            await this.initTendermint();
+        }
+        
+        // Correct TxParams structure
+        const txParams: TxParams = {
+            hash: new Uint8Array(Buffer.from(id, 'hex'))
+        };
+        
+        // Get transaction data
+        const txResponse = await this.tmClient!.tx(txParams);
+        
+        const txInfo = {
+            hash: id,
+            owner: '', // Would need chain-specific logic
+            insertedAt: Date.now(),
+            timestamp: Math.floor(Date.now() / 1000),
+            fee: 0,
+            value: 0,
+            gasUsed: txResponse.result.gasUsed ? Number(txResponse.result.gasUsed) : 0,
+        };
+        
+        if (verbosity > 1) {
+            // Fixed property access for gasUsed
+            return {
+                // Basic info
+                ...txInfo,
+                height: txResponse.height,
+                index: txResponse.index,
+                success: txResponse?.result.code === 0,
+                // Additional details
+                logs: txResponse?.result.log || '',
+            };
+        }
+        
+        return txInfo;
+    } catch (error) {
+        console.error(`Error fetching transaction ${id}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Get transaction receipt by hash using WebSocket first, with fallback to Tendermint client
+ * @param hash Transaction hash in hex format
+ * @returns Transaction receipt object or null if not found
+ */
+public async getTransactionReceipt(hash: string): Promise<any> {
+    try {
+        // Validate hash
+        if (!hash || typeof hash !== 'string') {
+            console.warn('Invalid transaction hash provided:', hash);
             return null;
         }
+        
+        // Try WebSocket first if connected
+        if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+            try {
+                // Convert hex hash to base64 format needed for the RPC call
+                const txHash = Buffer.from(hash, 'hex');
+                const txBase64 = txHash.toString('base64');
+                
+                // Use tx endpoint which accepts a base64-encoded transaction hash
+                const wsResponse = await this.sendWebSocketRequest('tx', {
+                    hash: txBase64,
+                    prove: false // We don't need proof data for receipt
+                }, 5000);
+                
+                if (!wsResponse) {
+                    throw new Error('Empty transaction response from WebSocket');
+                }
+                
+                // Map to the requested receipt structure
+                return {
+                    hash: hash, // Using the original hash as requested
+                    owner: '', // Would need chain-specific logic
+                    insertedAt: Date.now(),
+                    timestamp: Math.floor(Date.now() / 1000),
+                    fee: 0,
+                    value: 0,
+                    gasUsed: wsResponse.tx_result && wsResponse.tx_result.gas_used ? 
+                        Number(wsResponse.tx_result.gas_used) : 0,
+                    success: wsResponse.tx_result && wsResponse.tx_result.code === 0,
+                    logs: wsResponse.tx_result && wsResponse.tx_result.log ? 
+                        wsResponse.tx_result.log : '',
+                    height: wsResponse.height ? parseInt(wsResponse.height) : 0
+                };
+            } catch (wsError) {
+                console.warn(`WebSocket transaction receipt request failed: ${wsError.message}, falling back to Tendermint client`);
+                // Continue to the fallback implementation
+            }
+        }
+        
+        // Fallback to the original implementation
+        // Ensure Tendermint client is initialized
+        if (!this.tmClient) {
+            await this.initTendermint();
+            
+            // Verify initialization worked
+            if (!this.tmClient) {
+                throw new Error('Failed to initialize Tendermint client');
+            }
+        }
+        
+        // Create TxParams with proper binary hash
+        const txParams: TxParams = {
+            hash: new Uint8Array(Buffer.from(hash, 'hex'))
+        };
+        
+        // Get transaction data
+        const txResponse = await this.tmClient.tx(txParams);
+        
+        // Verify response exists
+        if (!txResponse) {
+            return null;
+        }
+        
+        // Map to the requested receipt structure
+        return {
+            hash: hash, // Using the original hash as requested
+            owner: '', // Would need chain-specific logic
+            insertedAt: Date.now(),
+            timestamp: Math.floor(Date.now() / 1000),
+            fee: 0,
+            value: 0,
+            gasUsed: txResponse.result && txResponse.result.gasUsed ? 
+                Number(txResponse.result.gasUsed) : 0,
+            success: txResponse.result && txResponse.result.code === 0,
+            logs: txResponse.result && txResponse.result.log ?
+                txResponse.result.log : '',
+            height: txResponse.height
+        };
+    } catch (error) {
+        // Log error but don't throw to allow batch processing to continue
+        if (error.message && error.message.includes('not found')) {
+            console.warn(`Transaction ${hash} not found`);
+        } else {
+            console.error(`Error fetching transaction receipt ${hash}:`, error);
+        }
+        return null;
     }
+}
 
     /**
      * Get block details
@@ -841,7 +880,6 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                 console.warn(`Failed to decode potential base64 hash: ${blockHash}`);
             }
         }
-        console.log(`header.time`, header);
         const basicBlock = {
             hash: blockHash,
             timestamp: header.time 
