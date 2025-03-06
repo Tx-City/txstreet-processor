@@ -35,8 +35,8 @@ export const enabledHooks: any = {
     ],
     DASH: [
         // "DefaultHousing",
-        "CoinJoin",
-        "PrivateSend",
+        // "CoinJoin",
+        // "PrivateSend",
     ],
     LUKSO: [
         // "DefaultHousing",
