@@ -109,6 +109,7 @@ const init = async () => {
         });
 
         dashWrapper.on('confirmed-block', (blockHash: string) => {
+            console.log(`Got block from event inside DASH: ${blockHash}`);
             processBlock(dashWrapper, blockHash);
         });
 

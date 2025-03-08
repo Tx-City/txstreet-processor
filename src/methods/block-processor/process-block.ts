@@ -12,6 +12,7 @@ import processUncle from './process-uncle';
 
 const action = async (wrapper: BlockchainWrapper, blockId: string | number = null, depth: number = 0, searchRequest: boolean = true): Promise<void> => {
     let request: any = null;
+    // console.log(`Processing block ${blockId}...`);
     try { 
         // Sanity check for block-processing depth.
         if(depth > wrapper.blockDepthLimit) 

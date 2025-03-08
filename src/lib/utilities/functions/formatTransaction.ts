@@ -87,6 +87,7 @@ export default (chain: string, data: any) => {
         if (data.blockHash) obj.bh = data.blockHash;
         if (data.vin) obj.inputs = data.vin;
         if (data.vout) obj.outputs = data.vout;
+
     } else if (chain === "XMR") {
         obj.tx = data.hash || data.tx;
         obj.s = Number(data.size);
@@ -100,6 +101,6 @@ export default (chain: string, data: any) => {
         if (data.blockHash) obj.bh = data.blockHash;
         if (data.paymentId) obj.pid = data.paymentId;
     }
-
+    
     return obj;
 }

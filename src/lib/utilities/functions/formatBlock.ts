@@ -49,5 +49,6 @@ export default (chain: string, block: any): Promise<any> => {
     }
 
     if(block.lastInserted) obj.inserted = Math.round(block.lastInserted / 1000);
+    console.log('BTC BLOCK obj>>>>>>:', obj)
     return obj;
 }

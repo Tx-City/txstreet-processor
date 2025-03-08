@@ -35,7 +35,7 @@ export default class EVOLUTIONPendingList {
         this._onDroppedTransactions = this._onDroppedTransactions.bind(this);
         this._onPendingTransactions = this._onPendingTransactions.bind(this);
 
-        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'LUKSO-pendingTransactions.bin');
+        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'EVOLUTION-pendingTransactions.bin');
         // Whenever a new transaction is broadcast.
         redis.subscribe('pendingTx');
 
