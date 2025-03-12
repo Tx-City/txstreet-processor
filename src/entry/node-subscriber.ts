@@ -22,7 +22,7 @@ if (process.env.USE_DATABASE === "true")
 var chainsToSubscribe: string[] = [];
 
 // Check for command line arguments matching that of blockchain implementations 
-const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'EVOLUTION','MANTA', 'CELO', 'DASH', 'FLR'];
+const blockchainImpls = ['BTC', 'LTC', 'XMR', 'BCH', 'ETH', 'RINKEBY', 'ARBI', 'LUMIA', 'LUKSO', 'EVOLUTION', 'MANTA', 'CELO', 'DASH', 'FLR'];
 Object.keys(process.env).forEach(key => {
     if (blockchainImpls.includes(key.toUpperCase())) {
         chainsToSubscribe.push(key.toUpperCase());
@@ -39,7 +39,9 @@ const getLatestBlockLoop = async (wrapper: any) => {
     if (process.env.USE_DATABASE !== "true") return;
     const { database } = await mongodb();
     try {
+        
         const height = await wrapper.getCurrentHeight();
+        
         if (!isNaN(height) && height > 100) {
             //height is a valid number
             const heightExistsInDb = await database.collection('blocks').find({ chain: wrapper.ticker, height }).project({ height: 1 }).limit(1).toArray();
@@ -222,6 +224,7 @@ const init = async () => {
         evolutionWrapper.on('confirmed-block', (blockHash: string) => {
             console.log(`Got block from event: ${blockHash}`);
             processBlock(evolutionWrapper, blockHash);
+            console.log("processBlock =======",processBlock(evolutionWrapper, blockHash));
         });
         getLatestBlockLoop(evolutionWrapper);
         evolutionWrapper.initEventSystem();

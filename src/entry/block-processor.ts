@@ -52,6 +52,7 @@ const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1);
     } catch (error) {
         console.error(error);
+        console.log('Error in EVOLUTION block processor, restarting in 1 second');
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1);
     }
 }

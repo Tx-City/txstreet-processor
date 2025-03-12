@@ -10,7 +10,7 @@ const zoomers: any = zoomersJson;
 
 export default (chain: string, data: any) => {
     var obj: any = {};
-    if (chain === "ETH" || chain === "LUKSO" || chain === "EVOLUTION" || chain === "FLR" || chain == "RINKEBY" || chain === "ARBI" || chain === "LUMIA" ||  chain === "MANTA" || chain === "CELO") {
+    if (chain === "ETH" || chain === "LUKSO" || chain === "FLR" || chain == "RINKEBY" || chain === "ARBI" || chain === "LUMIA" ||  chain === "MANTA" || chain === "CELO") {
         obj.tx = (typeof data.hash === "undefined" ? data.tx : data.hash);
         if (data.to) obj.to = data.to;
         if (data.from) obj.fr = data.from;
@@ -100,6 +100,14 @@ export default (chain: string, data: any) => {
 
         if (data.blockHash) obj.bh = data.blockHash;
         if (data.paymentId) obj.pid = data.paymentId;
+    } else if (chain === "EVOLUTION"){
+        obj.tx = (typeof data.hash === "undefined" ? data.tx : data.hash);
+        obj.f = Number(data.fee || 0);
+        obj.t = data.timestamp || data.t;
+        obj.ia = data.insertedAt || data.ia;
+        obj.fr = data.from || data.fr || '';
+        obj.v = data.value || (data.tot ? Number(data.tot * Math.pow(10, 18)) : 0);
+        obj.g = data.gasUsed || data.g || 0;
     }
     
     return obj;

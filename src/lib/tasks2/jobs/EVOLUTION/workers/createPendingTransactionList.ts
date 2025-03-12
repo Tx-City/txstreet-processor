@@ -5,8 +5,8 @@ import { formatTransaction, storeObject } from '../../../../../lib/utilities';
 import { setInterval } from '../../../utils/OverlapProtectedInterval';
 import fs from 'fs';
 import path from 'path';
-import { ETHTransactionsSchema } from '../../../../../data/schemas';
-import { ProjectedEthereumTransaction } from '../../../types';
+import { EVOLUTIONTransactionsSchema } from '../../../../../data/schemas';
+import { ProjectedEvolutionTransaction } from '../../../types';
 import axios from 'axios';
 import updateAccountNonces from '../../../../../methods/tx-processor/update-account-nonces';
 import * as Wrappers from '../../../../../lib/node-wrappers';
@@ -36,7 +36,7 @@ setInterval(async () => {
         const { database } = await mongodb();
 
         let data = await readFile(dataPath);
-        let parsed = ETHTransactionsSchema.fromBuffer(data);
+        let parsed = EVOLUTIONTransactionsSchema.fromBuffer(data);
 
         for (let i = 0; i < parsed.collection.length; i++) {
             const entry = parsed.collection[i];
@@ -44,17 +44,17 @@ setInterval(async () => {
             if(entry.pExtras && typeof entry.pExtras === "string") entry.pExtras = JSON.parse(entry.pExtras);
         }
 
-        let transactions = parsed.collection.sort((a: ProjectedEthereumTransaction, b: ProjectedEthereumTransaction) => (b.maxFeePerGas || b.gasPrice) - (a.maxFeePerGas || a.gasPrice));
+        let transactions = parsed.collection.sort((a: ProjectedEvolutionTransaction, b: ProjectedEvolutionTransaction) => (b.fee || b.gasUsed) - (a.fee || a.gasUsed));
         let transactionMap: any = {};
         let hashes = transactions.map((t: any) => t.hash);
-        let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedEthereumTransaction) => transaction.from))] as string[]
+        let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedEvolutionTransaction) => transaction.owner))] as string[]
 
         // console.log("TRANSACTIONS: " + transactions.length);
 
         // Test Cache 
         let cachedHashes = Object.keys(cache);
         let requestHashes: string[] = [];
-        transactions.forEach((transaction: ProjectedEthereumTransaction) => {
+        transactions.forEach((transaction: ProjectedEvolutionTransaction) => {
             transactionMap[transaction.hash] = true;
             if (!cache[transaction.hash])
                 requestHashes.push(transaction.hash);
@@ -80,7 +80,7 @@ setInterval(async () => {
         transactions = transactions.map((transaction: any) => ({ ...transaction, ...cache[transaction.hash] }));
         // End TMP
 
-        transactions = await updateAccountNonces(evolutionWrapper, transactions);
+        // transactions = await updateAccountNonces(evolutionWrapper, transactions);
 
         // The amount of transactions added by an account. 
         const addedByAddress: any = {};

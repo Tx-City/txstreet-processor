@@ -5,9 +5,18 @@ import fetch from 'node-fetch';
 class CashTokens extends ChainImplementation {
     public addresses: string[] = [];
     public _what: any = {};
-    private rpcUrl: string = 'http://65.109.115.131:8332';
+    private rpcUrl: string;
     private rpcUser: string = 'user';
     private rpcPass: string = 'pass';
+
+
+
+    constructor(chain: string) {
+        super(chain);
+        const nodeIp = process.env.BCH_NODE;
+        const nodePort = process.env.BCH_NODE_PORT;
+        this.rpcUrl = `http://${nodeIp}:${nodePort}`;
+    }
 
     async init(): Promise<ChainImplementation> {
         try {

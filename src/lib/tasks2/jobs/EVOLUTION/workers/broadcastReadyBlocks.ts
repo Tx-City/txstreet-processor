@@ -12,11 +12,10 @@ setInterval(async () => {
     try {
         const { database } = await mongodb();
         const collection = database.collection('blocks');
-        const blocks = await collection.find({ chain: 'EVOLUTION', processed: true, txsChecked: true, broadcast: false, hash: { $ne: null } }).sort({ height: 1 }).limit(1).toArray();
+        const blocks = await collection.find({ chain: 'EVOLUTION', processed: true, broadcast: false, hash: { $ne: null } }).sort({ height: 1 }).limit(1).toArray();
         if (blocks.length < 1) return;
         const block = blocks[0];
         if (!block) return;
-        console.log(`Found unprocessed block ${block.hash}`);
         await checkBlock(database, block);
     } catch (error) {
         console.error(error);
@@ -25,6 +24,7 @@ setInterval(async () => {
 
 
 const storeBlock = async (database: any, block: any) => {
+ 
     try {
         const remainingTxs = await database.collection('transactions_EVOLUTION').find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).count();
         if (remainingTxs > 0) {
@@ -39,40 +39,47 @@ const storeBlock = async (database: any, block: any) => {
             return false;
         }
 
-
-        if (!block.transactions)
+        // Ensure block.transactions is an array
+        if (!block.transactions || !Array.isArray(block.transactions)) {
             block.transactions = [];
+        }
 
         block.txFull = {};
-        const transactions = await database.collection('transactions_EVOLUTION').find({ hash: { $in: block.transactions }, confirmed: true }).toArray();
-        if(block.transactions && block.transactions.length > 0 && transactions.length === 0){
-            for (let i = 0; i < block.transactions.length; i++) {
-                const hash = block.transactions[i];
-                await database.collection('transactions_EVOLUTION').updateOne({ hash }, { $set: { blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } }, { upsert: true });
+        
+        // Only proceed with the query if block.transactions has items
+        let transactions = [];
+        if (block.transactions.length > 0) {
+            transactions = await database.collection('transactions_EVOLUTION').find({ 
+                hash: { $in: block.transactions }, 
+                confirmed: true 
+            }).toArray();
+            
+            if (transactions.length === 0) {
+                // If no transactions found, create them
+                for (let i = 0; i < block.transactions.length; i++) {
+                    const hash = block.transactions[i];
+                    await database.collection('transactions_EVOLUTION').updateOne(
+                        { hash }, 
+                        { 
+                            $set: { 
+                                blockHash: block.hash, 
+                                blockHeight: block.height, 
+                                blockNumber: block.number, 
+                                confirmed: true, 
+                                processed: false, 
+                                locked: false, 
+                                processFailures: 0, 
+                                lastInsert: new Date(), 
+                                insertedAt: new Date() 
+                            }, 
+                            $unset: { dropped: "" } 
+                        }, 
+                        { upsert: true }
+                    );
+                }
+                return false;
             }
-            return false;
         }
-        // const transactions = await database.collection('transactions_ETH').find({ hash: { $in: block.transactions }, confirmed: true, dropped: { $exists: false } }).toArray();
-        // if (block.transactions && block.transactions.length > 0 && transactions.length !== block.transactions.length) {
-        //     const hashes = transactions.map((tx: any) => tx.hash);
-        //     const missing = block.transactions.filter((hash: string) => hashes.indexOf(hash) == -1);
-        //     // console.log(missing);
-        //     for (let i = 0; i < missing.length; i++) {
-        //         // if(i > 25) continue;
-        //         const hash = missing[i];
-        //         // await new Promise(resolve => setTimeout(resolve, 10));
-        //         try {
-        //             const existing = await database.collection('transactions_ETH').findOne({ hash });
-        //             if (existing === null) {
-        //                 database.collection('transactions_ETH').insertOne({ hash, chain: "ETH", processed: false, blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, lastInsert: new Date(), insertedAt: new Date(), processFailures: 0, locked: false });
-        //             } else {
-        //                 if (!existing.lastInsert || (Date.now() - Date.parse(existing.lastInsert)) / 1000 > 10)
-        //                     await database.collection('transactions_ETH').updateOne({ hash }, { $set: { blockHash: block.hash, blockHeight:block.height, blockNumber: block.number, confirmed: true, processed: false, locked: false, processFailures: 0, lastInsert: new Date(), insertedAt: new Date() }, $unset: { dropped: "" } })
-        //             }
-        //         } catch (e) { console.log(e); }
-        //     }
-        //     return false;
-        // }
 
         transactions.forEach((transaction: any) => {
             const formatted = formatTransaction('EVOLUTION', transaction);
@@ -87,9 +94,12 @@ const storeBlock = async (database: any, block: any) => {
 
         const firstPart = block.hash[block.hash.length - 1];
         const secondPart = block.hash[block.hash.length - 2];
-        // try { await fs.promises.mkdir(path.join(dataDir, 'blocks', 'ETH', firstPart, secondPart), { recursive: true }); } catch (err) { }
+        console.log("Storing block", block.hash);
+        console.log("firstPart-----------------", firstPart);
+        console.log("secondPart----------------", secondPart);
+        
         await storeObject(path.join('blocks', 'EVOLUTION', firstPart, secondPart, block.hash), fileContents);
-        // await calculateBlockStats(block, transactions);
+        
         await database.collection('blocks').updateOne({ chain: 'EVOLUTION', hash: block.hash }, { $set: { stored: true, broadcast: false } });
         block.stored = true;
         block.broadcast = false;
@@ -101,12 +111,14 @@ const storeBlock = async (database: any, block: any) => {
 }
 
 const checkBlock = async (database: any, block: any, depth: number = 0) => {
+    console.log("inside check block function");
     if (depth > 1) return true;
 
     try {
         // If the block is not stored, make sure all transactions are processed and then store it. 
         if (!block.stored) {
             console.log("Block not stored - " + block.hash);
+            console.log("Checking block as getting mongo error - " + block);
             if (!(await storeBlock(database, block)))
                 return false;
         }
@@ -128,28 +140,9 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
 
         // If the previous block passed all checks (or doesn't exist, sanity, depth limit). 
         if (block.stored && parent && parent.stored || block.stored && !parent) {
-            let uncles = await database.collection('blocks').find({ chain: 'EVOLUTION', hash: { $in: block.uncles || [] } });
-            let unclesStored = true;
-            for (let i = 0; i < uncles.length; i++) {
-                let uncle = uncles[i];
-                if (!uncle.processed) {
-                    unclesStored = false;
-                    break;
-                }
-
-                if (!uncle.stored) {
-                    if (!(await storeBlock(database, uncle))) {
-                        unclesStored = false;
-                        break;
-                    }
-                }
-            }
-
-            // If uncles aren't stored, the block isn't ready, stop.
-            if (!unclesStored)
-                return false;
-
-            if (!block.height) block.height = block.number;
+            
+            console.log(`Block ${block.hash} is ready to broadcast.`);
+            
             redis.publish('block', JSON.stringify({ chain: 'EVOLUTION', height: block.height, hash: block.hash }));
             await database.collection('blocks').updateOne({ chain: 'EVOLUTION', hash: block.hash }, { $set: { broadcast: true, note: 'broadcast-ready-block' } });
             return true;
