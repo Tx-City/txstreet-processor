@@ -267,7 +267,7 @@ export default class BTCWrapper extends BlockchainWrapper {
 
             const block: any = await rpcGetBlock(id as string, verbosity);
 
-            console.log("block: ", block);
+            // console.log("block: ", block);
 
             block.transactions = block.tx.map((transaction: any) => {
                 transaction.timestamp = transaction.time * 1000;
@@ -367,7 +367,7 @@ export default class BTCWrapper extends BlockchainWrapper {
 
         const getFees = async (id: string) => new Promise((resolve) => {
             this.rpc.getMemPoolEntry(id, (error: string, resp: any) => {
-                console.log('resp------->', resp);
+                // console.log('resp------->', resp);
                 if (error) return resolve({ fee: false, fees: false });
                 if (!resp) return resolve({ fee: false, fees: false });
                 return resolve({ fee: resp.result.fees.base * 100000000, fees: resp.result.fees });

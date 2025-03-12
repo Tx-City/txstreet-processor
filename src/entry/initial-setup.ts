@@ -22,7 +22,7 @@ const createIndexes = async (): Promise<boolean> => {
         const existingCollections: any = await database.listCollections().toArray();
         const existingCollectionNames = existingCollections.map((c: any) => c.name);
 
-        const collectionNames: string[] = ['transactions_BTC', 'transactions_ETH', 'transactions_LUKSO', 'transaction_EVOLUTION','transactions_FLR', 'transactions_CELO', 'transactions_LTC', 'transactions_BCH', 'transactions_XMR', 'blocks', 'contracts_ETH', 'moonhead_owners', 'statistics', 'statistics_history', 'statistics_history_snapshots'];
+        const collectionNames: string[] = ['transactions_BTC', 'transactions_ETH', 'transactions_LUKSO', 'transactions_DASH', 'transactions_EVOLUTION','transactions_FLR', 'transactions_CELO', 'transactions_LTC', 'transactions_BCH', 'transactions_XMR', 'blocks', 'contracts_ETH', 'moonhead_owners', 'statistics', 'statistics_history', 'statistics_history_snapshots'];
         for (let i = 0; i < collectionNames.length; i++) {
             const name = collectionNames[i];
             if (existingCollectionNames.includes(name)) continue;
