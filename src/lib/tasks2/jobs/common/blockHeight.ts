@@ -1,5 +1,5 @@
-import { ProjectedEthereumBlock, ProjectedXMRBlock } from '../../types';
+import { ProjectedEthereumBlock, ProjectedXMRBlock, ProjectedEvolutionBlock } from '../../types';
 
-export default (latestBlock: ProjectedEthereumBlock | ProjectedXMRBlock) => {
+export default (latestBlock: ProjectedEthereumBlock | ProjectedXMRBlock | ProjectedEvolutionBlock) => {
     return latestBlock.height;
 }

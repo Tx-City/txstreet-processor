@@ -52,6 +52,7 @@ const nonBlockingInfiniteLoop = async (wrapper: Wrappers.BlockchainWrapper) => {
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1);
     } catch (error) {
         console.error(error);
+        console.log('Error in EVOLUTION block processor, restarting in 1 second');
         setTimeout(() => running && nonBlockingInfiniteLoop(wrapper) || null, 1);
     }
 }
@@ -68,7 +69,7 @@ const run = async () => {
     if (nodesToInit.includes('DASH')) {
         const dashWrapper = new Wrappers.DASHWrapper(
             { username: 'user', password: 'pass', host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE) || 9998 },
-            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 20009 });
+            { host: process.env.DASH_NODE as string, port: Number(process.env.DASH_NODE_ZMQPORT) || 29998 });
 
         nonBlockingInfiniteLoop(dashWrapper);
     }

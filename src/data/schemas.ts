@@ -170,3 +170,58 @@ export const BTCBlocksSchema = avro.Type.forSchema({
         }
     ]
 })
+
+export const EVOLUTIONTransactionsSchema = avro.Type.forSchema({
+    name: "EVOLUTIONTransactionsCollection",
+    type: "record",
+    fields: [
+        { name: "timestamp", type: "long", default: 0 },
+        {
+            name: "collection",
+            type: {
+                type: "array",
+                items: {
+                    name: "EVOLUTIONTransaction",
+                    type: "record",
+                    fields: [
+                        { name: "hash", type: "string", default: "" },
+                        { name: "owner", type: "string", default: "" },
+                        { name: "insertedAt", type: "long", default: 0 },
+                        { name: "timestamp", type: "long", default: 0 },
+                        { name: "fee", type: "double", default: 0.0 },
+                        { name: "value", type: "double", default: 0.0 },
+                        { name: "gasUsed", type: "long", default: 0 }
+                    ]
+                }
+            }
+        }
+    ]
+});
+
+export const EVOLUTIONBlocksSchema = avro.Type.forSchema({
+    name: "EVOLUTIONBlocksCollection",
+    type: "record",
+    fields: [
+        { name: "timestamp", type: "long", default: 0 },
+        {
+            name: "collection",
+            type: {
+                type: "array",
+                items: {
+                    name: "EVOLUTIONBlock",
+                    type: "record",
+                    fields: [
+                        { name: "hash", type: "string", default: "" },
+                        { name: "timestamp", type: "long", default: 0 },
+                        { name: "height", type: "long", default: 0 },
+                        { name: "transactions", type: "long", default: 0 },
+                        { name: "blockversion", type: "long", default: 0 },
+                        { name: "appversion", type: "long", default: 0 },
+                        { name: "l1lockedheight", type: "long", default: 0 },
+                        { name: "validator", type: "string", default: "" }
+                    ]
+                }
+            }
+        }
+    ]
+});

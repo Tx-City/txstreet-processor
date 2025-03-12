@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { setInterval } from "../../../utils/OverlapProtectedInterval";
-import { ETHBlocksSchema, ETHTransactionsSchema } from '../../../../../data/schemas';
-import { ProjectedEthereumBlock, ProjectedEthereumTransaction } from "../../../types";
+import { EVOLUTIONBlocksSchema, EVOLUTIONTransactionsSchema } from '../../../../../data/schemas';
+import { ProjectedEvolutionBlock, ProjectedEvolutionTransaction } from "../../../types";
 import mongodb from '../../../../../databases/mongodb';
 import redis from '../../../../../databases/redisEvents';
 import gasUsedDif from '../gasUsedDif';
@@ -24,25 +24,25 @@ import medianGasUsed from '../medianGasUsed';
 
 // The last value(s) calculated during the execution of this task. 
 let lastExecutionResults = {
-    'tps': 0,
-    'ctps': 0,
-    'difficulty': '0',
+    //'tps': 0,
+    //'ctps': 0,
+    //'difficulty': '0',
     'blockHeight': 0,
-    'baseFee': 0,
+    // 'baseFee': 0,
     // 'tipPrice': 0,
-    'gasTarget': 0,
-    'gasLimit': 0,
-    'medianGasUsed': 0,
-    'medianBlockSize': 0,
-    'medianBlockTime': 0,
-    'medianTxsPerBlock': 0,
-    'medianFee-gasPrice': 0,
-    'medianFee-usd': 0,
-    'medianFee-usdTransfer': 0,
-    'gasUsedDif': 0,
+    // 'gasTarget': 0,
+    // 'gasLimit': 0,
+    // 'medianGasUsed': 0,
+    // 'medianBlockSize': 0,
+    // 'medianBlockTime': 0,
+    // 'medianTxsPerBlock': 0,
+    // 'medianFee-gasPrice': 0,
+    // 'medianFee-usd': 0,
+    // 'medianFee-usdTransfer': 0,
+    // 'gasUsedDif': 0,
 }; 
 
-let lastKnownBlock: ProjectedEthereumBlock = null;
+let lastKnownBlock: ProjectedEvolutionBlock = null;
 
 
 redis.subscribe('block');
@@ -62,11 +62,11 @@ const interval = setInterval(async () => {
         const initTasks: Promise<void>[] = [];
 
         let pricePerIncrement = 0; 
-        let transactions: ProjectedEthereumTransaction[] = [];
-        let blocks: ProjectedEthereumBlock[] = []; 
-        let last250Blocks: ProjectedEthereumBlock[] = []; 
+        let transactions: ProjectedEvolutionTransaction[] = [];
+        let blocks: ProjectedEvolutionBlock[] = []; 
+        let last250Blocks: ProjectedEvolutionBlock[] = []; 
 
-        // Create the task to obtain the current ethereum price. 
+        // Create the task to obtain the current evo price. 
         initTasks.push(new Promise((resolve, reject) => {
             database.collection('statistics').findOne({ chain: 'EVOLUTION' }, { fiatPrice: 1 })
                 .then((document: any) => {
@@ -76,7 +76,7 @@ const interval = setInterval(async () => {
                 .catch(reject); 
         }));
         
-        // Create the task to load the ethereum transactions collection from disk. 
+        // Create the task to load the evo transactions collection from disk. 
         initTasks.push(new Promise((resolve, reject) => {
             const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'transactions-EVOLUTION.bin'); 
             fs.readFile(dataPath, (err: NodeJS.ErrnoException, data: Buffer) => {
@@ -84,7 +84,7 @@ const interval = setInterval(async () => {
 
                 try {
                     // Use avsc to parse the schema.
-                    let parsed = ETHTransactionsSchema.fromBuffer(data); 
+                    let parsed = EVOLUTIONTransactionsSchema.fromBuffer(data); 
 
                     // Create the values that will be used to filter the 5-minute window (+1); 
                     const now = Date.now();
@@ -93,20 +93,20 @@ const interval = setInterval(async () => {
                     const lowerRange = now - ((oneSecond * 60) * 5) - oneSecond;
 
                     // Filter the collection to obtain the transactions within the specified range. 
-                    transactions = parsed.collection.filter((transaction: ProjectedEthereumTransaction) => transaction.insertedAt >= lowerRange && transaction.insertedAt <= upperRange);
-                    transactions = transactions.sort((a: ProjectedEthereumTransaction, b: ProjectedEthereumTransaction) => a.insertedAt - b.insertedAt);
+                    transactions = parsed.collection.filter((transaction: ProjectedEvolutionTransaction) => transaction.insertedAt >= lowerRange && transaction.insertedAt <= upperRange);
+                    transactions = transactions.sort((a: ProjectedEvolutionTransaction, b: ProjectedEvolutionTransaction) => a.insertedAt - b.insertedAt);
                     return resolve();  
                 } catch (error) {
                     console.error(error);
                     console.log('Attempting to decode schema...'); 
-                    try { console.log(`Decoded information for error:`, ETHTransactionsSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }  
+                    try { console.log(`Decoded information for error:`, EVOLUTIONTransactionsSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }  
                     return reject(error); 
                 }
             }); 
         }));
 
         
-        // Create the task to load the ethereum blocks collection from disk.
+        // Create the task to load the evo blocks collection from disk.
         initTasks.push(new Promise((resolve, reject) => {
             const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'blocks-EVOLUTION.bin'); 
             fs.readFile(dataPath,  (err: NodeJS.ErrnoException, data: Buffer) => {
@@ -114,7 +114,7 @@ const interval = setInterval(async () => {
 
                 try {
                     // Use avsc to parse the schema.
-                    let parsed = ETHBlocksSchema.fromBuffer(data); 
+                    let parsed = EVOLUTIONBlocksSchema.fromBuffer(data); 
 
                     // Create the values that will be used to filter the 1-hour window (+1); 
                     const now = Math.floor(Date.now() / 1000);
@@ -123,15 +123,15 @@ const interval = setInterval(async () => {
                     const lowerRange = now - ((oneSecond * 60) * 60) - oneSecond;
 
                     // Filter the collection to obtain the transactions within the specified range. 
-                    last250Blocks = parsed.collection.sort((a: ProjectedEthereumBlock, b: ProjectedEthereumBlock) => a.height - b.height).slice(0,250); 
-                    blocks = parsed.collection.filter((block: ProjectedEthereumBlock) => block.timestamp >= lowerRange && block.timestamp <= upperRange);
-                    blocks = blocks.sort((a: ProjectedEthereumBlock, b: ProjectedEthereumBlock) => a.height - b.height); 
+                    last250Blocks = parsed.collection.sort((a: ProjectedEvolutionBlock, b: ProjectedEvolutionBlock) => a.height - b.height).slice(0,250); 
+                    blocks = parsed.collection.filter((block: ProjectedEvolutionBlock) => block.timestamp >= lowerRange && block.timestamp <= upperRange);
+                    blocks = blocks.sort((a: ProjectedEvolutionBlock, b: ProjectedEvolutionBlock) => a.height - b.height); 
                     lastKnownBlock = blocks[blocks.length - 1]; 
                     return resolve();  
                 } catch (error) {
                     console.error(error);
                     console.log('Attempting to decode schema...'); 
-                    try { console.log(`Decoded information for error:`, ETHBlocksSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }
+                    try { console.log(`Decoded information for error:`, EVOLUTIONBlocksSchema.decode(data)); } catch (error) { console.log('Schema could not be decoded.') }
                     return reject(error); 
                 }
             }); 
@@ -142,22 +142,22 @@ const interval = setInterval(async () => {
         // These tasks are all individually wrapped because their failures are not task-haulting. Even if one of these tasks fail to execute, 
         // the others can execute and if they depend on the failed task the lastExecutionResult will be available to use. 
         const startTime = Date.now(); 
-        try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
-        try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { console.error(error); };
-        try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
-        try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
-        try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['tps'] = await tps(transactions); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['ctps'] = await ctps(blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['medianBlockSize'] = await medianBlockSize(blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['medianBlockTime'] = await medianBlockTime(last250Blocks); } catch (error) { console.error(error); };
+        // try { lastExecutionResults['medianTxsPerBlock'] = await medianTxsPerBlock(blocks); } catch (error) { console.error(error); };
         try { lastExecutionResults['blockHeight'] = await blockHeight(lastKnownBlock); } catch (error) { console.error(error); };
-        try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
-        try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['difficulty'] = (await difficulty(lastKnownBlock)) as string; } catch (error) { console.error(error); };
+        // try { lastExecutionResults['gasUsedDif'] = await gasUsedDif(blocks); } catch (error) { console.error(error) }
         // try { lastExecutionResults['tipPrice'] = await tipPrice(lastKnownBlock); } catch (error) { console.error(error) }
-        try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { console.error(error) }
-        try { lastExecutionResults['gasTarget'] = await gasTarget(lastKnownBlock); } catch (error) { console.error(error) }
-        try { lastExecutionResults['gasLimit'] = await gasLimit(lastKnownBlock); } catch (error) { console.error(error) }
-        try { lastExecutionResults['medianGasUsed'] = await medianGasUsed(blocks); } catch (error) { console.error(error) }
-        try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { console.error(error) }
-        try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { console.error(error) }
-        try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
+        // try { lastExecutionResults['baseFee'] = await baseFee(lastKnownBlock); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['gasTarget'] = await gasTarget(lastKnownBlock); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['gasLimit'] = await gasLimit(lastKnownBlock); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['medianGasUsed'] = await medianGasUsed(blocks); } catch (error) { console.error(error) }
+        // try { lastExecutionResults['medianFee-gasPrice'] = await medianFeeGasPrice(transactions);  } catch (error) { console.error(error) }
+        // try { lastExecutionResults['medianFee-usd'] = await medianFeeUsd(transactions, pricePerIncrement, lastExecutionResults['gasUsedDif']);  } catch (error) { console.error(error) }
+        // try { lastExecutionResults['medianFee-usdTransfer'] = await medianFeeUsdTransfer(pricePerIncrement, lastExecutionResults['medianFee-gasPrice']) } catch (error) { console.error(error) }
     } catch (error) {  
         console.error(error); 
     } finally {

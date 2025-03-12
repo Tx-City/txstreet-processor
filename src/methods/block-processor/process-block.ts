@@ -12,6 +12,7 @@ import processUncle from './process-uncle';
 
 const action = async (wrapper: BlockchainWrapper, blockId: string | number = null, depth: number = 0, searchRequest: boolean = true): Promise<void> => {
     let request: any = null;
+    // console.log(`Processing block ${blockId}...`);
     try { 
         // Sanity check for block-processing depth.
         if(depth > wrapper.blockDepthLimit) 
@@ -71,7 +72,7 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
             // The exists field is appended to ensure that the execution flow is stopped in the event of an error
             // that has already been logged by the localized log in the blockchain implementation.
             if(!resolvedBlock) {
-                console.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
+                console.warn(`Could not get block for hash in process-blocks ${blockId} results: ${resolvedBlock}`)
                 await unlockRequest(wrapper.ticker, blockId as string); 
                 return await waitForTime(100);
             }

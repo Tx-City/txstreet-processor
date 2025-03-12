@@ -66,7 +66,7 @@ const start = async () => {
     const houseTasks: any[] = [];
     const allHouses = await database.collection('houses').find({}).toArray();
     const tickers = JSON.parse(process.env.TICKERS as string);
-
+    console.log("Tickers:", tickers);
     const blockTask = (ticker: string) => new Promise(async (resolve) => {
         const where = { chain: ticker };
         const project: any = { _id: 0, hash: 1 };
@@ -75,7 +75,9 @@ const start = async () => {
         const hashes = blocks.map((block: any) => {
             return block.hash
         });
+        console.log("Found last blocks for ticker:", ticker, hashes);
         lastBlocks[ticker] = hashes;
+        console.log("lastBlocks[ticker]::::::::", lastBlocks[ticker]);
         return resolve(true);
     });
 

@@ -1,18 +1,14 @@
 import { BlockchainWrapper } from '../../lib/node-wrappers';
 import { waitForTime, formatBlock } from '../../lib/utilities';
 
-// import findNextRequest from "./find-next-request"
-// import storeBlockDatabase from './store-block-database';
 import unlockRequest from './unlock-request';
-// import findBlockDatabase from './find-block-database';
-// import createTransactionRequests from './create-transaction-requests';
-// import createBlockFile from './create-block-file';
 import { formatTransaction } from '../../lib/utilities';
 import redis from '../../databases/redisEvents';
 import mongodb from "../../databases/mongodb";
 import callChainHooks from '../../lib/chain-implementations';
 
 const getRequests = async (chain: string): Promise<[] | null> => {
+    console.log("ttttttttttt process-block-txs.ts");
     // Get a reference to the database collection, setup collections & sessions for transactions. 
     const { connection, database } = await mongodb();
     const collection = database.collection('blocks');
@@ -44,6 +40,7 @@ const getRequests = async (chain: string): Promise<[] | null> => {
 }
 
 const action = async (wrapper: BlockchainWrapper): Promise<void> => {
+    console.log("tx tx tx tx process-block-txs.ts");
     let request: any = null;
     try {
         // The database key of the identifying property for this request.
@@ -52,51 +49,6 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
 
         // Obtain the block id (hash or height) to process if once was not provided
         const requests = await getRequests(wrapper.ticker);
-
-        // if(searchRequest) {
-        //     request = await findNextRequest(wrapper.ticker); 
-        //     if(blockId == null) {
-        //         if(request) {
-        //             blockId = request.hash || request.height; 
-        //             if(!request.hash && request.height != null) 
-        //                 databaseKey = 'height';
-        //         }
-        //     }
-        //     if(request)
-        //         console.log("Request found..."); 
-        // } else {
-        //     request = { hash: blockId }
-        // }
-
-
-
-        // If there's nothing to process, process a short delay then return a success response. 
-        // This is to prevent spamming the database for requests between blocks. 
-        // if(blockId == null) 
-        //     return await waitForTime(10); 
-
-        // // Sanity check some defaults.
-        // if(searchRequest) {
-        //     if(request.processMetadata === undefined)
-        //         request.processMetadata = true;
-        //     if(request.processTransactions === undefined)
-        //         request.processTransactions = true; 
-        // }
-
-        // Check if the block already exists in the datbase. 
-        // If it already exists, return a success response. 
-        // let block = await findBlockDatabase(wrapper.ticker, databaseKey, blockId); 
-        // if(block && !(request.processMetdata || request.processTransactions)) return; 
-        // if(!searchRequest && block) {
-        //     request.processMetadata = block.timestamp == null;
-        //     request.processTransactions = block.timestamp == null;
-        // }
-
-        // if(searchRequest)
-        //     console.log(`Found request: ${request.hash}`); 
-
-        // if(request.processMetadata || (!block && blockId)) {
-        // Utilize the blockchain specific implementation to resolve the block data.
 
         if (!Array.isArray(requests)) return;
         for (let i = 0; i < requests.length; i++) {
@@ -110,26 +62,13 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 // The exists field is appended to ensure that the execution flow is stopped in the event of an error
                 // that has already been logged by the localized log in the blockchain implementation.
                 if (!resolvedBlock) {
-                    console.warn(`Could not get block for hash ${blockId} results: ${resolvedBlock}`)
+                    console.warn(`Could not get block for hash in process-block-txssss ${blockId} results: ${resolvedBlock}`)
                     await unlockRequest(wrapper.ticker, blockId as string);
                     return await waitForTime(100);
                 }
 
-                // if((wrapper as any).getUncle && resolvedBlock.uncles && resolvedBlock.uncles.length) {
-                //     const startTime = Date.now();
-                //     for(let i = 0; i < resolvedBlock.uncles.length; i++) {
-                //         await processUncle(wrapper, blockId, i);
-                //     }
-                //     console.log(`Took ${Date.now() - startTime}ms to process uncles.`);
-                // }
-                // }
                 block = { ...resolvedBlock, ...block };
 
-                // const receipts = await wrapper.getTransactionReceipts(block);
-
-                // Create a tmp value holding the transactions array for the block. 
-                // This is later passed into createTransactionRequests. 
-                // But we want to reduce block.transactions to an array of hashes for database storage. 
                 let transactions: any[] = block.transactions;
                 if (block.transactions?.length && typeof block.transactions[0] === 'object') {
                     block.transactions = block.transactions.map((tx: any) => tx.hash);
@@ -143,19 +82,6 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 const transactionPromises: any = [];
                 transactions.forEach((transaction: any) => {
                     transactionPromises.push(new Promise(async (resolve) => {
-                        // for (let i = 0; i < receipts.length; i++) {
-                        //     const receipt = receipts[i];
-                        //     if (receipt.transactionHash === transaction.hash) {
-                        //         transaction.receipt = receipt;
-                        //         // transaction.gasUsed = Number(receipt.gasUsed);
-                        //         // transaction.cumulativeGasUsed = Number(receipt.cumulativeGasUsed);
-                        //         // transaction.effectiveGasPrice = Number(receipt.effectiveGasPrice);
-                        //         if (transaction.gas > 21000) {
-                        //             differences.push(Number(transaction.receipt.gasUsed) / transaction.gas);
-                        //         }
-                        //     }
-                        // }
-
                         await callChainHooks(wrapper.ticker, transaction);
                         const formatted = formatTransaction(wrapper.ticker, transaction);
                         block.txFull[formatted.tx] = formatted;
@@ -164,28 +90,15 @@ const action = async (wrapper: BlockchainWrapper): Promise<void> => {
                 });
                 await Promise.all(transactionPromises);
 
-                // if (differences.length) {
-                //     block.gasUsedDif = (differences.reduce((a: any, b: any) => a + b, 0) / differences.length) * 100;
-                // }
-
-
-                // console.log(transactions);
                 block.transactionsFull = transactions;
 
                 const { database } = await mongodb();
-
-                // delete block.transactionsFull;
-                // console.log("storing");
-                // await createBlockFile(wrapper.ticker, block);
-                // console.log("stored");
-                // await database.collection('blocks').updateOne({ chain: wrapper.ticker, hash: block.hash }, { $set: { stored: true } });
                 const formatted: any = formatBlock(wrapper.ticker, block);
 
                 console.log("broadcasting: " + block.height);
                 redis.publish('block', JSON.stringify({ chain: wrapper.ticker, height: block.height, hash: block.hash, block: formatted }));
 
                 database.collection('blocks').updateOne({ chain: wrapper.ticker, hash: block.hash }, { $set: { ...block, processed: true, broadcast: true, txsChecked: true, locked: false, note: '[block-processor]: store-block-db', stored: false } }, { upsert: true });
-                // database.collection('blocks').updateOne({ chain: wrapper.ticker, hash: block.hash }, { $set: { broadcast: true } });
             })();
         }
     } catch (error) {

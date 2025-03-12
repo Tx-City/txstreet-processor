@@ -1,18 +1,18 @@
 
 import { readNFSFile } from '../../../lib/utilities';
-import { ProjectedEthereumTransaction } from '../types';
+import { ProjectedEvolutionTransaction } from '../types';
 import mongodb from '../../../databases/mongodb';
 import redis from '../../../databases/redisEvents';
 import path from 'path';
 import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
-import { ETHTransactionsSchema } from '../../../data/schemas';
+import { EVOLUTIONTransactionsSchema } from '../../../data/schemas';
 
 export default class EVOLUTIONPendingList {
     // The maximum allowed size of the collection. 
     public capacity: number = 50000;
     // Index -> Value 
-    public array: ProjectedEthereumTransaction[] = [];
+    public array: ProjectedEvolutionTransaction[] = [];
     // Key -> Index 
     _mapByKey: { [key: string]: any } = {};
     // The internal task used to write the pending list to disk.
@@ -26,7 +26,7 @@ export default class EVOLUTIONPendingList {
 
     _remove: string[] = [];
 
-    _toAdd: ProjectedEthereumTransaction[] = [];
+    _toAdd: ProjectedEvolutionTransaction[] = [];
 
     constructor() {
         this.add = this.add.bind(this);
@@ -35,7 +35,7 @@ export default class EVOLUTIONPendingList {
         this._onDroppedTransactions = this._onDroppedTransactions.bind(this);
         this._onPendingTransactions = this._onPendingTransactions.bind(this);
 
-        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'LUKSO-pendingTransactions.bin');
+        this._filePath = path.join(__dirname, '..', '..', '..', 'data', 'EVOLUTION-pendingTransactions.bin');
         // Whenever a new transaction is broadcast.
         redis.subscribe('pendingTx');
 
@@ -44,21 +44,17 @@ export default class EVOLUTIONPendingList {
             if (chain !== "EVOLUTION") return;
 
             // Format the socket-format back into the ETHTransactionSchema Format.
-            const transaction: ProjectedEthereumTransaction = {
+            // Format the data into the ProjectedEvolutionTransaction interface
+            const transaction: ProjectedEvolutionTransaction = {
                 hash: data.tx,
-                from: data.fr,
+                owner: data.owner || '', // 'from' field mapped to 'owner'
                 insertedAt: new Date(data.ia).getTime(),
                 timestamp: data.t,
-                gas: data.g,
-                gasPrice: data.gp || null,
-                maxFeePerGas: data.mfpg || null,
-                maxPriorityFeePerGas: data.mpfpg || null,
+                fee: data.gp ? Number(data.gp) : 0, // Using gasPrice as fee
                 value: Number(data.tot * Math.pow(10, 18)) || 0,
-                dropped: false,
-                processed: true,
-                extras: data.e,
-                pExtras: data.pe
-            }
+                gasUsed: data.g || 0 // Using gas as gasUsed
+            };
+
 
 
             // Add the transaction to this list.
@@ -103,7 +99,7 @@ export default class EVOLUTIONPendingList {
             if (!this._toAdd.length) return;
             this.array = this.array.concat(this._toAdd);
             this._toAdd = [];
-            this.array = this.array.sort((a: ProjectedEthereumTransaction, b: ProjectedEthereumTransaction) => this._getSortValue(a) - this._getSortValue(b));
+            this.array = this.array.sort((a: ProjectedEvolutionTransaction, b: ProjectedEvolutionTransaction) => this._getSortValue(a) - this._getSortValue(b));
             if (this.array.length > this.capacity)
                 this.array.splice(0, this.array.length - this.capacity);
             this._rebuildKeyMap();
@@ -116,7 +112,7 @@ export default class EVOLUTIONPendingList {
      * 
      * @param transactions An array of transactions that we want to add. 
      */
-    add(transactions: ProjectedEthereumTransaction[]) {
+    add(transactions: ProjectedEvolutionTransaction[]) {
         this._toAdd = this._toAdd.concat(transactions);
     }
 
@@ -153,7 +149,7 @@ export default class EVOLUTIONPendingList {
      * 
      * @param transactions The transactions broadcast.
      */
-    _onPendingTransactions = async (transactions: ProjectedEthereumTransaction[]) => {
+    _onPendingTransactions = async (transactions: ProjectedEvolutionTransaction[]) => {
         this.add(transactions);
     };
 
@@ -216,12 +212,8 @@ export default class EVOLUTIONPendingList {
      * 
      * @param transaction The transaction.
      */
-    _getSortValue(transaction: ProjectedEthereumTransaction) {
-        if (transaction.hasOwnProperty('gasPrice') && transaction.gasPrice != null)
-            return transaction.gasPrice;
-        if (transaction.hasOwnProperty('maxFeePerGas') && transaction.maxFeePerGas != null)
-            return transaction.maxFeePerGas;
-        return 0;
+    _getSortValue(transaction: ProjectedEvolutionTransaction) {
+        return transaction.fee || 0;
     }
 
     /**
@@ -254,8 +246,8 @@ export default class EVOLUTIONPendingList {
             const { database } = await mongodb();
             const collection = database.collection('transactions_EVOLUTION');
             const where: any = { confirmed: false, processed: true, blockHash: { $eq: null }, dropped: { $exists: false } };
-            const project = { _id: 0, processed: 1, insertedAt: 1, gas: 1, value: 1, gasPrice: 1, maxFeePerGas: 1, maxPriorityFeePerGas: 1, dropped: 1, hash: 1, from: 1, timestamp: 1, extras: 1, pExtras: 1 };
-            const results = await collection.find(where).project(project).sort({ pendingSortPrice: -1 }).limit(this.capacity).toArray();
+            const project = { _id: 0, processed: 1, insertedAt: 1, gasUsed: 1, value: 1, hash: 1, from: 1, timestamp: 1 };
+            const results = await collection.find(where).project(project).limit(this.capacity).toArray();
             for (let i = 0; i < results.length; i++)
                 results[i].insertedAt = new Date(results[i].insertedAt).getTime();
             this.add(results);
@@ -279,14 +271,14 @@ export default class EVOLUTIONPendingList {
 
             for (let i = 0; i < this.array.length; i++) {
                 const entry = this.array[i];
-                if (entry.extras && typeof entry.extras !== "string") entry.extras = JSON.stringify(entry.extras);
-                if (entry.pExtras && typeof entry.pExtras !== "string") entry.pExtras = JSON.stringify(entry.pExtras);
+                // if (entry.extras && typeof entry.extras !== "string") entry.extras = JSON.stringify(entry.extras);
+                // if (entry.pExtras && typeof entry.pExtras !== "string") entry.pExtras = JSON.stringify(entry.pExtras);
 
                 //@ts-ignore
                 Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
             }
 
-            const contents = ETHTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
+            const contents = EVOLUTIONTransactionsSchema.toBuffer({ timestamp: Date.now(), collection: this.array });
 
             const writingFilePath = this._filePath.replace(/\.bin$/, '-writing.bin');
             fs.writeFileSync(writingFilePath, contents);

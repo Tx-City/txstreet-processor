@@ -1,7 +1,8 @@
 export default (chain: string, block: any): Promise<any> => {
     let obj: any = {};
     obj.coin = chain;
-    if(chain === "ETH" || chain === "LUKSO" || chain === "EVOLUTION" || chain === "FLR" || chain === "RINKEBY" || chain === "ARBI" || chain === "LUMIA" || chain === "MANTA" || chain === "CELO") {
+    
+    if(chain === "ETH" || chain === "LUKSO" || chain === "FLR" || chain === "RINKEBY" || chain === "ARBI" || chain === "LUMIA" || chain === "MANTA" || chain === "CELO") {
         obj.tx = block.transactions || [];
         obj.txs = block.transactions?.length; 
         obj.txFull = block.txFull;
@@ -21,7 +22,20 @@ export default (chain: string, block: any): Promise<any> => {
         if(block.tips) obj.tips = block.tips;
         if(block.burned) obj.burned = block.burned; 
     }
-
+    if (chain === "EVOLUTION") {
+        obj.tx = block.transactions || [];
+        obj.txs = block.txs || 0;
+        obj.txFull = block.txFull;
+        obj.hash = block.hash;
+        obj.parentHash = block.last_commit.block_id.hash;;
+        obj.height = block.height;
+        obj.time = block.timestamp;
+        obj.bv = block.blockversion || 0;
+        obj.av = block.appversion || 0;
+        obj.l1h = block.l1lockedheight || 0;
+        obj.v = block.validator || '';
+        console.log("OBJ----", obj);
+    }
     if(chain === "LTC" || chain === "BTC" || chain === "BCH" || chain === "DASH") {
         obj.tx = block.transactions || [];
         obj.txFull = block.txFull;
@@ -47,7 +61,8 @@ export default (chain: string, block: any): Promise<any> => {
         obj.height = block.height;
         obj.time = block.timestamp;
     }
-
+    console.log("block.lastInserted", block.lastInserted);  
     if(block.lastInserted) obj.inserted = Math.round(block.lastInserted / 1000);
+    // console.log('BTC BLOCK obj>>>>>>:', obj)
     return obj;
 }
