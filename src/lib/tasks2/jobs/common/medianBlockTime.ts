@@ -1,7 +1,7 @@
 import { average } from '../../../../lib/utilities';
-import { ProjectedEthereumBlock, ProjectedXMRBlock } from '../../types';
+import { ProjectedEthereumBlock, ProjectedXMRBlock, ProjectedEvolutionBlock } from '../../types';
 
-export default (blocks: ProjectedEthereumBlock[] | ProjectedXMRBlock[]) => {
+export default (blocks: ProjectedEthereumBlock[] | ProjectedXMRBlock[] | ProjectedEvolutionBlock[]) => {
     let lastTime = 0;
     let lastHeight = 0; 
     let array: any[] = []; 

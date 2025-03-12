@@ -75,3 +75,23 @@ export interface ProjectedBTCBlock {
     transactions: number;
     size: number;
 }
+
+export interface ProjectedEvolutionTransaction {
+    hash: string;
+    owner: string;
+    insertedAt: number;
+    timestamp: number;
+    fee: number;
+    value: number;
+    gasUsed: number;
+}
+export interface ProjectedEvolutionBlock {
+    hash: string;
+    timestamp: number;
+    height: number;
+    transactions: number;
+    blockversion: number;
+    appversion: number;
+    l1lockedheight: number;
+    validator: string;
+}
