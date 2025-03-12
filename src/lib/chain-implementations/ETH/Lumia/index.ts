@@ -19,13 +19,13 @@ class Lumia extends ChainImplementation {
     }
 
     async validate(transaction: any): Promise<boolean> {
-        // return transaction.from.toLowerCase() === "0x8f2d2da3044b0a1ea54ee26f7fe376cd9ec4393f" && transaction.to.toLowerCase() === "0x92726f7de49300dbdb60930066bc1d0803c0740b";
-        return transaction
+        return transaction.from.toLowerCase() === "0x8f2d2da3044b0a1ea54ee26f7fe376cd9ec4393f" && transaction.to.toLowerCase() === "0x92726f7de49300dbdb60930066bc1d0803c0740b";
+        // return transaction
     }
 
     async execute(transaction: any): Promise<boolean> {
         console.log("transaction.house for LUMIA", transaction.house);
-        // if(transaction.house === "lumia") return true;
+        if(transaction.house === "lumia") return true;
         transaction.house = 'lumia'; //ALWAYS SET!
         if(!transaction.extras) transaction.extras = {};
         transaction.extras.mailman = true;
