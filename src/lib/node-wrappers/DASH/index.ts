@@ -24,6 +24,7 @@ export default class DASHWrapper extends BlockchainWrapper {
     public sock: any;
     public configRpc: DASHRpcConfig;
     public configZmq?: DASHZmqConfig;
+    private heartbeatInterval: any;
 
     constructor(configRpc: DASHRpcConfig, configZmq?: DASHZmqConfig) {
         super('DASH');
@@ -42,91 +43,143 @@ export default class DASHWrapper extends BlockchainWrapper {
 
     public initEventSystem() {
         console.log("initEventSystem!");
-
+        
         if (!this.configZmq) {
             console.log("there is not this.configZmq!");
             throw 'ZMQ Configuration was not supplied when initializing DASHWrapper.'
         }
+        
         this.sock = zmq.socket('sub');
+        
+        // Add more detailed logging
+        console.log(`Attempting to connect ZMQ to tcp://${this.configZmq.host}:${this.configZmq.port}`);
+        
+        // Connect to the ZMQ server
         this.sock.connect(`tcp://${this.configZmq.host}:${this.configZmq.port}`);
-        this.sock.subscribe('raw');
+        
+        // Subscribe to the correct topics
+        this.sock.subscribe('rawtx');  // Changed from 'raw' to 'rawtx'
         this.sock.subscribe('hashblock');
-        console.log(`tcp://${this.configZmq.host}:${this.configZmq.port}`)
+        
+        console.log(`ZMQ subscribed to 'rawtx' and 'hashblock' at tcp://${this.configZmq.host}:${this.configZmq.port}`);
+        console.log("DASH HOUSES");
+        
+        // Setup heartbeat for checking ZMQ connection status
+        this.heartbeatInterval = setInterval(() => {
+            console.log(`ZMQ heartbeat - still waiting for messages from ${this.configZmq?.host}:${this.configZmq?.port}`);
+        }, 30000); // Check every 30 seconds
+        
+        // Connection event handlers - these may not work in compatibility mode but worth trying
+        this.sock.on('connect', () => {
+            console.log(`ZMQ socket connected to tcp://${this.configZmq?.host}:${this.configZmq?.port}`);
+        });
+        
+        this.sock.on('disconnect', () => {
+            console.log(`ZMQ socket disconnected from tcp://${this.configZmq?.host}:${this.configZmq?.port}`);
+        });
+        
+        this.sock.on('error', (error: any) => {
+            console.error('ZMQ socket error:', error);
+        });
+        
+        // First message received indicates connection is working
+        let firstMessageReceived = false;
+        
         this.sock.on('message', (topicBuffer: Buffer, messageBuffer: Buffer) => {
+            if (!firstMessageReceived) {
+                firstMessageReceived = true;
+                console.log("ZMQ FIRST MESSAGE RECEIVED! Connection confirmed working.");
+                clearInterval(this.heartbeatInterval); // Stop heartbeat once we confirm connection works
+            }
+            
             const topic = topicBuffer.toString('ascii');
+            console.log("DASH ==== topic received: ", topic);
+            
             switch (topic) {
                 case 'rawtx':
-                    const hex = messageBuffer.toString('hex');
-                    const bitcoreTx: any = new bitcore.Transaction(messageBuffer);
-                    const bitcoinjsTx = bitcoinjs.Transaction.fromHex(hex);
-                    const transaction = bitcoreTx.toJSON();
+                    console.log("DASH ==== raw transaction received");
+                    try {
+                        const hex = messageBuffer.toString('hex');
+                        const bitcoreTx: any = new bitcore.Transaction(messageBuffer);
+                        const bitcoinjsTx = bitcoinjs.Transaction.fromHex(hex);
+                        const transaction = bitcoreTx.toJSON();
 
-                    if (memcache.get(`dash-${transaction.hash}`)) return;
-                    memcache.put(`dash-${transaction.hash}`, 1);
+                        if (memcache.get(`dash-${transaction.hash}`)) return;
+                        memcache.put(`dash-${transaction.hash}`, 1);
 
-                    transaction.to = [];
-                    transaction.from = [];
-                    transaction.total = 0;
-                    transaction.asmArrays = [];
+                        transaction.to = [];
+                        transaction.from = [];
+                        transaction.total = 0;
+                        transaction.asmArrays = [];
+                        console.log("DASH transaction.outputs.length: ", transaction.outputs.length);
+                        for (let i = 0; i < transaction.outputs.length; i++) {
+                            const script = new bitcore.Script(transaction.outputs[i].script);
+                            transaction.outputs[i].address = script.toAddress().toString();
+                            transaction.outputs[i].asm = script.toASM();
 
-                    for (let i = 0; i < transaction.outputs.length; i++) {
-                        const script = new bitcore.Script(transaction.outputs[i].script);
-                        transaction.outputs[i].address = script.toAddress().toString();
-                        transaction.outputs[i].asm = script.toASM();
+                            const output = transaction.outputs[i];
 
-                        const output = transaction.outputs[i];
+                            let address = output.address;
+                            if (address && address.length > 10 && transaction.to.indexOf(address) === -1)
+                                transaction.to.push(address);
 
-                        let address = output.address;
-                        if (address && address.length > 10 && transaction.to.indexOf(address) === -1)
-                            transaction.to.push(address);
+                            output.value = (output.satoshis / 100000000);
+                            output.usd = 0;
 
-                        output.value = (output.satoshis / 100000000);
-                        output.usd = 0;
-
-                        transaction.outputs[i] = output;
-                        transaction.total += output.value;
-                        transaction.asmArrays[i] = output.asm.split(' ');
-
-                        // if (transaction.asmArrays[i][0] == "OP_RETURN") {
-                        //     if (!transaction.extras)
-                        //         transaction.extras = {};
-                        //     transaction.extras.op_return = true;
-                        // }
-                    }
-
-                    for (let i = 0; i < transaction.inputs.length; i++) {
-                        const script = new bitcore.Script(transaction.inputs[i].script);
-                        transaction.inputs[i].address = script.toAddress().toString();
-                        transaction.inputs[i].asm = script.toASM();
-
-                        let address = transaction.inputs[i].address;
-                        if (address && address.length > 10 && transaction.from.indexOf(address) === -1)
-                            transaction.from.push(address);
-
-                        if (transaction.inputs[i].asm.length < 120) {
-                            if (!transaction.extras)
-                                transaction.extras = {};
-                            transaction.extras.sw = true;
+                            transaction.outputs[i] = output;
+                            transaction.total += output.value;
+                            transaction.asmArrays[i] = output.asm.split(' ');
                         }
+
+                        for (let i = 0; i < transaction.inputs.length; i++) {
+                            const script = new bitcore.Script(transaction.inputs[i].script);
+                            transaction.inputs[i].address = script.toAddress().toString();
+                            transaction.inputs[i].asm = script.toASM();
+
+                            let address = transaction.inputs[i].address;
+                            if (address && address.length > 10 && transaction.from.indexOf(address) === -1)
+                                transaction.from.push(address);
+
+                            if (transaction.inputs[i].asm.length < 120) {
+                                if (!transaction.extras)
+                                    transaction.extras = {};
+                                transaction.extras.sw = true;
+                            }
+                        }
+
+                        transaction.hex = hex;
+                        transaction.rsize = hex.length / 2;
+                        transaction.size = bitcoinjsTx.virtualSize();
+                        transaction.fee = false;
+                        transaction.fees = false;
+                        
+                        console.log("DASH ==== transaction processed: ", transaction.hash);
+
+                        this.emit('mempool-tx', transaction);
+                    } catch (error) {
+                        console.error("Error processing transaction:", error);
                     }
-
-                    transaction.hex = hex;
-                    transaction.rsize = hex.length / 2;
-                    transaction.size = bitcoinjsTx.virtualSize();
-                    transaction.fee = false;
-                    transaction.fees = false;
-
-                    this.emit('mempool-tx', transaction);
                     break;
 
                 case 'hashblock':
-                    const hash = messageBuffer.toString('hex');
-                    if (memcache.get(`dash-${hash}`)) return;
-                    memcache.put(`dash-${hash}`, 1);
-                    this.emit('confirmed-block', hash);
+                    try {
+                        const hash = messageBuffer.toString('hex');
+                        console.log("DASH ==== new block received: ", hash);
+                        if (memcache.get(`dash-${hash}`)) return;
+                        memcache.put(`dash-${hash}`, 1);
+                        this.emit('confirmed-block', hash);
+                    } catch (error) {
+                        console.error("Error processing block:", error);
+                    }
+                    break;
+                    
+                default:
+                    console.log(`DASH ==== unknown topic received: ${topic}`);
                     break;
             }
         });
+        
+        console.log(`ZMQ socket setup completed - waiting for messages`);
     }
 
     public getTransactionReceipts: undefined;
@@ -190,12 +243,6 @@ export default class DASHWrapper extends BlockchainWrapper {
                             transaction.outputs[i] = output;
                             transaction.total += output.value;
                             transaction.asmArrays[i] = output.asm.split(' ');
-
-                            // if (transaction.asmArrays[i] == "OP_RETURN") {
-                            //     if (!transaction.extras)
-                            //         transaction.extras = {};
-                            //     transaction.extras.op_return = true;
-                            // }
                         }
                     }
 
@@ -318,12 +365,6 @@ export default class DASHWrapper extends BlockchainWrapper {
                         transaction.outputs[i] = output;
                         transaction.total += output.value;
                         transaction.asmArrays[i] = output.asm.split(' ');
-
-                        // if (transaction.asmArrays[i] == "OP_RETURN") {
-                        //     if (!transaction.extras)
-                        //         transaction.extras = {};
-                        //     transaction.extras.op_return = true;
-                        // }
                     }
                 }
                 transaction.rsize = transaction.hex.length / 2;

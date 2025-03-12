@@ -8,7 +8,7 @@ import fs from 'fs';
 import OverlapProtectedInterval, { setInterval } from '../utils/OverlapProtectedInterval';
 import { BTCTransactionsSchema } from '../../../data/schemas';
 
-export default class EVOLUTIONendingList {
+export default class DASHPendingList {
     // The maximum allowed size of the collection. 
     public capacity: number = 3000;
     // Index -> Value 
@@ -173,7 +173,7 @@ export default class EVOLUTIONendingList {
 
             const block = await obtainBlock();
             if (!block) {
-                console.log(`EVOLUTIONendingList Failed to get data for block: ${hash}`);
+                console.log(`DASHPendingList Failed to get data for block: ${hash}`);
                 return;
             }
             if (block.insertedAt) block.insertedAt = new Date(block.insertedAt).getTime();

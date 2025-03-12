@@ -27,6 +27,7 @@ const interval = setInterval(async () => {
     try {
         const { database } = await mongodb();
         const collection = database.collection(`transactions_DASH`);
+        // console.log('Calculating DASH Pending Transactions');
         const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'DASH-pendingTransactions.bin');
         let data = await readFile(dataPath);
         let parsed = BTCTransactionsSchema.fromBuffer(data);
@@ -58,7 +59,7 @@ const interval = setInterval(async () => {
             if (!hashes.includes(key))
                 delete cache[key];
         })
-
+        // console.log('DASH Pending Transactions:', pTransactions.length);
         await storeObject(path.join('live', `pendingTxs-DASH`), JSON.stringify(pTransactions.map((tx: any) => formatTransaction('DASH', tx))));
     } catch (error) {
         console.error(error);

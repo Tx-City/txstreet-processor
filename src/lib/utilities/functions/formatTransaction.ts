@@ -87,6 +87,7 @@ export default (chain: string, data: any) => {
         if (data.blockHash) obj.bh = data.blockHash;
         if (data.vin) obj.inputs = data.vin;
         if (data.vout) obj.outputs = data.vout;
+
     } else if (chain === "XMR") {
         obj.tx = data.hash || data.tx;
         obj.s = Number(data.size);
@@ -108,6 +109,6 @@ export default (chain: string, data: any) => {
         obj.v = data.value || (data.tot ? Number(data.tot * Math.pow(10, 18)) : 0);
         obj.g = data.gasUsed || data.g || 0;
     }
-
+    
     return obj;
 }

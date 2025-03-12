@@ -15,12 +15,24 @@ interface Output {
 class PrivateSend extends ChainImplementation {
     public addresses: string[] = [];
     public _what: any = {};
-    private rpcUrl: string = 'http://65.109.115.131:9998';
-    private rpcUser: string = 'user';
-    private rpcPass: string = 'pass';
+    private rpcUrl: string;
+    private rpcUser: string;
+    private rpcPass: string;
     private PRIVATESEND_DENOMINATIONS = [
         10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000
     ];
+
+    constructor(chain: string) {
+        super(chain);
+        // Use environment variables for RPC configuration
+        this.rpcUrl = `http://${process.env.DASH_NODE || '127.0.0.1'}:${process.env.DASH_NODE_PORT || '9998'}`;
+        this.rpcUser = process.env.DASH_RPC_USER || 'user';
+        this.rpcPass = process.env.DASH_RPC_PASS || 'pass';
+        
+        // Log RPC connection details for debugging (redact password in production)
+        console.log(`DASH RPC URL configured as: ${this.rpcUrl}`);
+        console.log(`DASH RPC User configured as: ${this.rpcUser}`);
+    }
 
     async init(): Promise<ChainImplementation> {
         try {
@@ -47,14 +59,26 @@ class PrivateSend extends ChainImplementation {
         // console.log("tx inputs for PRIVATE SEND======", transaction.inputs);
         // console.log("tx outputs for PRIVATE SEND======", transaction.outputs); 
         console.log("tx for PRIVATE SEND======", transaction.hash); 
+        
+        // Validate transaction inputs
+        if (!transaction.inputs || !Array.isArray(transaction.inputs)) {
+            console.error("Transaction inputs are missing or not an array");
+            return false;
+        }
 
         let privateSendInputCount = 0;
 
         // Check each input's previous transaction
         for (const input of transaction.inputs) {
             try {
+                // Validate prevTxId exists
+                if (!input || !input.prevTxId) {
+                    console.warn("Skipping input with missing prevTxId:", input);
+                    continue;
+                }
+                
+                console.log(`Processing prevTxId: ${input.prevTxId}`);
                 const rawTx = await this.getRawTransaction(input.prevTxId);
-                console.log(`Raw transaction for prevTxId ${input.prevTxId}:`, rawTx);
                 
                 // Parse the raw transaction
                 const parsedTx = await this.decodeRawTransaction(rawTx);
@@ -118,6 +142,10 @@ class PrivateSend extends ChainImplementation {
     }
 
     private async getRawTransaction(txid: string): Promise<string> {
+        if (!txid) {
+            throw new Error('Invalid transaction ID: txid is undefined or empty');
+        }
+        
         const headers = {
             'Authorization': 'Basic ' + Buffer.from(this.rpcUser + ":" + this.rpcPass).toString('base64'),
             'Content-Type': 'application/json'
@@ -131,6 +159,8 @@ class PrivateSend extends ChainImplementation {
         });
 
         try {
+            console.log(`Sending RPC request to ${this.rpcUrl} for transaction ${txid}`);
+            
             const response = await fetch(this.rpcUrl, {
                 method: 'POST',
                 headers: headers,
@@ -138,23 +168,33 @@ class PrivateSend extends ChainImplementation {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Get more details about the error response
+                const errorText = await response.text().catch(e => 'Could not read error response');
+                throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
             }
 
             const data = await response.json();
     
             if (data.error) {
-                throw new Error(`RPC error: ${data.error.message}`);
+                throw new Error(`RPC error: ${JSON.stringify(data.error)}`);
+            }
+
+            if (!data.result) {
+                throw new Error(`RPC returned empty result for transaction ${txid}`);
             }
 
             return data.result;
         } catch (error) {
-            console.error('There was an error fetching the raw transaction!', error);
+            console.error(`There was an error fetching the raw transaction ${txid}!`, error);
             throw error;
         }
     }
 
     private async decodeRawTransaction(rawTx: string): Promise<any> {
+        if (!rawTx) {
+            throw new Error('Invalid raw transaction: rawTx is undefined or empty');
+        }
+        
         const headers = {
             'Authorization': 'Basic ' + Buffer.from(this.rpcUser + ":" + this.rpcPass).toString('base64'),
             'Content-Type': 'application/json'
@@ -168,6 +208,8 @@ class PrivateSend extends ChainImplementation {
         });
 
         try {
+            console.log('Decoding raw transaction');
+            
             const response = await fetch(this.rpcUrl, {
                 method: 'POST',
                 headers: headers,
@@ -175,13 +217,19 @@ class PrivateSend extends ChainImplementation {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Get more details about the error response
+                const errorText = await response.text().catch(e => 'Could not read error response');
+                throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
             }
 
             const data = await response.json();
     
             if (data.error) {
-                throw new Error(`RPC error: ${data.error.message}`);
+                throw new Error(`RPC error: ${JSON.stringify(data.error)}`);
+            }
+
+            if (!data.result) {
+                throw new Error(`RPC returned empty result when decoding transaction`);
             }
 
             return data.result;
