@@ -433,13 +433,26 @@ public async getTransaction(id: string, verbosity: number = 1, blockId?: string 
                 
                 // Add additional details for higher verbosity
                 if (verbosity > 1) {
+                    console.log('Transaction response:', wsResponse);
+                    
+                    // Decode the transaction if it exists
+                    let decodedTx = null;
+                    if (wsResponse.tx) {
+                        try {
+                            decodedTx = await this.decodeTransaction(wsResponse.tx);
+                        } catch (decodeError) {
+                            console.warn(`Failed to decode transaction: ${decodeError.message}`);
+                        }
+                    }
+                    
                     return {
                         ...txInfo,
                         height: wsResponse.height ? parseInt(wsResponse.height) : 0,
                         index: wsResponse.index,
                         success: wsResponse.tx_result?.code === 0,
                         logs: wsResponse.tx_result?.log || '',
-                        txData: wsResponse.tx ? Buffer.from(wsResponse.tx, 'base64').toString('hex') : null,
+                        txData: wsResponse.tx || null,
+                        decodedTx: decodedTx, // Add the decoded transaction data
                         tx_result: wsResponse.tx_result || {},
                         proof: wsResponse.proof || null
                     };
@@ -493,6 +506,34 @@ public async getTransaction(id: string, verbosity: number = 1, blockId?: string 
     } catch (error) {
         console.error(`Error fetching transaction ${id}:`, error);
         return null;
+    }
+}
+
+/**
+ * Decodes a transaction using the platform-explorer API
+ * @param base64Transaction The base64-encoded transaction to decode
+ * @returns A promise that resolves to the decoded transaction data
+ */
+private async decodeTransaction(base64Transaction: string): Promise<any> {
+    try {
+        const response = await fetch('https://platform-explorer.pshenmic.dev/transaction/decode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                base64: base64Transaction,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error decoding transaction: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to decode transaction:', error);
+        throw error;
     }
 }
 
