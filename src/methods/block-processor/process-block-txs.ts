@@ -40,7 +40,7 @@ const getRequests = async (chain: string): Promise<[] | null> => {
 }
 
 const action = async (wrapper: BlockchainWrapper): Promise<void> => {
-    console.log("tx tx tx tx process-block-txs.ts");
+    // console.log("tx tx tx tx process-block-txs.ts");
     let request: any = null;
     try {
         // The database key of the identifying property for this request.

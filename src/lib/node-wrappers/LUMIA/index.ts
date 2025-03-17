@@ -27,10 +27,10 @@ export default class LUMIAWrapper extends BlockchainWrapper {
             }
         };
         //wss://testnet-rpc.lumia.org/ws
-        const provider = new Web3.providers.WebsocketProvider("ws://65.109.115.131:8548", this.options); 
+        const provider = new Web3.providers.WebsocketProvider(process.env.LUMIA_NODE, this.options); 
         this.web3 = new Web3(provider); 
 
-    
+        console.log("this.web===",this.web3);
         // Add admin peers, nodeInfo, and removePeer functions. 
         // this.web3.eth.extend({
         //     property: 'admin',
@@ -53,9 +53,11 @@ export default class LUMIAWrapper extends BlockchainWrapper {
     }
 
     public initEventSystem() {
+        console.log("inside LUMIA initEventSystem()");
         this.web3.eth.subscribe("newBlockHeaders").on("data", async (data: any) => {
             // if(data.hash){
             // const block = await this.web3.eth.getBlock(data.hash, true);
+            console.log("inside LUMIA initEventSystem()",data.hash);
             this.emit('confirmed-block', data.hash);
             // console.log(block);
         });

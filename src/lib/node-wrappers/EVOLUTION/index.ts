@@ -23,9 +23,10 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         super('EVOLUTION');
         
         // Store the RPC URL for Tendermint client
-        // 37.27.97.175:36657 65.109.115.131:26657
-        this.rpcUrl = `http:/37.27.97.175:36657`;
-        this.wsUrl = `ws://37.27.97.175:36657/websocket`;
+        // 37.27.97.175:36657 65.109.115.131:26657/websocket
+        
+        this.rpcUrl = process.env.EVOLUTION_NODE_RPC
+        this.wsUrl = process.env.EVOLUTION_NODE;
         
         // Initialize WebSocket connection
         this.connectWebSocket();

@@ -38,19 +38,34 @@ export default class ObtainRollupBlocksFromDatabase extends OverlapProtectedInte
 
 
                 let results = await collection.find(where).project(project).toArray();
-                // console.log("db results:" + results.length, this._lastKnownItemTimestamp);
+                
                 // Make sure we atleast have 250 blocks. 
-                // console.log(results.length,  "ARBI BLOCKS");
-                // console.log(results.length,  "LUMIA BLOCKS");
-                if(results.length < 250 && this._firstExecution) {
-                    // Find earliest known height. 
+                if(results.length < 250 && this._firstExecution && results.length > 0) {
+                    // Find earliest known height - only sort if we have results
                     let earliest = results.sort((a: any, b: any) => b.height - a.height)[results.length - 1]; 
-                    if(!earliest) 
-                        earliest = (await collection.find({ chain, hash: { $ne: null }, height: { $ne: null } },  project).sort({ height: -1 }).limit(1).toArray())[0];
-                    let earliestHeight: number = earliest.height;
-                    const remainder = 250 - results.length;
-                    let _results = await collection.find({ chain, height: { $lt: earliestHeight } }).project(project).sort({ height: -1 }).limit(remainder).toArray();
-                    results = results.concat(_results); 
+                    
+                    if(!earliest) {
+                        // Safely fetch the latest block if we couldn't determine from current results
+                        const latestBlocks = await collection.find({ 
+                            chain, 
+                            hash: { $ne: null }, 
+                            height: { $ne: null } 
+                        }).project(project).sort({ height: -1 }).limit(1).toArray();
+                        
+                        earliest = latestBlocks[0];
+                    }
+                    
+                    // Only proceed if we have a valid earliest block
+                    if (earliest && earliest.height !== undefined) {
+                        let earliestHeight: number = earliest.height;
+                        const remainder = 250 - results.length;
+                        let _results = await collection.find({ 
+                            chain, 
+                            height: { $lt: earliestHeight } 
+                        }).project(project).sort({ height: -1 }).limit(remainder).toArray();
+                        
+                        results = results.concat(_results);
+                    }
                 }
 
                 let transactionResults: any = [];
@@ -76,12 +91,11 @@ export default class ObtainRollupBlocksFromDatabase extends OverlapProtectedInte
                 }
 
                 if(results.length > 0) {
-                    // console.log("inserting blocks:"+ results.length);
+                    // Sort safely - ensure we have items before attempting to sort
                     const latest = results.sort((a: any, b: any) => a.lastInserted - b.lastInserted)[results.length - 1]; 
                     this._lastKnownItemTimestamp = latest.lastInserted; 
                     blocks.insert(results);
                     if(transactionResults.length > 0){
-                        // console.log("inserting txs:"+ transactionResults.length);
                         transactions.insert(transactionResults);
                     }
                 }
@@ -91,7 +105,6 @@ export default class ObtainRollupBlocksFromDatabase extends OverlapProtectedInte
                     this._firstExecution = false; 
             } catch (error) {
                 console.error(error); 
-                console.error(error);
             }
         }, 250); 
     }
