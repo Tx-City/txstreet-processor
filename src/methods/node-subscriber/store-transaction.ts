@@ -24,7 +24,7 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<Boo
     console.log('storing transaction');
 
     try {
-        // console.log(transaction.hash);a
+        // console.log(transaction.hash);
         // Merge the default fields into the current transaction data.
         transaction = { ...defaultTransactionFields(wrapper.ticker), ...transaction, };
 

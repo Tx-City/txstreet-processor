@@ -10,7 +10,7 @@ export default async (wrapper: BlockchainWrapper, transactions: any[]): Promise<
 
         // Create an array of instructions for the database. 
         const instructions: any[] = [];
-
+        console.log(`Storing ${transactions.length} confirmed transactions.`, `this is store-confirmed-transaction.ts`);
         // Iterate over the transactions to create the bulkWrite instrucctions. 
         transactions.forEach((transaction: any) => {
             delete transaction._id;

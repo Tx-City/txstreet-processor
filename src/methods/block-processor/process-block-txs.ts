@@ -8,7 +8,7 @@ import mongodb from "../../databases/mongodb";
 import callChainHooks from '../../lib/chain-implementations';
 
 const getRequests = async (chain: string): Promise<[] | null> => {
-    console.log("ttttttttttt process-block-txs.ts");
+    // console.log("ttttttttttt process-block-txs.ts");
     // Get a reference to the database collection, setup collections & sessions for transactions. 
     const { connection, database } = await mongodb();
     const collection = database.collection('blocks');

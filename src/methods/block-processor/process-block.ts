@@ -99,7 +99,9 @@ const action = async (wrapper: BlockchainWrapper, blockId: string | number = nul
         if(block.transactions?.length && typeof block.transactions[0] === 'object') {
             block.transactions = block.transactions.map((tx: any) => tx.hash); 
         }
-        
+        console.log("storeBlockDatabase function is being called here");
+        console.log("block ++++++ ", block);    
+        console.log("databaseKey ++++++ ", databaseKey);
         // Store the block in the database 
         await storeBlockDatabase(wrapper.ticker, block, databaseKey); 
         

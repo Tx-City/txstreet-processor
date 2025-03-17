@@ -84,6 +84,10 @@ export interface ProjectedEvolutionTransaction {
     fee: number;
     value: number;
     gasUsed: number;
+    dropped: boolean | undefined;
+    processed: boolean;
+    extras?: any;
+    pExtras?: any;
 }
 export interface ProjectedEvolutionBlock {
     hash: string;

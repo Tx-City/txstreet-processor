@@ -103,7 +103,7 @@ const run = async () => {
             case "MANTA":
             case "ETH":
             case "LUKSO":
-            case "EVOLUTION":
+            // case "EVOLUTION":
             case "FLR":
             case "CELO":
             case "RINKEBY":
@@ -129,7 +129,7 @@ const run = async () => {
                     return;
                 case "ETH":
                 case "LUKSO": 
-                case "EVOLUTION":
+                // case "EVOLUTION":
                 case "FLR":
                 case "CELO":
                 case "RINKEBY":

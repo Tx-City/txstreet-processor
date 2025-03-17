@@ -190,7 +190,11 @@ export const EVOLUTIONTransactionsSchema = avro.Type.forSchema({
                         { name: "timestamp", type: "long", default: 0 },
                         { name: "fee", type: "double", default: 0.0 },
                         { name: "value", type: "double", default: 0.0 },
-                        { name: "gasUsed", type: "long", default: 0 }
+                        { name: "gasUsed", type: "long", default: 0 },
+                        { name: 'dropped', type: ['boolean', 'null'], default: false },
+                        { name: 'processed', type: ['boolean', 'null'], default: false },
+                        { name: 'extras', type: ['string', 'null'], default: "{}" },
+                        { name: 'pExtras', type: ['string', 'null'], default: "{}" }
                     ]
                 }
             }

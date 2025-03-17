@@ -26,6 +26,7 @@ setInterval(async () => {
 const storeBlock = async (database: any, block: any) => {
  
     try {
+        console.log("inside store block function");
         const remainingTxs = await database.collection('transactions_EVOLUTION').find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).count();
         if (remainingTxs > 0) {
             let remainingFull = await database.collection('transactions_EVOLUTION').find({ confirmed: false, blockHash: block.hash, dropped: { $exists: false } }).limit(20).toArray();
@@ -99,9 +100,10 @@ const storeBlock = async (database: any, block: any) => {
         console.log("secondPart----------------", secondPart);
         
         await storeObject(path.join('blocks', 'EVOLUTION', firstPart, secondPart, block.hash), fileContents);
-        
+        console.log("is stored getting set to true");
         await database.collection('blocks').updateOne({ chain: 'EVOLUTION', hash: block.hash }, { $set: { stored: true, broadcast: false } });
         block.stored = true;
+        console.log("Block stored", block.stored);
         block.broadcast = false;
         return true;
     } catch (error) {
@@ -141,10 +143,11 @@ const checkBlock = async (database: any, block: any, depth: number = 0) => {
         // If the previous block passed all checks (or doesn't exist, sanity, depth limit). 
         if (block.stored && parent && parent.stored || block.stored && !parent) {
             
-            console.log(`Block ${block.hash} is ready to broadcast.`);
-            
+            // console.log(`Block ${block.hash} is ready to broadcast.`);
+            console.log("why is this called again and again");
             redis.publish('block', JSON.stringify({ chain: 'EVOLUTION', height: block.height, hash: block.hash }));
             await database.collection('blocks').updateOne({ chain: 'EVOLUTION', hash: block.hash }, { $set: { broadcast: true, note: 'broadcast-ready-block' } });
+            // console.log("Block broadcasted");
             return true;
         } else {
             console.log("Block isn't ready, either block or parent is not stored");

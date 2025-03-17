@@ -23,8 +23,9 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
         super('EVOLUTION');
         
         // Store the RPC URL for Tendermint client
-        this.rpcUrl = `http://65.109.115.131:26657`;
-        this.wsUrl = `ws://65.109.115.131:26657/websocket`;
+        // 37.27.97.175:36657 65.109.115.131:26657
+        this.rpcUrl = `http:/37.27.97.175:36657`;
+        this.wsUrl = `ws://37.27.97.175:36657/websocket`;
         
         // Initialize WebSocket connection
         this.connectWebSocket();
@@ -218,7 +219,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                     // Handle transaction events
                     if (parsedData.result?.data?.type === 'tendermint/event/Tx') {
                         const txevent = parsedData.result.data.value;
-                        console.log('Transaction event structure in side initEventSystem():', JSON.stringify(txevent, null, 2));
+                        // console.log('Transaction event structure in side initEventSystem():', JSON.stringify(txevent, null, 2));
 
                         if (!txevent.tx) {
                             console.error('Transaction event missing tx field');
@@ -227,9 +228,9 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                         
                         const txHash = await this.calculateDashTransactionHash(txevent.tx);
                         const transaction = await this.getTransaction(txHash, 2);
-                        console.log("transaction inside initEventSystem():", transaction);
+                        // console.log("transaction inside initEventSystem():", transaction);
                         this.emit('mempool-tx', transaction);
-                        console.log("Mempool TX", transaction);
+                        // console.log("Mempool TX", transaction);
                     }
                 } catch (error) {
                     console.error('Error handling transaction event:', error);
@@ -256,7 +257,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                         const blockHash = block.block_id.hash;
                         
                         this.emit('confirmed-block', blockHash);
-                        console.log("Block confirmed:", blockHash);
+                        // console.log("Block confirmed:", blockHash);
                     }
                 } catch (error) {
                     console.error('Error handling block event:', error);
@@ -272,11 +273,11 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             this.tmClient = await Tendermint34Client.connect(this.rpcUrl);
             console.log('Tendermint client initialized');
         } catch (error) {
-            console.error('Error initializing Tendermint client:', error);
+            // console.error('Error initializing Tendermint client:', error);
             
             // Retry connecting to Tendermint client
             setTimeout(() => {
-                console.log('Retrying Tendermint client connection...');
+                // console.log('Retrying Tendermint client connection...');
                 this.initTendermint();
             }, 5000);
         }
@@ -309,7 +310,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
                     
                     if (statusResponse && statusResponse.sync_info && statusResponse.sync_info.latest_block_height) {
                         const height = parseInt(statusResponse.sync_info.latest_block_height);
-                        console.log(`getCurrentHeight (WebSocket): ${height}`);
+                        // console.log(`getCurrentHeight (WebSocket): ${height}`);
                         return height;
                     }
                     
@@ -327,7 +328,7 @@ export default class EVOLUTIONWrapper extends BlockchainWrapper {
             
             // Get status from Tendermint client
             const status = await this.tmClient!.status();
-            console.log(`getCurrentHeight (Tendermint client)`, parseInt(status.syncInfo.latestBlockHeight.toString()));
+            // console.log(`getCurrentHeight (Tendermint client)`, parseInt(status.syncInfo.latestBlockHeight.toString()));
             // Extract the block height
             return parseInt(status.syncInfo.latestBlockHeight.toString());
         } catch (error) {
@@ -419,11 +420,11 @@ public async getTransaction(id: string, verbosity: number = 1, blockId?: string 
                 if (!wsResponse) {
                     throw new Error('Empty transaction response from WebSocket');
                 }
-                
+                // console.log('TRANSACTION VERBOSITY ====== :', verbosity);
                 // Create the transaction info object
                 const txInfo = {
                     hash: id,
-                    owner: '', // Would need chain-specific logic
+                    // owner: '', // Would need chain-specific logic
                     insertedAt: Date.now(),
                     timestamp: Math.floor(Date.now() / 1000),
                     fee: 0,
@@ -433,7 +434,8 @@ public async getTransaction(id: string, verbosity: number = 1, blockId?: string 
                 
                 // Add additional details for higher verbosity
                 if (verbosity > 1) {
-                    console.log('Transaction response:', wsResponse);
+                    // console.log('TRANSACTION VERBOSITY ====== :', verbosity);
+                    // console.log('Transaction response:', wsResponse);
                     
                     // Decode the transaction if it exists
                     let decodedTx = null;
@@ -449,7 +451,7 @@ public async getTransaction(id: string, verbosity: number = 1, blockId?: string 
                         ...txInfo,
                         height: wsResponse.height ? parseInt(wsResponse.height) : 0,
                         index: wsResponse.index,
-                        success: wsResponse.tx_result?.code === 0,
+                        owner: decodedTx.identityId || '', // Use decoded owner from transaction
                         logs: wsResponse.tx_result?.log || '',
                         txData: wsResponse.tx || null,
                         decodedTx: decodedTx, // Add the decoded transaction data
@@ -496,7 +498,6 @@ public async getTransaction(id: string, verbosity: number = 1, blockId?: string 
                 ...txInfo,
                 height: txResponse.height,
                 index: txResponse.index,
-                success: txResponse?.result.code === 0,
                 // Additional details
                 logs: txResponse?.result.log || '',
             };
@@ -577,7 +578,6 @@ public async getTransactionReceipt(hash: string): Promise<any> {
                     value: 0,
                     gasUsed: wsResponse.tx_result && wsResponse.tx_result.gas_used ? 
                         Number(wsResponse.tx_result.gas_used) : 0,
-                    success: wsResponse.tx_result && wsResponse.tx_result.code === 0,
                     logs: wsResponse.tx_result && wsResponse.tx_result.log ? 
                         wsResponse.tx_result.log : '',
                     height: wsResponse.height ? parseInt(wsResponse.height) : 0
@@ -622,7 +622,6 @@ public async getTransactionReceipt(hash: string): Promise<any> {
             value: 0,
             gasUsed: txResponse.result && txResponse.result.gasUsed ? 
                 Number(txResponse.result.gasUsed) : 0,
-            success: txResponse.result && txResponse.result.code === 0,
             logs: txResponse.result && txResponse.result.log ?
                 txResponse.result.log : '',
             height: txResponse.height
@@ -763,7 +762,7 @@ public async getTransactionReceipt(hash: string): Promise<any> {
             
             try {
                 this.ws.send(JSON.stringify(request));
-                console.log(`WebSocket request sent: ${method}`, params);
+                // console.log(`WebSocket request sent: ${method}`, params);
             } catch (error) {
                 // Clear the timeout and remove the handler
                 clearTimeout(timeoutId);

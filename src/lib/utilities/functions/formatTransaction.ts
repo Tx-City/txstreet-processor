@@ -101,8 +101,10 @@ export default (chain: string, data: any) => {
         if (data.blockHash) obj.bh = data.blockHash;
         if (data.paymentId) obj.pid = data.paymentId;
     } else if (chain === "EVOLUTION"){
+        // console.log("EVOLUTION TRANSACTION", data);
         obj.tx = (typeof data.hash === "undefined" ? data.tx : data.hash);
         obj.f = Number(data.fee || 0);
+        obj.o = data.owner;
         obj.t = data.timestamp || data.t;
         obj.ia = data.insertedAt || data.ia;
         obj.fr = data.from || data.fr || '';

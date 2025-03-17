@@ -9,9 +9,9 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
     const batchSize = Number(process.env.CONFIRMED_BATCH_SIZE || 25);
     let session: any = null; 
     try {
+        // console.log("getting confirmed batch")
         const { connection, database } = await mongodb();
         const collection = database.collection('transactions_' + wrapper.ticker || ''); 
-
         // Create a database session to atomically execute multiple queries. 
         session = connection.startSession(); 
 
@@ -45,7 +45,6 @@ export default async (wrapper: BlockchainWrapper): Promise<any[]> => {
                 await collection.updateMany(where, updateInstructions); 
             }
         }); 
-        
         return results;
     } catch (error) {
         console.error(error)

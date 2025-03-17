@@ -11,7 +11,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
     constructor(chain: string, blocks: DropoutContainer<any>) {
         super(async () => {
             try { 
-                console.log(`ObtainBlocksFromDatabase executing for chain: ${chain}`);
+                // console.log(`ObtainBlocksFromDatabase executing for chain: ${chain}`);
                 
                 // Initialize the database. 
                 const { database } = await mongodb(); 
@@ -44,7 +44,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     processed: true, 
                     timestamp: { $gt: this._lastKnownItemTimestamp === 0 ? Math.floor((Date.now() - (((1000 * 60) * 60) * 24)) / divider) : this._lastKnownItemTimestamp } };
                 
-                console.log(`Query conditions for ${chain}:`, JSON.stringify(where));
+                // console.log(`Query conditions for ${chain}:`, JSON.stringify(where));
                     
                 let project: any = {};
                 switch(chain) {
@@ -87,10 +87,10 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                 let results: any[] = [];
   
                 results = await collection.find(where).project(project).toArray();
-                console.log("Sample block:", JSON.stringify(results[0], null, 2));
+                // console.log("Sample block:", JSON.stringify(results[0], null, 2));
                 
                 
-                console.log(`Found ${results.length} blocks for ${chain}`);
+                // console.log(`Found ${results.length} blocks for ${chain}`);
 
                 // Make sure we atleast have 250 blocks. 
                 if(results.length < 250 && this._firstExecution) {
@@ -195,7 +195,7 @@ export default class ObtainBlocksFromDatabase extends OverlapProtectedInterval {
                     blocks.insert(results);
                     console.log(`Successfully inserted blocks for ${chain}`);
                 } else {
-                    console.log(`No blocks to insert for ${chain}`);
+                    // console.log(`No blocks to insert for ${chain}`);
                 }
                 
                 this._done = true; 

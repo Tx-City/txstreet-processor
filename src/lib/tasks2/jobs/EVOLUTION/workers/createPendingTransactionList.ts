@@ -94,27 +94,27 @@ setInterval(async () => {
 
         const pushAndCheckToMove = (transaction: any): boolean => {
             if (addedByHash[transaction.hash]) return;
-            if (transaction.from)
-                transaction.from = transaction.from.toLowerCase();
+            // if (transaction.from)
+            //     transaction.from = transaction.from.toLowerCase();
 
             // Add this transaction to the list to be sent out. 
             pendingList.push(transaction);
             addedByHash[transaction.hash] = true;
 
             // Increase the amount of transactions added by an address/account.
-            if (!addedByAddress[transaction.from])
-                addedByAddress[transaction.from] = 0;
-            addedByAddress[transaction.from]++;
+            if (!addedByAddress[transaction.owner])
+                addedByAddress[transaction.owner] = 0;
+            addedByAddress[transaction.owner]++;
 
             // If there are transactions remaining in toMove
-            if (toMove[transaction.from]?.length) {
+            if (toMove[transaction.owner]?.length) {
                 // The next transaction to 'process'
-                const nextToAdd = toMove[transaction.from][0];
+                const nextToAdd = toMove[transaction.owner][0];
                 // The next nonce is the currentTransactionCount + the amount of transactions added. 
-                const nextNonce = (addedByAddress[transaction.from] || 0) + (transaction.fromNonce || 0);
+                const nextNonce = (addedByAddress[transaction.owner] || 0) + (transaction.fromNonce || 0);
                 if (nextNonce === nextToAdd.nonce) {
                     // Remove the transaction from toMove
-                    toMove[transaction.from].shift();
+                    toMove[transaction.owner].shift();
                     // Recursively call pushAndCheckToMove 
                     return pushAndCheckToMove(nextToAdd);
                 }
@@ -129,18 +129,18 @@ setInterval(async () => {
             // if (pendingList.length >= 3000 * 4) break;
             const transaction = transactions[i];
             if (addedByHash[transaction.hash]) continue;
-            transaction.from = transaction.from.toLowerCase()
-            if (!addedByAddress[transaction.from])
-                addedByAddress[transaction.from] = 0;
+            // transaction.from = transaction.from.toLowerCase()
+            if (!addedByAddress[transaction.owner])
+                addedByAddress[transaction.owner] = 0;
             // The next nonce is the currentTransactionCount + the amount of transactions added. 
-            const nextNonce = (addedByAddress[transaction.from] || 0) + (transaction.fromNonce || 0);
+            const nextNonce = (addedByAddress[transaction.owner] || 0) + (transaction.fromNonce || 0);
 
             if (nextNonce === transaction.nonce) {
                 pushAndCheckToMove(transaction);
             } else {
-                if (!toMove[transaction.from])
-                    toMove[transaction.from] = [];
-                toMove[transaction.from].push(transaction);
+                if (!toMove[transaction.owner])
+                    toMove[transaction.owner] = [];
+                toMove[transaction.owner].push(transaction);
             }
         }
 

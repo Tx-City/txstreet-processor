@@ -42,7 +42,7 @@ export default class EVOLUTIONPendingList {
         redis.events.on('pendingTx', async (data) => {
             const { chain } = data;
             if (chain !== "EVOLUTION") return;
-
+            console.log('EVOLUTION PENDINGLIST DATA======', data);
             // Format the socket-format back into the ETHTransactionSchema Format.
             // Format the data into the ProjectedEvolutionTransaction interface
             const transaction: ProjectedEvolutionTransaction = {
@@ -52,7 +52,9 @@ export default class EVOLUTIONPendingList {
                 timestamp: data.t,
                 fee: data.gp ? Number(data.gp) : 0, // Using gasPrice as fee
                 value: Number(data.tot * Math.pow(10, 18)) || 0,
-                gasUsed: data.g || 0 // Using gas as gasUsed
+                gasUsed: data.g || 0, // Using gas as gasUsed
+                dropped: false,
+                processed: true
             };
 
 

@@ -23,6 +23,7 @@ export default (chain: string, block: any): Promise<any> => {
         if(block.burned) obj.burned = block.burned; 
     }
     if (chain === "EVOLUTION") {
+        // console.log("EVOLUTION BLOCK", block);
         obj.tx = block.transactions || [];
         obj.txs = block.txs || 0;
         obj.txFull = block.txFull;
@@ -30,11 +31,12 @@ export default (chain: string, block: any): Promise<any> => {
         obj.parentHash = block.last_commit.block_id.hash;;
         obj.height = block.height;
         obj.time = block.timestamp;
+        obj.timestamp = block.timestamp;
         obj.bv = block.blockversion || 0;
         obj.av = block.appversion || 0;
         obj.l1h = block.l1lockedheight || 0;
         obj.v = block.validator || '';
-        console.log("OBJ----", obj);
+        // console.log("OBJ----", obj);
     }
     if(chain === "LTC" || chain === "BTC" || chain === "BCH" || chain === "DASH") {
         obj.tx = block.transactions || [];

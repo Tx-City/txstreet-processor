@@ -44,6 +44,7 @@ export default async (wrapper: BlockchainWrapper, transaction: any): Promise<any
                 return transaction;
 
             if(deletedHashes.length) {
+                console.log("is DROPPED BEING SET TO TRUE HERE???")
                 transaction.deletedHashes = deletedHashes; 
                 await collection.updateMany({ hash: { $in: deletedHashes } }, { $set: { dropped: true } });
 

@@ -10,7 +10,7 @@ export default class ObtainTransactionsFromDatabase extends OverlapProtectedInte
     constructor(chain: string, transactions: DropoutContainer<any>) {
         super(async () => {
             try { 
-                console.log(`ObtainTransactionsFromDatabase executing for chain: ${chain}`);
+                // console.log(`ObtainTransactionsFromDatabase executing for chain: ${chain}`);
                 
                 // Initialize the database. 
                 const { database } = await mongodb(); 
@@ -21,7 +21,7 @@ export default class ObtainTransactionsFromDatabase extends OverlapProtectedInte
                     processed: true, 
                     insertedAt: { $gt: this._lastKnownItemTimestamp === 0 ? new Date(Date.now() - (((1000 * 60) * 60) * 1)) : new Date(this._lastKnownItemTimestamp) } };
 
-                console.log(`Transaction query for ${chain}:`, JSON.stringify(where));
+                // console.log(`Transaction query for ${chain}:`, JSON.stringify(where));
 
                 let project: any = {};
                 switch(chain) {
@@ -55,8 +55,8 @@ export default class ObtainTransactionsFromDatabase extends OverlapProtectedInte
                 }
 
                 let results = await collection.find(where).project(project).toArray();
-                console.log("Sample transaction:", JSON.stringify(results[0], null, 2));
-                console.log(`Found ${results.length} transactions for ${chain}`);
+                // console.log("Sample transaction:", JSON.stringify(results[0], null, 2));
+                // console.log(`Found ${results.length} transactions for ${chain}`);
 
                 if(results.length > 0) {
                     // Convert insertedAt to timestamp for all chains

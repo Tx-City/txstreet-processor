@@ -36,6 +36,7 @@ export default async (chain: string, block: any): Promise<any> => {
         if(block.uncles && block.uncles.length) requiresBlocksForBroadcast.push(...block.uncles); 
         
         let readyToBroadcast = true; 
+        console.log("requiresBlocksForBroadcast.length: " + requiresBlocksForBroadcast.length);
         if(requiresBlocksForBroadcast.length > 0) {
             let requiredBlocks = await collection.find({ chain, hash: { $in: requiresBlocksForBroadcast } }).toArray(); 
             for(let i = 0; i < requiredBlocks.length; i++) {
@@ -46,7 +47,7 @@ export default async (chain: string, block: any): Promise<any> => {
                 }
             }
         }
-
+        console.log("ready to broadcast: 55555555555555" + readyToBroadcast);
         if(readyToBroadcast) 
             redis.publish('block', JSON.stringify({ chain, height: block.height, hash: block.hash })); 
 

@@ -25,16 +25,18 @@ Object.keys(process.env).forEach(key => {
         nodesToInit.push(key.toUpperCase());
     }
 })
-
+console.log('inside tx-processor.ts', nodesToInit);
 // Non event-blocking infinite loop for processPending
 const processPending = async (wrapper: Wrappers.BlockchainWrapper) => {
 
     try {
         await processPendingTransactions(wrapper);
+        // console.log('processPendingTransactions');
     } catch (error) {
         console.error(error);
     } finally {
         process.nextTick(() => processPending(wrapper));
+        // console.log('processPending');
     }
 }
 
@@ -43,7 +45,9 @@ const processPending = async (wrapper: Wrappers.BlockchainWrapper) => {
 const processConfirmed = async (wrapper: Wrappers.BlockchainWrapper) => {
     // console.log('processConfirming');
     try {
+        // console.log('processConfirmedTransactions being called at this point');
         await processConfirmedTransactions(wrapper);
+        // console.log('processConfirmedTransactions being called at this point');
     } catch (error) {
         console.error(error);
     } finally {
@@ -121,10 +125,13 @@ const run = async () => {
             processConfirmed(luksoWrapper);
     }
     if (nodesToInit.includes('EVOLUTION')) {
+        console.log('running evolution');
         const evolutionWrapper = new Wrappers.EVOLUTIONWrapper(process.env.EVOLUTION_NODE as string);
         if (process.env.PROCESS_PENDING == "true")
+            // console.log("does it called processPending()")
             processPending(evolutionWrapper);
         if (process.env.PROCESS_CONFIRMED == "true")
+            // console.log("does it called processConfirmed()")
             processConfirmed(evolutionWrapper);
     }
     if (nodesToInit.includes('FLR')) {

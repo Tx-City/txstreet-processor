@@ -10,7 +10,7 @@ const execute = async (database: any, chain: string, hash: string) => {
     const block = await blockCollection.findOne({ chain, hash }); 
     if(!block || block.stored || block.broadcast) return;
     
-    
+    console.log("tx processor chekcing block confirmations")
     const remainingTransactions = await txCollection.find({ blockHash: block.hash, dropped: { $exists: false }, confirmed: false }).count()
     if(remainingTransactions > 0) return; 
     
@@ -22,6 +22,7 @@ const execute = async (database: any, chain: string, hash: string) => {
     if(block.uncles && block.uncles.length) requiresBlocksForBroadcast.push(...block.uncles); 
     
     let readyToBroadcast = true; 
+    console.log("requiresBlocksForBroadcast.length: " + requiresBlocksForBroadcast.length);
     if(requiresBlocksForBroadcast.length > 0) {
         let requiredBlocks = await blockCollection.find({ chain, hash: { $in: requiresBlocksForBroadcast } }).toArray(); 
         if(requiredBlocks.length !== requiresBlocksForBroadcast.length) {

@@ -111,7 +111,7 @@ const init = async () => {
         });
 
         dashWrapper.on('confirmed-block', (blockHash: string) => {
-            console.log(`Got block from event inside DASH: ${blockHash}`);
+            // console.log(`Got block from event inside DASH: ${blockHash}`);
             processBlock(dashWrapper, blockHash);
         });
 
@@ -224,7 +224,6 @@ const init = async () => {
         evolutionWrapper.on('confirmed-block', (blockHash: string) => {
             console.log(`Got block from event: ${blockHash}`);
             processBlock(evolutionWrapper, blockHash);
-            console.log("processBlock =======",processBlock(evolutionWrapper, blockHash));
         });
         getLatestBlockLoop(evolutionWrapper);
         evolutionWrapper.initEventSystem();

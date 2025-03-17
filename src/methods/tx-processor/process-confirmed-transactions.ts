@@ -17,7 +17,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
     try {
         // Obtain the batch that we're going to do work on.
         let transactionRequests = await getConfirmedBatch(wrapper);
-
+        
         // If there were no transactions, provide a small delay to allow for more inserts.
         // Since pending transactions come directly from the mempool, this delay can be relatively small.
         if (transactionRequests.length < 1) {
@@ -69,10 +69,10 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
             transactionRequests = await getContactCodes(wrapper, transactionRequests);
             transactionRequests = await getReceipts(wrapper, transactionRequests);
         }
-        if (wrapper.ticker === "EVOLUTION") {
-            transactionRequests = await getContactCodes(wrapper, transactionRequests);
-            transactionRequests = await getReceipts(wrapper, transactionRequests);
-        }
+        // if (wrapper.ticker === "EVOLUTION") {
+        //     transactionRequests = await getContactCodes(wrapper, transactionRequests);
+        //     transactionRequests = await getReceipts(wrapper, transactionRequests);
+        // }
         if (wrapper.ticker === "FLR") {
             transactionRequests = await getContactCodes(wrapper, transactionRequests);
             transactionRequests = await getReceipts(wrapper, transactionRequests);
@@ -123,7 +123,7 @@ export default async (wrapper: BlockchainWrapper): Promise<any> => {
         if ((wrapper as any).getTransactionCount) {
             transactions = await updateAccountNonces(wrapper, transactions, false, true);
         }
-
+        console.log("StoreConfrimedTransaction function called at this point")
         // Update all successful transactions with the appropriate transaction data. 
         await storeConfirmedTransaction(wrapper, transactions);
 
