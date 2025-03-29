@@ -1,189 +1,165 @@
-// IN PROGRESS - OPTIMIZATION|| Refactoring to use memory transactions, paused to fix other important issues. 
-
+import { formatTransaction, storeObject } from "../../../../../lib/utilities";
+import { setInterval } from "../../../utils/OverlapProtectedInterval";
 import mongodb from '../../../../../databases/mongodb';
-import { formatTransaction, storeObject } from '../../../../../lib/utilities';
-import { setInterval } from '../../../utils/OverlapProtectedInterval';
-import fs from 'fs';
+import redis from '../../../../../databases/redisEvents';
 import path from 'path';
-import { EVOLUTIONTransactionsSchema } from '../../../../../data/schemas';
-import { ProjectedEvolutionTransaction } from '../../../types';
-import axios from 'axios';
-import updateAccountNonces from '../../../../../methods/tx-processor/update-account-nonces';
-import * as Wrappers from '../../../../../lib/node-wrappers';
+import fs from 'fs';
+import { EVOLUTIONTransactionsSchema } from "../../../../../data/schemas";
+import { ProjectedEvolutionTransaction } from "../../../types";
 
-const evolutionWrapper = new Wrappers.EVOLUTIONWrapper(process.env.EVOLUTION_NODE as string);
+// Cache for transaction metadata to reduce database queries
+const cache: { [key: string]: any } = {};
 
+// Subscribe to block events to force immediate updates when a new block is created
+redis.subscribe('block');
+redis.events.on('block', (data) => {
+    const { chain } = data;
+    if (chain !== 'EVOLUTION') return;
+    interval.force();
+});
+
+// Helper function to read files
 const readFile = (path: string) => new Promise<Buffer>((resolve, reject) => {
     fs.readFile(path, (err: NodeJS.ErrnoException, data: Buffer) => {
         if (err) return reject(err);
         return resolve(data);
-    })
-})
+    });
+});
 
-// to, house, maxPriorityFeePerGas, nonce
-// delete timestamp/insertedAt
-
-// Used to hold transaction-specific data. 
-const cache: { [key: string]: any } = {}
-
+// Throttle control for file writes
 let lastUploadTime = 0;
 
+console.log('Initializing EVOLUTION Pending Transactions processor');
 
-// The purpose of this function is to curate and store the JSON information for the current pending transaction list. 
-setInterval(async () => {
+// Main processing interval
+const interval = setInterval(async () => {
     try {
-        const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'EVOLUTION-pendingTransactions.bin');
         const { database } = await mongodb();
-
+        const collection = database.collection(`transactions_EVOLUTION`);
+        
+        // Read the binary pending transactions file
+        const dataPath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'EVOLUTION-pendingTransactions.bin');
         let data = await readFile(dataPath);
         let parsed = EVOLUTIONTransactionsSchema.fromBuffer(data);
-
+        
+        // Parse any JSON strings in the transaction data
         for (let i = 0; i < parsed.collection.length; i++) {
             const entry = parsed.collection[i];
-            if(entry.extras && typeof entry.extras === "string") entry.extras = JSON.parse(entry.extras);
-            if(entry.pExtras && typeof entry.pExtras === "string") entry.pExtras = JSON.parse(entry.pExtras);
-        }
-
-        let transactions = parsed.collection.sort((a: ProjectedEvolutionTransaction, b: ProjectedEvolutionTransaction) => (b.fee || b.gasUsed) - (a.fee || a.gasUsed));
-        let transactionMap: any = {};
-        let hashes = transactions.map((t: any) => t.hash);
-        let uniqueAccounts: string[] = [...new Set(transactions.map((transaction: ProjectedEvolutionTransaction) => transaction.owner))] as string[]
-
-        // console.log("TRANSACTIONS: " + transactions.length);
-
-        // Test Cache 
-        let cachedHashes = Object.keys(cache);
-        let requestHashes: string[] = [];
-        transactions.forEach((transaction: ProjectedEvolutionTransaction) => {
-            transactionMap[transaction.hash] = true;
-            if (!cache[transaction.hash])
-                requestHashes.push(transaction.hash);
-        })
-        cachedHashes.forEach((hash: string) => {
-            if (!transactionMap[hash])
-                delete cache[hash];
-        })
-
-        let qResult = await database.collection('transactions_EVOLUTION').find({ hash: { $in: requestHashes } }).project({ _id: 0, hash: 1, to: 1, house: 1, nonce: 1 }).toArray();
-
-        qResult.forEach((doc: any) => {
-            cache[doc.hash] = { to: doc.to, house: doc.house, nonce: doc.nonce };
-        })
-        // Edn Test Cache
-
-
-        //TMP
-        let _remove = await database.collection('transactions_EVOLUTION').find({ hash: { $in: hashes }, blockHash: { $ne: null } }).project({ hash: 1 }).toArray();
-        _remove = _remove.map((tx: any) => tx.hash);
-
-        transactions = transactions.filter((tx: any) => !_remove.includes(tx.hash));
-        transactions = transactions.map((transaction: any) => ({ ...transaction, ...cache[transaction.hash] }));
-        // End TMP
-
-        // transactions = await updateAccountNonces(evolutionWrapper, transactions);
-
-        // The amount of transactions added by an account. 
-        const addedByAddress: any = {};
-
-        // The array of transactions to store. 
-        var pendingList: any[] = [];
-        const addedByHash: any = {};
-
-        // ???
-        const toMove: any = {};
-
-        const pushAndCheckToMove = (transaction: any): boolean => {
-            if (addedByHash[transaction.hash]) return;
-            // if (transaction.from)
-            //     transaction.from = transaction.from.toLowerCase();
-
-            // Add this transaction to the list to be sent out. 
-            pendingList.push(transaction);
-            addedByHash[transaction.hash] = true;
-
-            // Increase the amount of transactions added by an address/account.
-            if (!addedByAddress[transaction.owner])
-                addedByAddress[transaction.owner] = 0;
-            addedByAddress[transaction.owner]++;
-
-            // If there are transactions remaining in toMove
-            if (toMove[transaction.owner]?.length) {
-                // The next transaction to 'process'
-                const nextToAdd = toMove[transaction.owner][0];
-                // The next nonce is the currentTransactionCount + the amount of transactions added. 
-                const nextNonce = (addedByAddress[transaction.owner] || 0) + (transaction.fromNonce || 0);
-                if (nextNonce === nextToAdd.nonce) {
-                    // Remove the transaction from toMove
-                    toMove[transaction.owner].shift();
-                    // Recursively call pushAndCheckToMove 
-                    return pushAndCheckToMove(nextToAdd);
+            if (entry.extras && typeof entry.extras === "string") {
+                try {
+                    entry.extras = JSON.parse(entry.extras);
+                } catch (error) {
+                    // Keep as string if parse fails
                 }
             }
-
-            // No transactions left to add from this address.
-            return true;
-        }
-
-        // Iterate over the list of pending transactions.
-        for (let i = 0; i < transactions.length; i++) {
-            // if (pendingList.length >= 3000 * 4) break;
-            const transaction = transactions[i];
-            if (addedByHash[transaction.hash]) continue;
-            // transaction.from = transaction.from.toLowerCase()
-            if (!addedByAddress[transaction.owner])
-                addedByAddress[transaction.owner] = 0;
-            // The next nonce is the currentTransactionCount + the amount of transactions added. 
-            const nextNonce = (addedByAddress[transaction.owner] || 0) + (transaction.fromNonce || 0);
-
-            if (nextNonce === transaction.nonce) {
-                pushAndCheckToMove(transaction);
-            } else {
-                if (!toMove[transaction.owner])
-                    toMove[transaction.owner] = [];
-                toMove[transaction.owner].push(transaction);
+            if (entry.pExtras && typeof entry.pExtras === "string") {
+                try {
+                    entry.pExtras = JSON.parse(entry.pExtras);
+                } catch (error) {
+                    // Keep as string if parse fails
+                }
             }
         }
-
-        Object.keys(toMove).forEach((key) => {
-            const arr = toMove[key];
-            if (toMove[key].length) {
-                toMove[key] = arr.sort((a: any, b: any) => a.nonce - b.nonce);
-                pushAndCheckToMove(toMove[key][0]);
+        
+        // Sort transactions by fee (higher fees first)
+        let pTransactions = parsed.collection.sort(
+            (a: ProjectedEvolutionTransaction, b: ProjectedEvolutionTransaction) => 
+                b.gasUsed - a.gasUsed
+        );
+        
+        // Extract transaction hashes
+        let hashes: string[] = pTransactions.map((tx: ProjectedEvolutionTransaction) => tx.hash);
+        let needed: string[] = [];
+        
+        // Determine which transactions need to be fetched from the database
+        hashes.forEach((hash: string) => {
+            if (!cache[hash]) {
+                needed.push(hash);
             }
         });
-
-        if (pendingList.length > 3000)
-            pendingList.splice(3000, pendingList.length - 3000);
-
-
-        let count = 0;
-        pendingList = pendingList.map((transaction: any) => {
-            // transaction.fromNonce = accounts[transaction.from.toLowerCase()]
-            transaction.type = transaction.maxFeePerGas ? 2 : 0;
-            const formatted = formatTransaction("EVOLUTION", transaction)
-            if (formatted.an == null) {
-                count++;
-            }
-            return formatted;
-        });
-
-        if (count > 0) console.log(`Found ${count} accounts without a fromNonce in pending transaction creation`);
-
-        // pendingList = pendingList.sort((a: any, b: any) => b.gp - a.gp);
-        const content = JSON.stringify(pendingList);
-
-        if (Date.now() - lastUploadTime >= 1990) {
-            const _path = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'EVOLUTION-pendingTransactions.json');
-            const writingFilePath = _path.replace(/\.json$/, '-writing.json');
-            fs.writeFileSync(writingFilePath, content);
-            fs.rename(writingFilePath, _path, (err) => {
-                if (err) throw err
+        
+        // Fetch needed transaction metadata from database
+        if (needed.length > 0) {
+            let results = await collection.find({ hash: { $in: needed } })
+                .project({ 
+                    hash: 1, 
+                    extras: 1, 
+                    total: 1,
+                    to: 1,
+                    house: 1 
+                })
+                .toArray();
+                
+            // Update cache with fetched data
+            results.forEach((result: any) => {
+                cache[result.hash] = result;
             });
+        }
+        
+        // Enrich transactions with cached metadata
+        for (let i = 0; i < pTransactions.length; i++) {
+            let cached = cache[pTransactions[i].hash];
+            if (cached) {
+                Object.assign(pTransactions[i], cached);
+            }
+        }
+        
+        // Remove confirmed transactions from the list
+        let confirmedTransactions = await collection.find(
+            { hash: { $in: hashes }, blockHash: { $ne: null } }
+        ).project({ hash: 1 }).toArray();
+        
+        let confirmedHashes = confirmedTransactions.map((tx: any) => tx.hash);
+        pTransactions = pTransactions.filter((tx: any) => !confirmedHashes.includes(tx.hash));
+        
+        // Clean up cache - remove transactions no longer in the pending list
+        Object.keys(cache).forEach((key: string) => {
+            if (!hashes.includes(key) || confirmedHashes.includes(key)) {
+                delete cache[key];
+            }
+        });
+        
+        // Format transactions for frontend consumption
+        let formattedTransactions = pTransactions.map((tx: any) => 
+            formatTransaction('EVOLUTION', tx)
+        );
+        
+        console.log('EVOLUTION Pending Transactions:', formattedTransactions.length);
+        
+        // Store the formatted transactions - throttle writes to reduce disk I/O
+        if (Date.now() - lastUploadTime >= 1990) {
+            const content = JSON.stringify(formattedTransactions);
+            
+            // Write to both the JSON file and the storage object
+            const filePath = path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'EVOLUTION-pendingTransactions.json');
+            const writingFilePath = filePath.replace(/\.json$/, '-writing.json');
+            fs.writeFileSync(writingFilePath, content);
+            fs.rename(writingFilePath, filePath, (err) => {
+                if (err) throw err;
+            });
+            
             lastUploadTime = Date.now();
             await storeObject(path.join('live', `pendingTxs-EVOLUTION`), content);
         }
-
     } catch (error) {
-        console.error(error);
+        console.error('Error processing EVOLUTION pending transactions:', error);
     }
-}, 2000).start(true);
+}, 3000).start(true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

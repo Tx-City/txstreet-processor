@@ -11,44 +11,44 @@ export default class LUKSOWrapper extends BlockchainWrapper {
     constructor(host: string) {
         super('LUKSO');
 
-        // Initialize web3
-        this.options = {
-            clientConfig: {
-                maxReceivedFrameSize: 10000000000,
-                maxReceivedMessageSize: 10000000000,
-                keepalive: true,
-                keepaliveInterval: 1000,
-            },
-            reconnect: {
-                auto: true,
-                delay: 1000,
-                maxAttempts: Number.MAX_SAFE_INTEGER,
-                onTimeout: false
-            }
-        };
+        // // Initialize web3
+        // this.options = {
+        //     clientConfig: {
+        //         maxReceivedFrameSize: 10000000000,
+        //         maxReceivedMessageSize: 10000000000,
+        //         keepalive: true,
+        //         keepaliveInterval: 1000,
+        //     },
+        //     reconnect: {
+        //         auto: true,
+        //         delay: 1000,
+        //         maxAttempts: Number.MAX_SAFE_INTEGER,
+        //         onTimeout: false
+        //     }
+        // };
         // host = 'ws://168.119.137.140:9546';
-        const provider = new Web3.providers.WebsocketProvider(host, this.options);
+        const provider = new Web3.providers.WebsocketProvider(host);
         this.web3 = new Web3(provider);
         // console.log("lukso provider", provider);    
         // console.log("lukso web3", this.web3);
         // Add admin peers, nodeInfo, and removePeer functions. 
-        this.web3.eth.extend({
-            property: 'admin',
-            methods: [
-                { name: 'peers', call: 'admin_peers' },
-                { name: 'nodeInfo', call: 'admin_nodeInfo' },
-                { name: 'removePeer', call: 'admin_removePeer', params: 1 }
-            ]
-        });
+        // this.web3.eth.extend({
+        //     property: 'admin',
+        //     methods: [
+        //         { name: 'peers', call: 'admin_peers' },
+        //         { name: 'nodeInfo', call: 'admin_nodeInfo' },
+        //         { name: 'removePeer', call: 'admin_removePeer', params: 1 }
+        //     ]
+        // });
 
-        // Add txpoorl content, inspect, and status functions. 
-        this.web3.eth.extend({
-            property: 'txpool',
-            methods: [
-                { name: "content", call: "txpool_content" },
-                { name: "inspect", call: "txpool_inspect" }
-            ]
-        });
+        // // Add txpoorl content, inspect, and status functions. 
+        // this.web3.eth.extend({
+        //     property: 'txpool',
+        //     methods: [
+        //         { name: "content", call: "txpool_content" },
+        //         { name: "inspect", call: "txpool_inspect" }
+        //     ]
+        // });
     }
 
     public initEventSystem() {

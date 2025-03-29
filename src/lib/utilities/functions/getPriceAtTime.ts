@@ -23,7 +23,7 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
             name = 'ethereum'; 
             break;
         case 'LUKSO':
-            name = 'lukso'; //lukso-token-2
+            name = 'lukso-token-2'; //lukso-token-2
             break;
         case 'EVOLUTION':
             name = 'evolution'; 
@@ -53,6 +53,7 @@ export default async (ticker: string, fromTime: number, toTime: number) => {
                 if(--retriesLeft < 0) return null;
                 return makeRequest(); 
             } else {
+                console.log("FINDING LUKSO PRICE ===",result);
                 let index = Math.floor(result.data.prices.length / 2); 
                 results = result.data.prices[index];
             }

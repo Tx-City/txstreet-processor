@@ -12,7 +12,7 @@ export default async () => {
         const pendingTxList = new EVOLUTIONPendingList(); 
         await pendingTxList.init();
 
-        // new Worker(path.join(__dirname, 'createPendingTransactionList.js'), { workerData }); 
+        new Worker(path.join(__dirname, 'createPendingTransactionList.js'), { workerData }); 
         // new Worker(path.join(__dirname, 'calculatePendingTransactionLists.js'), { workerData }); 
         // new Worker(path.join(__dirname, 'calculateStats.js'), { workerData })
         // new Worker(path.join(__dirname, 'mempoolInfo.js'), { workerData })

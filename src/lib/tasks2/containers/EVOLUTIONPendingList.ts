@@ -273,8 +273,8 @@ export default class EVOLUTIONPendingList {
 
             for (let i = 0; i < this.array.length; i++) {
                 const entry = this.array[i];
-                // if (entry.extras && typeof entry.extras !== "string") entry.extras = JSON.stringify(entry.extras);
-                // if (entry.pExtras && typeof entry.pExtras !== "string") entry.pExtras = JSON.stringify(entry.pExtras);
+                if (entry.extras && typeof entry.extras !== "string") entry.extras = JSON.stringify(entry.extras);
+                if (entry.pExtras && typeof entry.pExtras !== "string") entry.pExtras = JSON.stringify(entry.pExtras);
 
                 //@ts-ignore
                 Object.keys(entry).forEach((k) => (!entry[k] || entry[k] == null || entry[k] == "null") && delete entry[k]);
